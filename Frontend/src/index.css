@@ -1,0 +1,405 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0b0c;
+  --panel: #141416;
+  --text: #e9e9ea;
+  --muted: rgba(233, 233, 234, 0.75);
+  --border: rgba(233, 233, 234, 0.14);
+  --border-strong: rgba(233, 233, 234, 0.22);
+  --accent: #2b2b2b;
+
+  --r: 14px;
+  --r-pill: 999px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
+  background: radial-gradient(1200px 700px at 0% 1200%, #15151a 0%, var(--bg) 55%);
+  color: var(--text);
+}
+
+a {
+  color: inherit;
+}
+
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  background: rgba(11, 11, 12, 0.7);
+  border-bottom: 1px solid var(--border);
+}
+
+.headerInner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  opacity: 0.9;
+}
+
+.nav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.navLink {
+  text-decoration: none;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.navLink:hover {
+  border-color: var(--border-strong);
+}
+
+.navLinkActive {
+  background: rgba(233, 233, 234, 0.08);
+  border-color: var(--border-strong);
+}
+
+.h1 {
+  font-size: 40px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.p {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
+.panel {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  background: rgba(20, 20, 22, 0.75);
+  border-radius: var(--r);
+  padding: 16px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  max-width: 440px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--text);
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--border-strong);
+}
+
+.btn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn:hover {
+  border-color: var(--border-strong);
+}
+
+.btnPrimary {
+  background: rgba(233, 233, 234, 0.08);
+  border-color: var(--border-strong);
+}
+
+.pill {
+  border-radius: var(--r-pill);
+}
+
+.card {
+  border: 1px solid var(--border);
+  background: rgba(20, 20, 22, 0.75);
+  border-radius: var(--r);
+  padding: 16px;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+.small {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+.pulse-dot {
+  animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+  0% { transform: scale(0.95); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+  100% { transform: scale(0.95); opacity: 1; }
+}
+
+/* index.css / App.css */
+
+/* Анимация плавного движения вверх-вниз */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); } /* Поднимается на 15px */
+  100% { transform: translateY(0px); }
+}
+
+.floating-image {
+  animation: float 6s ease-in-out infinite; /* Бесконечная анимация */
+  /* Добавим неоновое свечение позади картинки */
+  box-shadow: 0 0 50px rgba(16, 185, 129, 0.2); 
+  border-radius: 12px; /* Легкое закругление самой картинки */
+}
+
+.footer {
+  width: 100%;
+  padding: 60px 0 30px;
+  background-color: #0a0a0a; /* Тот же глубокий черный */
+  border-top: 1px solid rgba(255, 255, 255, 0.05); /* Тонкая линия */
+}
+
+.footerInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.footerLogo {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: -1px;
+}
+
+.footerLink {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.footerLink:hover {
+  color: #10b981;
+}
+
+.footerCopyright {
+  width: 100%;
+  text-align: center;
+  margin-top: 60px;
+  color: #444;
+  font-size: 12px;
+}
+
+.bento-card {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: default;
+}
+
+.bento-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Эффект свечения для большой карточки при ховере */
+.bento-card:first-child:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(16, 185, 129, 0.05);
+}
+
+
+
+/* Фикс для того, чтобы контент был поверх сетки */
+.grid-canvas > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Карточка вакансии */
+.job-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.job-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Стили для тегов технологий */
+.tech-tag {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  font-weight: 600;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-invited { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+.status-rejected { background: rgba(255, 107, 107, 0.1); color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.2); }
+.status-new { background: rgba(255, 255, 255, 0.05); color: #888; border: 1px solid rgba(255, 255, 255, 0.1); }
+
+@keyframes shadow-pulse {
+  0% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.4); }
+  100% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+}
+
+.pulse-dot-active {
+  animation: shadow-pulse 2s infinite;
+}
+/* Кастомный скроллбар для чата */
+.chat-scroll::-webkit-scrollbar { width: 4px; }
+.chat-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+/* Стиль сообщений */
+.msg-bubble {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.4;
+  position: relative;
+}
+.msg-mine {
+  background: #10b981;
+  color: #000;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.msg-theirs {
+  background: #222;
+  color: #fff;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+/* Анимация пульсации для круглой кнопки */
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.7); }
+  100% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+}
+
+/* Стили для плавающей круглой кнопки */
+.floating-chat-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background-color: #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #000;
+  text-decoration: none;
+  z-index: 1000; /* Чтобы была поверх всего */
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.floating-chat-btn:hover {
+  transform: scale(1.1) translateY(-5px);
+  background-color: #34d399;
+}
+
+/* Класс для пульсации при уведомлении */
+.floating-chat-btn.has-notification {
+  animation: pulse-green 2s infinite;
+}
+
+/* Счетчик уведомлений поверх круглой кнопки */
+.chat-notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ff4b4b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #0a0a0a; /* Чтобы отделить от зеленой кнопки */
+}
