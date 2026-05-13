@@ -20,7 +20,7 @@ const playNotificationSound = () => {
   audio.play().catch(e => console.log("Audio autoplay blocked by browser", e));
 };
 
-export default function TopNav({ mode, setMode }: { mode: UserMode; setMode: (m: UserMode) => void }) {
+export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserMode) => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isLoading } = useAuth();
