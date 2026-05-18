@@ -12,7 +12,6 @@ import JobDetails from "./pages/JobDetails";
 import NotFound from "./pages/NotFound";
 import Applications from "./pages/Applications";
 import Employer from "./pages/Employer";
-import EmployerJob from "./pages/EmployerJob";
 import Profile from './pages/Profile'; 
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
@@ -106,13 +105,16 @@ function AppRoutes({ mode }: { mode: UserMode }) {
   const fullWidthPages = ["/", "/profile", "/blog",
      "/jobs", "/employer", "/login", "/register",
       "/privacy", "/terms", "/cookies", "/about",
-       "/contact", "/applications", "/saved"];
+       "/contact", "/applications", "/saved",
+      "/forgot-password", "/reset-password"];
        
   const isFullWidth = 
   fullWidthPages.includes(location.pathname) || 
   location.pathname.startsWith("/messages") || 
   location.pathname.startsWith("/applications") ||
-  location.pathname.startsWith("/jobs"); 
+  location.pathname.startsWith("/jobs") ||
+  location.pathname.startsWith('/candidate');
+  
 
   return (
     <main className={isFullWidth ? "" : "container"}>

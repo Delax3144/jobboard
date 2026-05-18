@@ -7,7 +7,8 @@ import { useAuth } from "../context/AuthContext";
 const Icons = {
   Send: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>,
   Search: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>,
-  Info: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+  Info: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
+  ChevronLeft: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
 };
 
 export default function MessagesPage() {
@@ -104,7 +105,7 @@ export default function MessagesPage() {
   });
 
   return (
-    <div style={{ 
+    <div className="msg-page-wrapper" style={{ 
       width: '100vw', 
       position: 'relative', 
       left: '50%',
@@ -120,15 +121,15 @@ export default function MessagesPage() {
       padding: '20px'
     }}>
       
-      {/* === ДЕКОРАТИВНЫЙ ФОН (НА ВЕСЬ ЭКРАН) === */}
+      {/* === ДЕКОРАТИВНЫЙ ФОН === */}
       <div style={{ position: 'absolute', top: '10%', left: '15%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ position: 'absolute', bottom: '10%', right: '15%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
-      {/* === ЦЕНТРАЛЬНЫЙ КОНТЕЙНЕР ЧАТА (ОГРАНИЧЕН ПО ШИРИНЕ) === */}
-      <div style={{ 
+      {/* === ЦЕНТРАЛЬНЫЙ КОНТЕЙНЕР ЧАТА === */}
+      <div className={`msg-messenger-container ${id ? 'chat-active' : 'list-active'}`} style={{ 
         width: '100%', 
         maxWidth: '1200px', 
-        height: 'calc(100vh - 120px)', // Оставляем отступы сверху и снизу
+        height: 'calc(100vh - 120px)', 
         background: 'rgba(15, 15, 15, 0.6)', 
         backdropFilter: 'blur(20px)', 
         border: '1px solid rgba(255,255,255,0.05)', 
@@ -140,7 +141,7 @@ export default function MessagesPage() {
       }}>
         
         {/* === ЛЕВАЯ ПАНЕЛЬ (СПИСОК ЧАТОВ) === */}
-        <div style={{ width: '380px', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', background: 'rgba(0, 0, 0, 0.2)', flexShrink: 0 }}>
+        <div className="msg-sidebar-panel" style={{ width: '380px', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', background: 'rgba(0, 0, 0, 0.2)', flexShrink: 0 }}>
           <div style={{ padding: '30px 25px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
             <h2 style={{ margin: '0 0 20px', fontSize: '24px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>Messages</h2>
             
@@ -199,45 +200,52 @@ export default function MessagesPage() {
         </div>
 
         {/* === ПРАВАЯ ПАНЕЛЬ (ОКНО ЧАТА) === */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'transparent', minWidth: 0 }}>
+        <div className="msg-chat-window" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'transparent', minWidth: 0 }}>
           {currentApp ? (
             <>
-              {/* ШАПКА ЧАТА С КЛИКАБЕЛЬНЫМ ПРОФИЛЕМ */}
-              <div style={{ padding: '20px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0, 0, 0, 0.1)', flexShrink: 0 }}>
+              {/* ШАПКА ЧАТА */}
+              <div className="msg-chat-header" style={{ padding: '20px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0, 0, 0, 0.1)', flexShrink: 0, gap: '10px' }}>
                  
-                 <Link to={user?.role === 'employer' ? `/candidate/${currentApp.candidate.id}` : `/employer/company/${currentApp.job.ownerId}`} style={{ display: 'flex', alignItems: 'center', gap: '15px', textDecoration: 'none', padding: '5px 10px 5px 0', borderRadius: '12px', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
-                   <div style={{ width: '48px', height: '48px', borderRadius: user?.role === 'employer' ? '50%' : '12px', background: '#222', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '18px' }}>
-                     {user?.role === 'employer' ? (
-                       currentApp.candidate?.avatarUrl ? <img src={currentApp.candidate.avatarUrl?.startsWith('http') ? currentApp.candidate.avatarUrl : `${apiUrl}${currentApp.candidate.avatarUrl}`} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <span style={{fontWeight:'bold'}}>{currentApp.candidate?.email[0].toUpperCase()}</span>
-                     ) : (
-                       currentApp.job?.companyLogo ? <img src={currentApp.job.companyLogo?.startsWith('http') ? currentApp.job.companyLogo : `${apiUrl}${currentApp.job.companyLogo}`} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <span style={{fontWeight:'bold'}}>{currentApp.job?.companyName[0].toUpperCase()}</span>
-                     )}
-                   </div>
-                   <div>
-                     <div style={{ fontWeight: '800', fontSize: '18px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       {user?.role === 'employer' ? `${currentApp.candidate?.firstName || ''} ${currentApp.candidate?.lastName || ''}`.trim() || currentApp.candidate?.email : currentApp.job.companyName}
-                       <span style={{ color: '#666', display: 'flex' }}><Icons.Info /></span>
-                     </div>
-                     {(() => {
-                       const isOnline = checkIsOnline(user?.role === 'employer' ? currentApp.candidate?.lastActive : currentApp.job?.owner?.lastActive);
-                       return (
-                         <div style={{ fontSize: '13px', color: isOnline ? '#10b981' : '#666', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', fontWeight: 500 }}>
-                           <span style={{ width: 8, height: 8, background: isOnline ? '#10b981' : '#444', borderRadius: '50%', boxShadow: isOnline ? '0 0 8px rgba(16,185,129,0.5)' : 'none' }} /> 
-                           {isOnline ? "Online right now" : "Last seen recently"}
-                         </div>
-                       );
-                     })()}
-                   </div>
-                 </Link>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                   {/* Мобильная кнопка Назад */}
+                   <button className="msg-back-to-list-btn" onClick={() => navigate('/messages')} style={{ display: 'none', background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', padding: '4px', marginRight: '4px' }}>
+                     <Icons.ChevronLeft />
+                   </button>
 
-                 <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', color: '#888', fontWeight: 600 }}>
-                   Applying for: <span style={{ color: '#fff' }}>{currentApp.job.title}</span>
+                   <Link to={user?.role === 'employer' ? `/candidate/${currentApp.candidate.id}` : `/employer/company/${currentApp.job.ownerId}`} style={{ display: 'flex', alignItems: 'center', gap: '15px', textDecoration: 'none', padding: '5px 10px 5px 0', borderRadius: '12px', transition: 'background 0.2s', minWidth: 0 }} onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
+                     <div style={{ width: '48px', height: '48px', borderRadius: user?.role === 'employer' ? '50%' : '12px', background: '#222', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontSize: '18px', flexShrink: 0 }}>
+                       {user?.role === 'employer' ? (
+                         currentApp.candidate?.avatarUrl ? <img src={currentApp.candidate.avatarUrl?.startsWith('http') ? currentApp.candidate.avatarUrl : `${apiUrl}${currentApp.candidate.avatarUrl}`} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <span style={{fontWeight:'bold'}}>{currentApp.candidate?.email[0].toUpperCase()}</span>
+                       ) : (
+                         currentApp.job?.companyLogo ? <img src={currentApp.job.companyLogo?.startsWith('http') ? currentApp.job.companyLogo : `${apiUrl}${currentApp.job.companyLogo}`} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <span style={{fontWeight:'bold'}}>{currentApp.job?.companyName[0].toUpperCase()}</span>
+                       )}
+                     </div>
+                     <div style={{ minWidth: 0 }}>
+                       <div style={{fontWeight: '800', fontSize: '17px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                         {user?.role === 'employer' ? `${currentApp.candidate?.firstName || ''} ${currentApp.candidate?.lastName || ''}`.trim() || currentApp.candidate?.email : currentApp.job.companyName}
+                         <span style={{ color: '#666', display: 'flex', flexShrink: 0 }}><Icons.Info /></span>
+                       </div>
+                       {(() => {
+                         const isOnline = checkIsOnline(user?.role === 'employer' ? currentApp.candidate?.lastActive : currentApp.job?.owner?.lastActive);
+                         return (
+                           <div style={{ fontSize: '12px', color: isOnline ? '#10b981' : '#666', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', fontWeight: 500 }}>
+                             <span style={{ width: 6, height: 6, background: isOnline ? '#10b981' : '#444', borderRadius: '50%', boxShadow: isOnline ? '0 0 8px rgba(16,185,129,0.5)' : 'none' }} /> 
+                             {isOnline ? "Online" : "Offline"}
+                           </div>
+                         );
+                       })()}
+                     </div>
+                   </Link>
+                 </div>
+
+                 <div className="msg-chat-header-job-badge" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', color: '#888', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
+                   Role: <span style={{ color: '#fff' }}>{currentApp.job.title}</span>
                  </div>
               </div>
 
               {/* ИСТОРИЯ СООБЩЕНИЙ */}
-              <div ref={scrollContainerRef} style={{ flex: 1, overflowY: 'auto', padding: '30px 40px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ alignSelf: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '8px 20px', borderRadius: '20px', fontSize: '12px', color: '#666', marginBottom: '30px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <div ref={scrollContainerRef} className="premium-scroll" style={{ flex: 1, overflowY: 'auto', padding: '25px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ alignSelf: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: '20px', fontSize: '11px', color: '#666', marginBottom: '20px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'center' }}>
                   Application started {new Date(currentApp.createdAt).toLocaleDateString()}
                 </div>
 
@@ -258,13 +266,13 @@ export default function MessagesPage() {
 
                   return (
                     <div key={m.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                      {showDateLabel && <div style={{ alignSelf: 'center', margin: '20px 0', fontSize: '12px', fontWeight: '800', color: '#555', background: 'rgba(0,0,0,0.5)', padding: '6px 16px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>{new Date(m.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>}
-                      <div style={{ alignSelf: isMine ? 'flex-end' : 'flex-start', maxWidth: '70%', display: 'flex', alignItems: 'flex-end', gap: '12px', marginTop: isFirstInGroup ? '12px' : '0' }}>
+                      {showDateLabel && <div style={{ alignSelf: 'center', margin: '15px 0', fontSize: '11px', fontWeight: '800', color: '#555', background: 'rgba(0,0,0,0.5)', padding: '6px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>{new Date(m.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>}
+                      <div style={{ alignSelf: isMine ? 'flex-end' : 'flex-start', maxWidth: '85%', display: 'flex', alignItems: 'flex-end', gap: '8px', marginTop: isFirstInGroup ? '8px' : '0' }}>
                         
                         {!isMine && (
-                          <Link to={user?.role === 'employer' ? `/candidate/${currentApp.candidate.id}` : `/employer/company/${currentApp.job.ownerId}`} style={{ width: '36px', height: '36px', borderRadius: user?.role === 'employer' ? '50%' : '10px', background: '#222', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isLastInGroup ? 1 : 0, border: '1px solid rgba(255,255,255,0.05)', color: '#888', textDecoration: 'none' }}>
-                            {msgAvatar ? <img src={msgAvatar?.startsWith('http') ? msgAvatar : `${apiUrl}${msgAvatar}`} style={{width:'100%', height:'100%', objectFit:'cover'}} /> : <span style={{fontSize:'14px', fontWeight:'bold'}}>{msgInitial}</span>}
-                          </Link>
+                          <div style={{ width: '32px', height: '32px', borderRadius: user?.role === 'employer' ? '50%' : '10px', background: '#222', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isLastInGroup ? 1 : 0, border: '1px solid rgba(255,255,255,0.05)', color: '#888' }}>
+                            {msgAvatar ? <img src={msgAvatar?.startsWith('http') ? msgAvatar : `${apiUrl}${msgAvatar}`} style={{width:'100%', height:'100%', objectFit:'cover'}} /> : <span style={{fontSize:'12px', fontWeight:'bold'}}>{msgInitial}</span>}
+                          </div>
                         )}
 
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start' }}>
@@ -272,18 +280,18 @@ export default function MessagesPage() {
                             background: isMine ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(255,255,255,0.05)', 
                             color: isMine ? '#000' : '#fff', 
                             border: isMine ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                            padding: '14px 20px', 
-                            borderRadius: '20px', 
-                            borderTopLeftRadius: !isMine && !isFirstInGroup ? '6px' : '20px', 
-                            borderBottomLeftRadius: !isMine && !isLastInGroup ? '6px' : (isMine ? '20px' : '6px'), 
-                            borderTopRightRadius: isMine && !isFirstInGroup ? '6px' : '20px', 
-                            borderBottomRightRadius: isMine && !isLastInGroup ? '6px' : (isMine ? '6px' : '20px'), 
-                            fontSize: '15px', fontWeight: isMine ? '600' : '400', wordBreak: 'break-word', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
+                            padding: '12px 16px', 
+                            borderRadius: '16px', 
+                            borderTopLeftRadius: !isMine && !isFirstInGroup ? '4px' : '16px', 
+                            borderBottomLeftRadius: !isMine && !isLastInGroup ? '4px' : (isMine ? '16px' : '4px'), 
+                            borderTopRightRadius: isMine && !isFirstInGroup ? '4px' : '16px', 
+                            borderBottomRightRadius: isMine && !isLastInGroup ? '4px' : (isMine ? '4px' : '16px'), 
+                            fontSize: '14px', fontWeight: isMine ? '600' : '400', wordBreak: 'break-word', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
                             boxShadow: isMine ? '0 5px 15px rgba(16, 185, 129, 0.2)' : 'none'
                           }}>
                             {m.text}
                           </div>
-                          {isLastInGroup && <div style={{ fontSize: '11px', color: '#555', marginTop: '6px', fontWeight: 600 }}>{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>}
+                          {isLastInGroup && <div style={{ fontSize: '10px', color: '#555', marginTop: '4px', fontWeight: 600 }}>{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>}
                         </div>
 
                       </div>
@@ -293,34 +301,33 @@ export default function MessagesPage() {
               </div>
 
               {/* ПОЛЕ ВВОДА СООБЩЕНИЯ */}
-              <div style={{ padding: '20px 30px 30px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0, 0, 0, 0.1)' }}>
-                <div style={{ display: 'flex', gap: '15px', background: 'rgba(0,0,0,0.4)', padding: '12px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.08)', alignItems: 'flex-end', transition: 'border-color 0.2s', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
+              <div style={{ padding: '15px 20px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0, 0, 0, 0.1)' }}>
+                <div style={{ display: 'flex', gap: '10px', background: 'rgba(0,0,0,0.4)', padding: '8px 12px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', alignItems: 'flex-end', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
                   <textarea 
                     value={msg} 
                     onChange={(e) => setMsg(e.target.value)} 
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }} 
                     placeholder="Type a message..." 
-                    style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', outline: 'none', padding: '10px 15px', resize: 'none', minHeight: '24px', maxHeight: '150px', fontFamily: 'inherit', fontSize: '16px', lineHeight: '1.5' }} 
+                    style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', outline: 'none', padding: '8px', resize: 'none', minHeight: '24px', maxHeight: '120px', fontFamily: 'inherit', fontSize: '15px', lineHeight: '1.4' }} 
                   />
                   <button 
                     onClick={sendMsg} 
                     disabled={!msg.trim()}
-                    style={{ background: msg.trim() ? '#10b981' : '#222', color: msg.trim() ? '#000' : '#555', border: 'none', width: '48px', height: '48px', borderRadius: '16px', cursor: msg.trim() ? 'pointer' : 'not-allowed', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', boxShadow: msg.trim() ? '0 5px 15px rgba(16, 185, 129, 0.3)' : 'none' }}
+                    style={{ background: msg.trim() ? '#10b981' : '#222', color: msg.trim() ? '#000' : '#555', border: 'none', width: '40px', height: '40px', borderRadius: '14px', cursor: msg.trim() ? 'pointer' : 'not-allowed', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', boxShadow: msg.trim() ? '0 5px 15px rgba(16, 185, 129, 0.3)' : 'none' }}
                   >
                     <Icons.Send />
                   </button>
                 </div>
-                <div style={{ textAlign: 'center', marginTop: '12px', color: '#444', fontSize: '12px' }}>Press <strong style={{ color: '#666' }}>Enter</strong> to send, <strong style={{ color: '#666' }}>Shift + Enter</strong> for new line</div>
               </div>
             </>
           ) : (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#555' }}>
+              <div style={{ textAlign: 'center', padding: '0 20px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px', color: '#555' }}>
                   <Icons.Search />
                 </div>
-                <h3 style={{ color: '#666', margin: '0 0 10px', fontSize: '20px' }}>Your Messages</h3>
-                <p style={{ margin: 0, color: '#444' }}>Select a conversation from the left to start chatting</p>
+                <h3 style={{ color: '#666', margin: '0 0 10px', fontSize: '18px' }}>Your Messages</h3>
+                <p style={{ margin: 0, color: '#444', fontSize: '14px' }}>Select a conversation from the left to start chatting</p>
               </div>
             </div>
           )}

@@ -89,7 +89,7 @@ export default function Contact() {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 20px', position: 'relative', zIndex: 1 }}>
         
         {/* === ЗАГОЛОВОК === */}
-        <div style={{ textAlign: 'center', marginBottom: '80px', animation: 'fadeIn 0.6s ease-out' }}>
+        <div className="contact-hero" style={{ textAlign: 'center', marginBottom: '80px', animation: 'fadeIn 0.6s ease-out' }}>
           <div style={{ display: 'inline-block', padding: '6px 14px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '12px', fontWeight: '800', marginBottom: '15px', border: '1px solid rgba(16, 185, 129, 0.2)', textTransform: 'uppercase', letterSpacing: '1px' }}>
             Support Center
           </div>
@@ -111,7 +111,7 @@ export default function Contact() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '40px', alignItems: 'stretch' }}>
           
           {/* === ЛЕВАЯ ЧАСТЬ: ИНФО И КНОПКА ТИКЕТОВ === */}
-          <div style={{ 
+          <div className="contact-card" style={{ 
             background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(20px)', 
             border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', 
             padding: '50px', boxShadow: '0 30px 60px rgba(0,0,0,0.2)',
@@ -180,7 +180,7 @@ export default function Contact() {
           </div>
 
           {/* === ПРАВАЯ ЧАСТЬ: ДИНАМИЧЕСКИЙ КОНТЕНТ (ФОРМА ИЛИ СПИСОК ТИКЕТОВ) === */}
-          <div style={{ 
+          <div className="contact-card" style={{ 
             background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', 
             border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', 
             padding: '50px', boxShadow: '0 30px 60px rgba(0,0,0,0.4)',

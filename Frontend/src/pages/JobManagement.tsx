@@ -73,16 +73,16 @@ export default function JobManagement() {
   return (
     <div style={{ maxWidth: '1100px', margin: '40px auto', padding: '0 20px' }}>
       
-      <div style={{ marginBottom: '40px' }}>
+      <div className="job-mgmt-header" style={{ marginBottom: '40px' }}>
         <Link to="/employer" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#10b981', textDecoration: 'none', fontWeight: 600, fontSize: '13px', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           <Icons.Back /> Back to Dashboard
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
             <h1 style={{ fontSize: '36px', fontWeight: 900, color: '#fff', margin: '0 0 10px', letterSpacing: '-1px' }}>{job.title}</h1>
-            <div style={{ display: 'flex', gap: '15px', color: '#888', fontSize: '15px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '15px', color: '#888', fontSize: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ color: '#fff', fontWeight: 600 }}>{job.companyName}</span>
-              <span>•</span>
+              <span className="hidden-mobile">•</span>
               <span style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
                 {applications.length} Candidate{applications.length !== 1 && 's'}
               </span>
@@ -91,13 +91,13 @@ export default function JobManagement() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '20px' }}>
+      <div className="job-mgmt-filters" style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '20px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {['all', 'new', 'reviewed', 'invited', 'rejected'].map(f => (
           <button
             key={f}
             onClick={() => setFilter(f as any)}
             style={{
-              padding: '10px 20px', borderRadius: '14px', fontSize: '14px', fontWeight: 600, textTransform: 'capitalize', cursor: 'pointer', transition: 'all 0.2s',
+              padding: '10px 20px', borderRadius: '14px', fontSize: '14px', fontWeight: 600, textTransform: 'capitalize', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap',
               background: filter === f ? '#fff' : 'transparent',
               color: filter === f ? '#000' : '#888',
               border: filter === f ? '1px solid #fff' : '1px solid transparent'
@@ -121,10 +121,10 @@ export default function JobManagement() {
             return (
               <div key={app.id} style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', overflow: 'hidden', transition: 'all 0.3s', boxShadow: isExpanded ? '0 20px 40px rgba(0,0,0,0.5)' : 'none' }}>
                 
-                <div style={{ padding: '30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
+                <div className="job-mgmt-card-header" style={{ padding: '30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
                   
                   <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg, #222, #111)', border: '2px solid #333', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold', color: '#888', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg, #222, #111)', border: '2px solid #333', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold', color: '#888', boxShadow: '0 5px 15px rgba(0,0,0,0.3)', flexShrink: 0 }}>
                       {app.candidate.avatarUrl ? (
                         <img src={app.candidate.avatarUrl.startsWith('http') ? app.candidate.avatarUrl : `${apiUrl}${app.candidate.avatarUrl}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
@@ -132,8 +132,8 @@ export default function JobManagement() {
                       )}
                     </div>
                     
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
                         <h3 style={{ margin: 0, fontSize: '20px', color: '#fff', fontWeight: 800 }}>
                           {app.candidate.firstName} {app.candidate.lastName}
                         </h3>
@@ -141,22 +141,21 @@ export default function JobManagement() {
                           {app.status}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#666', fontSize: '14px' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Icons.Mail /> {app.candidate.email}</span>
-                        <span>•</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: '#666', fontSize: '14px', flexWrap: 'wrap' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px', wordBreak: 'break-all' }}><Icons.Mail /> {app.candidate.email}</span>
+                        <span className="hidden-mobile">•</span>
                         <span>Applied: {new Date(app.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <div className="job-mgmt-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     
-                    {/* НОВАЯ КНОПКА: VIEW PROFILE */}
-                    <Link to={`/candidate/${app.candidate.id}`} style={{ padding: '12px 18px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}>
+                    <Link to={`/candidate/${app.candidate.id}`} style={{ padding: '12px 18px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', justifyContent: 'center' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}>
                       <Icons.User /> Profile
                     </Link>
 
-                    <button onClick={() => toggleExpand(app.id)} style={{ padding: '12px 18px', borderRadius: '14px', background: 'transparent', border: '1px solid #333', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#111'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                    <button onClick={() => toggleExpand(app.id)} style={{ padding: '12px 18px', borderRadius: '14px', background: 'transparent', border: '1px solid #333', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'background 0.2s', justifyContent: 'center' }} onMouseOver={(e) => e.currentTarget.style.background = '#111'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                       {isExpanded ? "Hide Details" : "View CV"}
                       {isExpanded ? <Icons.ChevronUp /> : <Icons.ChevronDown />}
                     </button>
@@ -164,18 +163,18 @@ export default function JobManagement() {
                     {app.status !== 'rejected' && app.status !== 'invited' && (
                        <>
                          {app.status === 'new' && (
-                           <button onClick={() => handleUpdateStatus(app.id, 'reviewed')} style={{ padding: '12px 18px', borderRadius: '14px', background: '#111', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }} title="Mark as Reviewed">
+                           <button onClick={() => handleUpdateStatus(app.id, 'reviewed')} style={{ padding: '12px 18px', borderRadius: '14px', background: '#111', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, justifyContent: 'center' }} title="Mark as Reviewed">
                              <Icons.Check /> Review
                            </button>
                          )}
-                         <button onClick={() => handleUpdateStatus(app.id, 'rejected')} style={{ padding: '12px 18px', borderRadius: '14px', background: '#111', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }} title="Decline Candidate">
+                         <button onClick={() => handleUpdateStatus(app.id, 'rejected')} style={{ padding: '12px 18px', borderRadius: '14px', background: '#111', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, justifyContent: 'center' }} title="Decline Candidate">
                            <Icons.X /> Decline
                          </button>
                        </>
                     )}
 
                     {app.status === 'reviewed' && (
-                      <button onClick={() => handleUpdateStatus(app.id, 'invited')} style={{ padding: '12px 20px', borderRadius: '14px', background: '#10b981', border: 'none', color: '#000', fontSize: '14px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 10px 20px -5px rgba(16, 185, 129, 0.4)' }}>
+                      <button onClick={() => handleUpdateStatus(app.id, 'invited')} style={{ padding: '12px 20px', borderRadius: '14px', background: '#10b981', border: 'none', color: '#000', fontSize: '14px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 10px 20px -5px rgba(16, 185, 129, 0.4)', justifyContent: 'center' }}>
                         Invite to Interview
                       </button>
                     )}
@@ -184,7 +183,7 @@ export default function JobManagement() {
 
                 {isExpanded && (
                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '30px', background: 'rgba(0,0,0,0.4)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
+                    <div className="job-mgmt-details" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
                       
                       <div>
                         <h4 style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px', marginTop: 0 }}>Motivation Letter</h4>

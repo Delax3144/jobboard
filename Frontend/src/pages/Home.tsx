@@ -17,16 +17,19 @@ export default function Home() {
     <div style={{ background: '#000', color: '#fff', overflowX: 'hidden' }}>
       
       {/* --- SECTION 1: HERO --- */}
-      <section style={{ position: 'relative', padding: '120px 0 80px 0' }}>
+      {/* ID для точечной настройки сетки в index.css */}
+      <section id="home-hero-grid" style={{ position: 'relative', padding: '120px 0 80px 0' }}>
         
         {/* Glow Effects */}
         <div style={{ position: 'absolute', top: '-10%', left: '20%', transform: 'translateX(-50%)', width: '800px', height: '600px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 60%)', zIndex: 0, pointerEvents: 'none', filter: 'blur(40px)' }} />
         <div style={{ position: 'absolute', top: '20%', right: '-10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 60%)', zIndex: 0, pointerEvents: 'none', filter: 'blur(50px)' }} />
 
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '60px', alignItems: 'center', position: 'relative', zIndex: 1, maxWidth: '1280px', margin: '0 auto', padding: '0 30px' }}>
+        {/* Сетка переключается в 1 колонку на мобилке через m-grid-1 */}
+        <div className="container m-grid-1" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '60px', alignItems: 'center', position: 'relative', zIndex: 1, maxWidth: '1280px', margin: '0 auto', padding: '0 30px' }}>
           
           {/* Hero Text */}
-          <div>
+          {/* Класс для настройки отступов на мобилке */}
+          <div className="home-hero-content">
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 16px', borderRadius: '30px', background: 'rgba(16, 185, 129, 0.05)', color: '#10b981', fontSize: '13px', fontWeight: '700', marginBottom: '30px', border: '1px solid rgba(16, 185, 129, 0.15)', textTransform: 'uppercase', letterSpacing: '1px' }}>
               <span style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }} />
               The #1 Tech Hiring Platform
@@ -68,7 +71,8 @@ export default function Home() {
           </div>
 
           {/* Hero Image & Floating Cards */}
-          <div style={{ position: 'relative' }}>
+          {/* ID для скрытия карточек на мобилке в index.css */}
+          <div id="home-hero-visual" style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', width: '100%', height: '100%', background: 'linear-gradient(45deg, #10b981, transparent)', filter: 'blur(80px)', zIndex: -1, opacity: 0.3 }} />
             
             <img src="/images/hero-coder.png" alt="Developer coding" style={{ width: '100%', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 30px 60px -15px rgba(0,0,0,0.8)' }} />
@@ -107,7 +111,7 @@ export default function Home() {
       <section style={{ padding: '40px 0', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#050505' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 30px', textAlign: 'center' }}>
           <p style={{ color: '#666', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600, marginBottom: '30px' }}>Trusted by innovative teams worldwide</p>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.5, flexWrap: 'wrap', gap: '30px' }}>
+          <div className="home-trusted-logos" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.5, flexWrap: 'wrap', gap: '30px' }}>
              <h3 style={{ fontSize: '24px', fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>acme.</h3>
              <h3 style={{ fontSize: '24px', fontWeight: 800, margin: 0, fontStyle: 'italic' }}>GlobalTech</h3>
              <h3 style={{ fontSize: '24px', fontWeight: 800, margin: 0, fontFamily: 'monospace' }}>_build</h3>
@@ -129,7 +133,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'minmax(250px, auto)', gap: '24px' }}>
+          {/* ID для настройки Bento-сетки в index.css */}
+          <div id="home-features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'minmax(250px, auto)', gap: '24px' }}>
             
             {/* Feature 1: Large (Communication) */}
             <div style={{ gridColumn: '1 / 3', background: 'radial-gradient(circle at top left, #1a1a1a, #050505)', borderRadius: '32px', padding: '40px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden', transition: 'transform 0.3s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
@@ -192,7 +197,8 @@ export default function Home() {
       </section>
 
       {/* --- SECTION 4: BOTTOM CTA --- */}
-      <section style={{ padding: '80px 30px', margin: '0 auto 80px', maxWidth: '1280px' }}>
+      {/* Класс для настройки отступов на мобилке */}
+      <section className="home-cta-section" style={{ padding: '80px 30px', margin: '0 auto 80px', maxWidth: '1280px' }}>
         <div style={{ background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '40px', padding: '80px 40px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
           
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")', opacity: 0.5 }} />

@@ -26,7 +26,7 @@ export default function ApplicationDetails() {
     } catch (err) { alert("Error"); }
   };
 
-  if (!app) return <div className="container" style={{padding: '100px', textAlign: 'center'}}>Loading...</div>;
+  if (!app) return <div className="container app-loading-mobile" style={{padding: '100px', textAlign: 'center'}}>Loading...</div>;
 
   // РАЗДЕЛЯЕМ ВИЗУАЛ В ЗАВИСИМОСТИ ОТ РОЛИ
   return user?.role === 'employer' 

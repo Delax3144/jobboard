@@ -3,22 +3,21 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function EmployerAppView({ app, updateStatus }: { app: any, updateStatus: (s: string) => void }) {
   const navigate = useNavigate();
-  // URL бэкенда для картинок и файлов
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-  // Статусы для стилизации
   const isInvited = app.status === 'invited';
   const isRejected = app.status === 'rejected';
 
   return (
     <div style={{ padding: '40px 0', maxWidth: '900px', margin: '0 auto', color: '#fff' }}>
-      <Link to="/employer" style={{ color: '#666', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>
-        ← BACK TO DASHBOARD
-      </Link>
+      <div style={{ padding: '0 20px' }}>
+        <Link to="/employer" style={{ color: '#666', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>
+          ← BACK TO DASHBOARD
+        </Link>
+      </div>
       
-      <div style={{ marginTop: '30px', display: 'grid', gap: '30px' }}>
+      <div style={{ marginTop: '30px', display: 'grid', gap: '30px', padding: '0 20px' }}>
         
-        {/* 1. ГЛАВНАЯ КАРТОЧКА КАНДИДАТА С ДЕЙСТВИЯМИ */}
         <div style={{ 
           background: 'linear-gradient(145deg, #0f0f0f, #050505)', 
           padding: '40px', 
@@ -26,14 +25,13 @@ export default function EmployerAppView({ app, updateStatus }: { app: any, updat
           border: '1px solid #1a1a1a',
           position: 'relative'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{ display: 'flex', gap: '25px', alignItems: 'center' }}>
+          <div className="app-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div className="app-title-group" style={{ display: 'flex', gap: '25px', alignItems: 'center' }}>
               
-              {/* Исправленный блок АВАТАРА КАНДИДАТА */}
               <div style={{ 
                 width: '90px', height: '90px', borderRadius: '24px', 
                 background: '#111', border: '1px solid #222', display: 'flex', 
-                alignItems: 'center', justifyContent: 'center', overflow: 'hidden' 
+                alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0
               }}>
                 {app.candidate.avatarUrl ? (
                   <img 
@@ -48,7 +46,6 @@ export default function EmployerAppView({ app, updateStatus }: { app: any, updat
                 )}
               </div>
               
-              {/* Данные кандидата и вакансии */}
               <div>
                 <h1 style={{ fontSize: '32px', fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>
                   {app.candidate.firstName} {app.candidate.lastName}
@@ -67,26 +64,23 @@ export default function EmployerAppView({ app, updateStatus }: { app: any, updat
               </div>
             </div>
 
-            {/* Стилизованный СТАТУС-БЕЙДЖ */}
-            <div style={{ textAlign: 'right' }}>
+            <div className="app-status-wrapper" style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '10px', color: '#444', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
                 Status
               </div>
               <span style={{ 
                 background: isInvited ? 'rgba(16,185,129,0.1)' : (isRejected ? 'rgba(239,68,68,0.1)' : '#111'),
                 color: isInvited ? '#10b981' : (isRejected ? '#ef4444' : '#fff'),
-                padding: '8px 18px', borderRadius: '12px', fontWeight: 800, fontSize: '12px', border: '1px solid currentColor'
+                padding: '8px 18px', borderRadius: '12px', fontWeight: 800, fontSize: '12px', border: '1px solid currentColor', whiteSpace: 'nowrap'
               }}>
                 {app.status.toUpperCase()}
               </span>
             </div>
           </div>
 
-          {/* 2. БЛОК С COVER LETTER И CV */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '25px', marginTop: '40px' }}>
+          <div className="app-bento-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '25px', marginTop: '40px' }}>
             
-            {/* Текст письма */}
-            <div style={{ 
+            <div className="about-card" style={{ 
                 padding: '30px', background: 'rgba(0,0,0,0.3)', 
                 borderRadius: '24px', border: '1px solid rgba(255,255,255,0.02)' 
             }}>
@@ -98,9 +92,7 @@ export default function EmployerAppView({ app, updateStatus }: { app: any, updat
                 </p>
             </div>
 
-            {/* Блок CV и Действий */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-                {/* Ссылка на CV (Исправленная) */}
                 <div style={{ background: '#0a0a0a', padding: '25px', borderRadius: '24px', border: '1px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                         <div style={{ fontSize: '11px', color: '#444', fontWeight: 800, marginBottom: '5px' }}>ATTACHED CV</div>
@@ -118,7 +110,6 @@ export default function EmployerAppView({ app, updateStatus }: { app: any, updat
                     )}
                 </div>
 
-                {/* КНОПКИ УПРАВЛЕНИЯ СТАТУСОМ (Показываем только если статус "new") */}
                 {app.status === 'new' ? (
                     <div style={{ display: 'flex', gap: '15px' }}>
                         <button 
@@ -137,7 +128,6 @@ export default function EmployerAppView({ app, updateStatus }: { app: any, updat
                         </button>
                     </div>
                 ) : (
-                    // Показываем пояснение, если решение уже принято
                     <div style={{ 
                         padding: '20px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', 
                         borderRadius: '20px', border: '1px dotted #222', color: '#444', fontSize: '13px' 
@@ -150,7 +140,6 @@ export default function EmployerAppView({ app, updateStatus }: { app: any, updat
 
         </div>
 
-        {/* 3. КНОПКА ОТКРЫТИЯ ЧАТА (Внизу, акцентная) */}
         <button 
           onClick={() => navigate(`/messages/${app.id}`)}
           style={{ 
@@ -170,7 +159,6 @@ export default function EmployerAppView({ app, updateStatus }: { app: any, updat
             gap: '12px',
             transition: '0.3s'
           }}
-          // Эффект наведения
           onMouseOver={(e) => e.currentTarget.style.borderColor = '#10b981'}
           onMouseOut={(e) => e.currentTarget.style.borderColor = '#222'}
         >

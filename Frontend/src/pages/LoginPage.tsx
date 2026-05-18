@@ -53,8 +53,8 @@ export default function LoginPage() {
     }
   };
 
-  const handleVerify2FA = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerify2FA = async (safeE: React.FormEvent) => {
+    safeE.preventDefault();
     if (twoFactorCode.length !== 6) return alert("Code must be 6 digits");
     
     setIsVerifying(true);
@@ -83,7 +83,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ 
+    <div className="auth-container" style={{ 
       padding: '60px 0', minHeight: 'calc(100vh - 80px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: '#050505', position: 'relative', overflow: 'hidden',
       width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw'
@@ -92,8 +92,8 @@ export default function LoginPage() {
       <div style={{ position: 'absolute', top: '10%', left: '20%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '10%', right: '20%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
 
-      <div style={{ 
-        width: '100%', maxWidth: '480px', position: 'relative', zIndex: 1, // <-- ИЗМЕНИЛИ ШИРИНУ ТУТ
+      <div className="auth-card" style={{ 
+        width: '100%', maxWidth: '480px', position: 'relative', zIndex: 1,
         background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', 
         border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '50px 40px',
         boxShadow: '0 30px 60px rgba(0,0,0,0.4)'
@@ -117,7 +117,7 @@ export default function LoginPage() {
                 <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', padding: '16px 20px', borderRadius: '16px', outline: 'none', fontSize: '15px', transition: 'border-color 0.2s' }} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '5px' }}>
+              <div className="auth-options-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '5px', flexWrap: 'wrap', gap: '10px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', color: '#888' }}>
                   <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} style={{ width: '16px', height: '16px', accentColor: '#10b981', cursor: 'pointer' }} /> 
                   Remember me
@@ -132,11 +132,11 @@ export default function LoginPage() {
 
             <div style={{ display: 'flex', alignItems: 'center', margin: '30px 0' }}>
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
-              <span style={{ padding: '0 15px', color: '#666', fontSize: '11px', fontWeight: 800, letterSpacing: '1px' }}>OR CONTINUE WITH</span>
+              <span style={{ padding: '0 15px', color: '#666', fontSize: '11px', fontWeight: 800, letterSpacing: '1px', textAlign: 'center' }}>OR CONTINUE WITH</span>
               <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
+            <div className="auth-social-row" style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }}>
                 <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => alert('Google login failed')} type="icon" theme="filled_black" shape="circle" size="large" />
               </div>

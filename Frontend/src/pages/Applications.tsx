@@ -112,7 +112,7 @@ export default function Applications() {
 
         {/* === МИНИ-ДАШБОРД (СТАТИСТИКА) === */}
         {apps.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '50px', animation: 'fadeIn 0.6s ease-out' }}>
+          <div className="app-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '50px', animation: 'fadeIn 0.6s ease-out' }}>
             <div style={{ background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
               <div style={{ color: '#fff', marginBottom: '10px' }}><Icons.Briefcase /></div>
               <div style={{ fontSize: '28px', fontWeight: 900, color: '#fff', marginBottom: '2px' }}>{stats.total}</div>
@@ -174,7 +174,7 @@ export default function Applications() {
                 <Link 
                   to={`/applications/${a.id}`} 
                   key={a.id} 
-                  className={`app-card ${borderClass}`}
+                  className={`app-card app-card-inner ${borderClass}`}
                   style={{ border: isInvited ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(255,255,255,0.05)' }}
                 >
                   
@@ -201,7 +201,7 @@ export default function Applications() {
                   </div>
 
                   {/* ПРАВАЯ ЧАСТЬ: СТАТУС, ДАТА, СТРЕЛКА */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '30px', flexShrink: 0 }}>
+                  <div className="app-card-right" style={{ display: 'flex', alignItems: 'center', gap: '30px', flexShrink: 0 }}>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', color: statusColor, background: statusBg, border: `1px solid ${statusBorder}`, padding: '4px 10px', borderRadius: '8px' }}>

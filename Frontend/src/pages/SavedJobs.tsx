@@ -36,12 +36,11 @@ export default function SavedJobs() {
   }, [user]);
 
   const removeBookmark = async (e: React.MouseEvent, jobId: string) => {
-    e.preventDefault(); // Предотвращаем переход по ссылке
+    e.preventDefault(); 
     e.stopPropagation();
 
     try {
       await api.post(`/bookmarks/${jobId}`);
-      // Красиво убираем вакансию из списка (можно добавить анимацию исчезновения, но пока просто удаляем из стейта)
       setSavedJobs(prev => prev.filter(job => job.id !== jobId));
     } catch (err) {
       console.error("Error removing bookmark:", err);
@@ -114,7 +113,7 @@ export default function SavedJobs() {
       <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
       {/* Контейнер ленты */}
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '60px 20px', position: 'relative', zIndex: 1 }}>
+      <div className="container" style={{ maxWidth: '900px', margin: '0 auto', padding: '60px 20px', position: 'relative', zIndex: 1 }}>
         
         {/* === ШАПКА === */}
         <header style={{ textAlign: 'center', marginBottom: '50px', animation: 'fadeIn 0.5s ease-out' }}>
@@ -156,7 +155,7 @@ export default function SavedJobs() {
                     )}
                   </div>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: '0', paddingRight: '15px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: '0', paddingRight: '15px', flex: 1 }}>
                     <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', color: '#fff', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {job.title}
                     </h3>
@@ -165,7 +164,7 @@ export default function SavedJobs() {
                       <span style={{ color: '#10b981', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Icons.Building /> {job.companyName}
                       </span>
-                      <span style={{ width: '4px', height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }} />
+                      <span style={{ width: '4px', height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }} className="hidden-mobile" />
                       <span style={{ color: '#888', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
                         <Icons.Location /> {job.location}
                       </span>
@@ -174,14 +173,14 @@ export default function SavedJobs() {
                 </div>
 
                 {/* ПРАВАЯ ЧАСТЬ: Зарплата и Кнопка */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '30px', flexShrink: 0 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '16px', fontWeight: '800', color: '#fff' }}>
-                      <Icons.Wallet /> {job.salaryFrom} - {job.salaryTo} PLN
+                <div className="saved-job-right-side" style={{ display: 'flex', alignItems: 'center', gap: '30px', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }} className="saved-job-salary-block">
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '16px', fontWeight: '800', color: '#10b981' }}>
+                      <Icons.Wallet /> {job.salaryFrom.toLocaleString()} - {job.salaryTo.toLocaleString()} PLN
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '20px' }}>
+                  <div className="saved-job-actions-block" style={{ display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '20px' }}>
                     <button 
                       onClick={(e) => removeBookmark(e, job.id)}
                       className="unbookmark-btn"
@@ -189,7 +188,7 @@ export default function SavedJobs() {
                     >
                       <Icons.HeartSolid />
                     </button>
-                    <div style={{ color: '#555' }}><Icons.ArrowRight /></div>
+                    <div style={{ color: '#555' }} className="hidden-mobile"><Icons.ArrowRight /></div>
                   </div>
                 </div>
 

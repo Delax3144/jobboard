@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import { useAuth } from "../context/AuthContext";
 import api from "../lib/api";
@@ -167,9 +167,7 @@ export default function Profile() {
         ? { isPublic, showEmail } 
         : { soundEnabled, toastsEnabled };
         
-      // Покажем фейк-уведомление успеха, так как бекенд еще нужно обновить под эти поля
       console.log(`Sending to backend:`, payload); 
-      // await api.put("/auth/settings", payload); 
       
       setUser({ ...user, ...payload } as any);
       setMessage("Settings saved successfully! ⚙️");
@@ -191,7 +189,7 @@ export default function Profile() {
       setOpenCropper(true);
     });
     reader.readAsDataURL(file);
-    e.target.value = ""; // Сбрасываем инпут
+    e.target.value = ""; 
   };
 
   const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
@@ -288,9 +286,8 @@ export default function Profile() {
     { id: 'notifications', label: 'Notifications', icon: <Icons.Bell /> },
     { id: 'security', label: 'Security & Password', icon: <Icons.Lock /> }
   ];
-
   return (
-    <div style={{ 
+    <div className="prof-page-container" style={{ 
       background: '#050505', width: '100vw', position: 'relative', left: '50%', right: '50%',
       marginLeft: '-50vw', marginRight: '-50vw', minHeight: 'calc(100vh - 100px)', overflowX: 'clip' 
     }}>
@@ -299,10 +296,10 @@ export default function Profile() {
       <div style={{ position: 'absolute', top: '0', left: '20%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ position: 'absolute', bottom: '0', right: '10%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 20px', display: 'flex', gap: '50px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+      <div className="prof-layout-wrapper" style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 20px', display: 'flex', gap: '50px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
         
         {/* === ЛЕВАЯ ПАНЕЛЬ (НАВИГАЦИЯ И АВА) === */}
-        <div style={{ width: '300px', flexShrink: 0 }}>
+        <div className="prof-sidebar-panel" style={{ width: '300px', flexShrink: 0 }}>
           <div style={{ 
             background: 'rgba(15, 15, 15, 0.7)', backdropFilter: 'blur(20px)', 
             border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', 
@@ -333,8 +330,6 @@ export default function Profile() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', 
                   transition: 'transform 0.2s, background 0.2s', padding: 0, boxShadow: '0 5px 15px rgba(0,0,0,0.5)'
                 }}
-                onMouseOver={(e) => { e.currentTarget.style.background = '#222'; e.currentTarget.style.transform = 'scale(1.1)'; }}
-                onMouseOut={(e) => { e.currentTarget.style.background = '#111'; e.currentTarget.style.transform = 'scale(1)'; }}
               >
                 <Icons.Camera />
               </button>
@@ -345,7 +340,7 @@ export default function Profile() {
             <p style={{ margin: 0, fontSize: '14px', color: '#666', fontWeight: 500 }}>@{user.username || 'username'}</p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="prof-tabs-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {TABS.map(tab => (
               <button 
                 key={tab.id} 
@@ -364,8 +359,8 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* === ПРАВАЯ ПАНЕЛЬ (КОНТЕНТ ВКАЛДОК) === */}
-        <div style={{ flex: 1 }}>
+        {/* === ПРАВАЯ ПАНЕЛЬ (КОНТЕНТ ВКЛАДОК) === */}
+        <div className="prof-content-panel" style={{ flex: 1, minWidth: 0 }}>
           <div style={{ 
             background: 'rgba(15, 15, 15, 0.7)', backdropFilter: 'blur(20px)', 
             border: '1px solid rgba(255,255,255,0.05)', borderRadius: '40px', 
@@ -374,7 +369,7 @@ export default function Profile() {
             
             {/* ШАПКА ФОРМЫ (Общая для General и Professional) */}
             {(activeTab === "general" || activeTab === "professional") && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
+              <div className="prof-form-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px', gap: '20px' }}>
                 <div>
                   <h2 style={{ fontSize: '32px', fontWeight: 900, margin: '0 0 10px', color: '#fff', letterSpacing: '-1px' }}>
                     {activeTab === "general" ? "Personal Details" : "Professional Profile"}
@@ -386,9 +381,7 @@ export default function Profile() {
                 {!isEditing && (
                   <button 
                     onClick={() => setIsEditing(true)} 
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '16px', fontSize: '15px', fontWeight: 700, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}
-                    onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '16px', fontSize: '15px', fontWeight: 700, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', whiteSpace: 'nowrap' }}
                   >
                     <Icons.Edit /> Edit Profile
                   </button>
@@ -400,7 +393,7 @@ export default function Profile() {
               {/* === ВКЛАДКА 1: ОСНОВНОЕ (ДЛЯ ВСЕХ) === */}
               {activeTab === "general" && (
                 <div style={{ display: 'grid', gap: '30px', animation: 'fadeIn 0.3s ease-out' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
+                  <div className="prof-grid-two-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
                     <div>
                       <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>First Name</label>
                       <input value={firstName} onChange={(e) => setFirstName(e.target.value)} disabled={!isEditing} style={inputStyle} />
@@ -421,7 +414,7 @@ export default function Profile() {
                     </select>
                   </div>
 
-                  <div style={{ display: 'grid', gap: '25px' }}>
+                  <div className="prof-grid-two-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
                     <div>
                       <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Email Address</label>
                       <input value={user.email} disabled style={{ ...inputStyle, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.02)', color: '#555', cursor: 'not-allowed' }} />
@@ -429,7 +422,7 @@ export default function Profile() {
                     <div>
                       <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Phone Number</label>
                       <div style={{ display: 'flex', gap: '15px' }}>
-                        <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} disabled={!isEditing} style={{ ...inputStyle, width: '160px', appearance: isEditing ? 'auto' : 'none' }}>
+                        <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} disabled={!isEditing} style={{ ...inputStyle, width: '120px', minWidth: '120px', padding: '16px 10px', appearance: isEditing ? 'auto' : 'none' }}>
                           {COUNTRY_CODES.map(c => <option key={c.code} value={c.code} style={{ background: '#111', color: '#fff' }}>{c.label}</option>)}
                         </select>
                         <input value={phoneNumber} onChange={handlePhoneChange} disabled={!isEditing} placeholder={isEditing ? "123 456 789" : "Not set"} style={{ ...inputStyle, flex: 1 }} />
@@ -466,17 +459,13 @@ export default function Profile() {
                 <div style={{ display: 'flex', gap: '15px', marginTop: '30px', paddingTop: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   <button 
                     type="submit" disabled={isSaving} 
-                    style={{ padding: '16px 36px', borderRadius: '16px', fontSize: '16px', fontWeight: 800, background: '#10b981', color: '#000', border: 'none', cursor: 'pointer', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', transition: 'transform 0.2s' }}
-                    onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                    style={{ padding: '16px 36px', borderRadius: '16px', fontSize: '16px', fontWeight: 800, background: '#10b981', color: '#000', border: 'none', cursor: 'pointer', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)' }}
                   >
                     {isSaving ? "Saving..." : "Save Changes"}
                   </button>
                   <button 
                     type="button" onClick={handleCancel} 
-                    style={{ padding: '16px 36px', borderRadius: '16px', fontSize: '16px', fontWeight: 700, background: 'transparent', color: '#888', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
-                    onMouseOver={e => e.currentTarget.style.color = '#fff'}
-                    onMouseOut={e => e.currentTarget.style.color = '#888'}
+                    style={{ padding: '16px 36px', borderRadius: '16px', fontSize: '16px', fontWeight: 700, background: 'transparent', color: '#888', border: 'none', cursor: 'pointer' }}
                   >
                     Cancel
                   </button>
@@ -491,7 +480,7 @@ export default function Profile() {
                 <p style={{ color: '#888', fontSize: '16px', marginBottom: '40px' }}>Control your visibility and who can see your data on the platform.</p>
                 
                 <div style={{ display: 'grid', gap: '20px', marginBottom: '30px' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="prof-settings-row" style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
                     <div>
                       <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700, marginBottom: '5px' }}>Public Profile</div>
                       <div style={{ color: '#666', fontSize: '14px' }}>Allow verified employers to find you in search results.</div>
@@ -499,7 +488,7 @@ export default function Profile() {
                     <Toggle active={isPublic} onClick={() => { setIsPublic(!isPublic); handleSaveSettings('privacy'); }} />
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="prof-settings-row" style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
                     <div>
                       <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700, marginBottom: '5px' }}>Show Email Address</div>
                       <div style={{ color: '#666', fontSize: '14px' }}>Visible only to companies you've explicitly applied to.</div>
@@ -510,14 +499,14 @@ export default function Profile() {
               </div>
             )}
 
-            {/* === ВКЛАДКА 4: УВЕДОМЛЕНИЯ (НОВОЕ) === */}
+            {/* === ВКЛАДКА 4: УВЕДОМЛЕНИЯ === */}
             {activeTab === 'notifications' && (
               <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
                 <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', margin: '0 0 10px', letterSpacing: '-1px' }}>Notification Preferences</h2>
                 <p style={{ color: '#888', fontSize: '16px', marginBottom: '40px' }}>Customize how and when we alert you about new messages and application updates.</p>
                 
                 <div style={{ display: 'grid', gap: '20px', marginBottom: '30px' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="prof-settings-row" style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
                     <div>
                       <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700, marginBottom: '5px' }}>In-App Push Notifications</div>
                       <div style={{ color: '#666', fontSize: '14px' }}>Show real-time alerts in the bottom right corner of your screen.</div>
@@ -525,7 +514,7 @@ export default function Profile() {
                     <Toggle active={toastsEnabled} onClick={() => { setToastsEnabled(!toastsEnabled); handleSaveSettings('notifications'); }} />
                   </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="prof-settings-row" style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
                     <div>
                       <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700, marginBottom: '5px' }}>Sound Alerts</div>
                       <div style={{ color: '#666', fontSize: '14px' }}>Play a soft notification sound when a new message arrives.</div>
@@ -536,7 +525,7 @@ export default function Profile() {
               </div>
             )}
 
-            {/* === ВКЛАДКА 5: БЕЗОПАСНОСТЬ (С 2FA) === */}
+            {/* === ВКЛАДКА 5: БЕЗОПАСНОСТЬ === */}
             {activeTab === "security" && (
               <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
                 <div style={{ marginBottom: '40px' }}>
@@ -547,7 +536,7 @@ export default function Profile() {
                 <div style={{ display: 'grid', gap: '25px' }}>
                   
                   {/* Блок 2FA */}
-                  <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '35px', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="prof-settings-row" style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '35px', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
                     <div>
                       <div style={{ color: '#10b981', fontWeight: 800, marginBottom: '5px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '1px' }}>Recommended</div>
                       <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700, marginBottom: '5px' }}>Two-Factor Authentication (2FA)</div>
@@ -571,9 +560,7 @@ export default function Profile() {
                       <button 
                         onClick={handlePasswordResetRequest} 
                         disabled={isResetting} 
-                        style={{ background: '#fff', color: '#000', border: 'none', padding: '16px 32px', borderRadius: '16px', cursor: 'pointer', fontWeight: 800, fontSize: '15px', transition: 'transform 0.2s' }}
-                        onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                        onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        style={{ background: '#fff', color: '#000', border: 'none', padding: '16px 32px', borderRadius: '16px', cursor: 'pointer', fontWeight: 800, fontSize: '15px' }}
                       >
                         {isResetting ? "Sending Request..." : "Send Password Reset Link"}
                       </button>
@@ -583,7 +570,7 @@ export default function Profile() {
               </div>
             )}
 
-            {/* Всплывающее уведомление об успехе (сохранение профиля) */}
+            {/* Всплывающее уведомление об успехе */}
             {message && (
               <div style={{ position: 'fixed', bottom: '40px', right: '40px', background: '#10b981', color: '#000', padding: '16px 32px', borderRadius: '16px', fontWeight: 800, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', zIndex: 100 }}>
                 <Icons.Check /> {message}
@@ -596,8 +583,8 @@ export default function Profile() {
 
       {/* === МОДАЛЬНОЕ ОКНО 2FA === */}
       {show2FAModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '24px', padding: '40px', maxWidth: '400px', width: '100%', textAlign: 'center', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '15px' }}>
+          <div className="prof-2fa-modal-inner" style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '24px', padding: '40px', maxWidth: '400px', width: '100%', textAlign: 'center', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
             <h3 style={{ margin: '0 0 15px', color: '#fff', fontSize: '24px', fontWeight: 800 }}>Setup Google Authenticator</h3>
             <p style={{ color: '#888', fontSize: '14px', lineHeight: '1.6', marginBottom: '25px' }}>
               Scan the QR code below with your Authenticator app, then enter the 6-digit code.
@@ -614,8 +601,6 @@ export default function Profile() {
               value={twoFactorCode}
               onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
               style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '16px', borderRadius: '12px', textAlign: 'center', fontSize: '24px', letterSpacing: '8px', fontWeight: 800, marginBottom: '20px', outline: 'none' }}
-              onFocus={e => e.target.style.borderColor = '#10b981'}
-              onBlur={e => e.target.style.borderColor = '#333'}
             />
 
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -630,12 +615,12 @@ export default function Profile() {
 
       {/* === МОДАЛКА КРОППЕРА (PREMIUM DESIGN) === */}
       <Modal open={openCropper} title="Adjust your Profile Picture" onClose={() => setOpenCropper(false)}>
-        <div style={{ textAlign: 'center' }}>
+        <div className="prof-cropper-modal-container">
           <p style={{ color: '#888', marginTop: 0, marginBottom: '25px', fontSize: '15px' }}>
             Drag to position, use the slider to zoom.
           </p>
           
-          <div style={{ position: 'relative', width: '100%', height: '350px', background: '#000', borderRadius: '20px', overflow: 'hidden', border: '1px solid #222', marginBottom: '25px' }}>
+          <div className="prof-cropper-frame-view" style={{ position: 'relative', width: '100%', height: '350px', background: '#000', borderRadius: '20px', overflow: 'hidden', border: '1px solid #222', marginBottom: '25px' }}>
             {imageSrc && (
               <Cropper
                 image={imageSrc}
@@ -666,7 +651,7 @@ export default function Profile() {
             <span style={{ color: '#555' }}><Icons.ZoomIn /></span>
           </div>
 
-          <div style={{ display: 'flex', gap: '15px', borderTop: '1px solid #1a1a1a', paddingTop: '25px' }}>
+          <div className="prof-cropper-actions" style={{ display: 'flex', gap: '15px', borderTop: '1px solid #1a1a1a', paddingTop: '25px' }}>
             <button 
               onClick={handleSaveCroppedAvatar} disabled={isAvatarSaving}
               className="btn btnPrimary pill" style={{ flex: 1, padding: '16px', fontSize: '15px', fontWeight: 800 }}

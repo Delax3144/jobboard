@@ -37,7 +37,7 @@ export default function AboutUs() {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', position: 'relative', zIndex: 1 }}>
         
         {/* === HERO SECTION === */}
-        <section style={{ textAlign: 'center', padding: '120px 0 80px', animation: 'fadeIn 0.6s ease-out' }}>
+        <section className="about-hero" style={{ textAlign: 'center', padding: '120px 0 80px', animation: 'fadeIn 0.6s ease-out' }}>
           <div style={{ display: 'inline-block', padding: '8px 16px', borderRadius: '20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#aaa', fontSize: '13px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '25px' }}>
             Our Story
           </div>
@@ -51,13 +51,13 @@ export default function AboutUs() {
         </section>
 
         {/* === STATS SECTION === */}
-        <section style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center', marginBottom: '140px' }}>
+        <section className="m-mb-40" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center', marginBottom: '140px' }}>
           {[
             { label: "Active Jobs", value: "10,000+" },
             { label: "Tech Talents", value: "50,000+" },
             { label: "Global Partners", value: "2,500+" }
           ].map((stat, i) => (
-            <div key={i} style={{ flex: '1 1 250px', background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '30px 40px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <div key={i} className="about-card" style={{ flex: '1 1 250px', background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '30px 40px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
               <div style={{ fontSize: '42px', fontWeight: 900, color: '#fff', letterSpacing: '-1px', marginBottom: '5px' }}>{stat.value}</div>
               <div style={{ color: '#10b981', fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>{stat.label}</div>
             </div>
@@ -65,8 +65,8 @@ export default function AboutUs() {
         </section>
 
         {/* === MISSION SECTION (BENTO GRID) === */}
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '30px', marginBottom: '140px', alignItems: 'center' }}>
-          <div style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '40px', padding: '60px', boxShadow: '0 30px 60px rgba(0,0,0,0.3)', position: 'relative', overflow: 'hidden' }}>
+        <section className="about-mission m-grid-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '30px', marginBottom: '140px', alignItems: 'center' }}>
+          <div className="about-card" style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '40px', padding: '60px', boxShadow: '0 30px 60px rgba(0,0,0,0.3)', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)', filter: 'blur(40px)', zIndex: 0 }} />
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05))', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '30px' }}>
@@ -78,13 +78,13 @@ export default function AboutUs() {
               </p>
             </div>
           </div>
-          <div style={{ height: '100%', minHeight: '400px', background: 'url(https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80) center/cover', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
+          <div className="about-mission-img" style={{ height: '100%', minHeight: '400px', background: 'url(https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80) center/cover', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(5,5,5,0.8) 0%, transparent 100%)' }} />
           </div>
         </section>
 
         {/* === VALUES SECTION === */}
-        <section style={{ marginBottom: '140px' }}>
+        <section className="m-mb-40" style={{ marginBottom: '140px' }}>
           <div style={{ textAlign: 'center', marginBottom: '60px' }}>
             <h2 style={{ fontSize: '42px', fontWeight: 900, color: '#fff', letterSpacing: '-1px', margin: '0 0 15px' }}>Our Core Values</h2>
             <p style={{ color: '#888', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>The principles that guide every feature we build and every decision we make.</p>
@@ -98,6 +98,7 @@ export default function AboutUs() {
             ].map((value, i) => (
               <div 
                 key={i} 
+                className="about-card"
                 style={{ background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '40px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', overflow: 'hidden' }} 
                 onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.4)'; }} 
                 onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.boxShadow = 'none'; }}
@@ -112,7 +113,7 @@ export default function AboutUs() {
         </section>
 
         {/* === TEAM SECTION === */}
-        <section style={{ marginBottom: '140px' }}>
+        <section className="m-mb-40" style={{ marginBottom: '140px' }}>
           <div style={{ textAlign: 'center', marginBottom: '60px' }}>
             <h2 style={{ fontSize: '42px', fontWeight: 900, color: '#fff', letterSpacing: '-1px', margin: '0 0 15px' }}>Meet the Creators</h2>
             <p style={{ color: '#888', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>The passionate team working behind the scenes to make JobBoard exceptional.</p>
@@ -120,7 +121,7 @@ export default function AboutUs() {
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '40px', justifyContent: 'center' }}>
             {teamMembers.map((member, index) => (
-              <div key={index} style={{ background: 'rgba(15, 15, 15, 0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '40px', padding: '40px 30px', textAlign: 'center', transition: 'transform 0.3s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+              <div key={index} className="about-card" style={{ background: 'rgba(15, 15, 15, 0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '40px', padding: '40px 30px', textAlign: 'center', transition: 'transform 0.3s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
                 <div style={{ 
                   width: '160px', height: '160px', borderRadius: '50%', background: '#111', 
                   margin: '0 auto 25px', padding: '6px', border: '1px solid rgba(16, 185, 129, 0.3)',
@@ -143,7 +144,7 @@ export default function AboutUs() {
         </section>
 
         {/* === CTA SECTION === */}
-        <section style={{ 
+        <section className="about-cta" style={{ 
           background: 'rgba(15, 15, 15, 0.8)', 
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(16, 185, 129, 0.2)', 

@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom"; // <-- Добавили Портал!
 import api from "../lib/api"; 
 import ApplyForm from "../components/ApplyForm";
 import { useAuth } from "../context/AuthContext";
@@ -34,6 +35,8 @@ export default function JobDetails() {
 
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
+  // Скролл страницы больше не блокируем, убрали useEffect!
+
   useEffect(() => {
     if (!id) return;
     setIsLoading(true);
@@ -42,7 +45,6 @@ export default function JobDetails() {
       .catch(err => console.error("Ошибка загрузки:", err))
       .finally(() => setIsLoading(false));
 
-    // Проверяем закладки
     if (user?.role === 'candidate') {
       api.get("/bookmarks")
         .then(res => {
@@ -72,7 +74,6 @@ export default function JobDetails() {
       overflowX: 'clip', paddingBottom: '100px'
     }}>
       
-      {/* Стили для защиты верстки от длинного текста */}
       <style>{`
         .job-description {
           width: 100%;
@@ -94,6 +95,11 @@ export default function JobDetails() {
         .job-description a { color: #10b981; text-decoration: none; }
         .job-description img { border-radius: 12px; margin: 20px 0; height: auto; }
         .job-description pre, .job-description code { white-space: pre-wrap; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 6px; }
+        
+        .premium-scroll::-webkit-scrollbar { width: 6px; }
+        .premium-scroll::-webkit-scrollbar-track { background: transparent; }
+        .premium-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .premium-scroll::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.5); }
       `}</style>
 
       {/* Декоративные свечения */}
@@ -128,7 +134,7 @@ export default function JobDetails() {
         </div>
 
         {/* ШАПКА ВАКАНСИИ (HERO) */}
-        <div style={{ display: 'flex', gap: '30px', alignItems: 'flex-start', marginBottom: '60px', flexWrap: 'wrap', animation: 'fadeIn 0.5s ease-out' }}>
+        <div className="job-details-hero" style={{ display: 'flex', gap: '30px', alignItems: 'flex-start', marginBottom: '60px', flexWrap: 'wrap', animation: 'fadeIn 0.5s ease-out' }}>
           <div style={{ width: '120px', height: '120px', borderRadius: '24px', background: '#111', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', flexShrink: 0 }}>
             {job.companyLogo ? (
               <img src={job.companyLogo?.startsWith('http') ? job.companyLogo : `${apiUrl}${job.companyLogo}`} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -158,15 +164,15 @@ export default function JobDetails() {
         </div>
 
         {/* ОСНОВНОЙ КОНТЕНТ (FLEX: ЛЕВАЯ КОЛОНКА + ПРАВЫЙ САЙДБАР) */}
-        <div style={{ display: 'flex', gap: '50px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div className="job-details-content" style={{ display: 'flex', gap: '50px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
           
           {/* ЛЕВАЯ КОЛОНКА (ОПИСАНИЕ И ТЕГИ) */}
-          <div style={{ flex: '1 1 600px', minWidth: 0 }}> {/* minWidth: 0 критически важен, чтобы текст не разрывал колонку */}
+          <div style={{ flex: '1 1 600px', minWidth: 0 }}>
             
             {/* ТЕГИ */}
             <div style={{ marginBottom: '60px' }}>
               <h3 style={{ fontSize: '14px', color: '#666', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '25px' }}>Tech Stack & Skills</h3>
-              <div style={{ display: "flex", gap: '12px', flexWrap: "wrap" }}>
+              <div className="job-tags-container" style={{ display: "flex", gap: '12px', flexWrap: "wrap" }}>
                 {job.tags && job.tags.split(',').map(t => t.trim()).filter(t => t !== "").map((tag) => (
                   <span key={tag} style={{ background: 'rgba(255,255,255,0.03)', border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "10px 18px", fontSize: "14px", color: '#fff', fontWeight: 600 }}>
                     {tag}
@@ -184,7 +190,7 @@ export default function JobDetails() {
           </div>
 
           {/* ПРАВАЯ КОЛОНКА (STICKY ПАНЕЛЬ ОТКЛИКА) */}
-          <div style={{ width: '380px', flexShrink: 0, position: 'sticky', top: '120px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="job-details-sidebar" style={{ width: '380px', flexShrink: 0, position: 'sticky', top: '120px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
             <div style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '40px', boxShadow: '0 30px 60px rgba(0,0,0,0.4)', textAlign: 'center' }}>
               <div style={{ display: 'flex', justifyContent: 'center', color: '#10b981', marginBottom: '15px' }}><Icons.Wallet /></div>
@@ -235,14 +241,15 @@ export default function JobDetails() {
         </div>
       </div>
 
-      {/* === ПРЕМИУМ-МОДАЛКА ОТКЛИКА === */}
-      {isModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', animation: 'fadeIn 0.3s ease-out' }} />
+      {/* === ПРЕМИУМ-МОДАЛКА (Используем React Portal для отвязки от родителя) === */}
+      {isModalOpen && document.body && createPortal(
+        <div className="premium-scroll" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999, display: 'flex', flexDirection: 'column', padding: '40px 20px', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           
-          <div style={{ position: 'relative', width: '100%', maxWidth: '600px', background: 'rgba(15, 15, 15, 0.9)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '32px', padding: '50px', boxShadow: '0 40px 80px rgba(0,0,0,0.6)', animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+          <div onClick={() => setIsModalOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)', animation: 'fadeIn 0.3s ease-out' }} />
+          
+          <div className="job-apply-modal-inner" style={{ margin: 'auto', flexShrink: 0, position: 'relative', zIndex: 1, width: '100%', maxWidth: '600px', background: 'rgba(10, 10, 10, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '32px', padding: '40px', boxShadow: '0 40px 100px rgba(0,0,0,0.8)', animation: 'slideUp 0.3s ease-out' }}>
             
-            <button onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: '30px', right: '30px', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#888', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={e => {e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'}} onMouseOut={e => {e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#888'}}>
+            <button onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#888', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', zIndex: 10 }} onMouseOver={e => {e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'}} onMouseOut={e => {e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#888'}}>
               <Icons.Close />
             </button>
 
@@ -263,14 +270,15 @@ export default function JobDetails() {
               </div>
             ) : (
               <div>
-                <h2 style={{ margin: '0 0 10px', fontSize: '28px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>Submit Application</h2>
-                <p style={{ color: '#888', margin: '0 0 30px', fontSize: '15px' }}>Applying for <strong style={{color: '#fff'}}>{job.title}</strong> at {job.companyName}</p>
+                <h2 style={{ margin: '0 0 8px', fontSize: '26px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', paddingRight: '40px' }}>Submit Application</h2>
+                <p style={{ color: '#888', margin: '0 0 25px', fontSize: '14px' }}>Applying for <strong style={{color: '#fff'}}>{job.title}</strong> at {job.companyName}</p>
                 <ApplyForm jobId={job.id} jobTitle={job.title} onSuccess={() => setIsSent(true)} />
               </div>
             )}
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

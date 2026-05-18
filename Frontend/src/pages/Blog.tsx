@@ -69,7 +69,7 @@ export default function Blog() {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', position: 'relative', zIndex: 1 }}>
         
         {/* === HERO SECTION === */}
-        <section style={{ textAlign: 'center', padding: '100px 0 60px', animation: 'fadeIn 0.6s ease-out' }}>
+        <section className="blog-hero" style={{ textAlign: 'center', padding: '100px 0 60px', animation: 'fadeIn 0.6s ease-out' }}>
           <div style={{ display: 'inline-block', padding: '6px 14px', borderRadius: '20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#aaa', fontSize: '13px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '25px' }}>
             JobBoard Blog
           </div>
@@ -85,12 +85,12 @@ export default function Blog() {
         {/* === FEATURED POST === */}
         <div style={{ marginBottom: '50px' }}>
           <Link to={`/blog/${featuredPost.id}`} style={{ display: 'block', textDecoration: 'none', borderRadius: '40px', overflow: 'hidden', position: 'relative', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 30px 60px rgba(0,0,0,0.5)', transition: 'transform 0.3s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-            <div style={{ height: '450px', width: '100%', position: 'relative' }}>
+            <div className="blog-featured-img" style={{ height: '450px', width: '100%', position: 'relative' }}>
               <img src={featuredPost.image} alt={featuredPost.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(5,5,5,0.9) 0%, rgba(5,5,5,0.2) 50%, transparent 100%)' }} />
             </div>
             
-            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', padding: '50px', boxSizing: 'border-box' }}>
+            <div className="blog-featured-content" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', padding: '50px', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px', flexWrap: 'wrap' }}>
                 <span style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '6px 14px', borderRadius: '12px', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
                   {featuredPost.category}
@@ -110,13 +110,13 @@ export default function Blog() {
         </div>
 
         {/* === POSTS GRID === */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px' }}>
+        <div className="blog-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px' }}>
           {posts.map(post => (
             <Link key={post.id} to={`/blog/${post.id}`} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', overflow: 'hidden', textDecoration: 'none', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.4)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.boxShadow = 'none'; }}>
               <div style={{ height: '220px', width: '100%', overflow: 'hidden' }}>
                 <img src={post.image} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} />
               </div>
-              <div style={{ padding: '35px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <div className="blog-card-content" style={{ padding: '35px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
                   <span style={{ color: '#10b981', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>{post.category}</span>
                   <span style={{ width: '4px', height: '4px', background: '#444', borderRadius: '50%' }} />

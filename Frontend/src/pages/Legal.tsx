@@ -64,18 +64,18 @@ export default function Legal() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '50px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div className="legal-layout" style={{ display: 'flex', gap: '50px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
           
           {/* === НАВИГАЦИЯ СЛЕВА === */}
-          <div style={{ width: '280px', flexShrink: 0, position: 'sticky', top: '100px' }}>
+          <div className="legal-sidebar" style={{ width: '280px', flexShrink: 0, position: 'sticky', top: '100px' }}>
             <div style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '15px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="legal-tabs-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {TABS.map(tab => (
                   <Link 
                     key={tab.id} 
                     to={tab.path}
                     style={{ 
-                      display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', 
+                      display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', whiteSpace: 'nowrap',
                       background: activeTab === tab.id ? 'rgba(16, 185, 129, 0.1)' : 'transparent', 
                       color: activeTab === tab.id ? '#10b981' : '#888', 
                       border: '1px solid', borderColor: activeTab === tab.id ? 'rgba(16, 185, 129, 0.2)' : 'transparent', 
@@ -88,14 +88,14 @@ export default function Legal() {
                 ))}
               </div>
             </div>
-            <div style={{ marginTop: '30px', padding: '0 15px', color: '#555', fontSize: '13px', lineHeight: '1.6' }}>
+            <div className="legal-info-footer" style={{ marginTop: '30px', padding: '0 15px', color: '#555', fontSize: '13px', lineHeight: '1.6' }}>
               Last updated: <strong>May 2026</strong><br/>
               Have questions? <Link to="/contact" style={{ color: '#10b981', textDecoration: 'none' }}>Contact Support</Link>
             </div>
           </div>
 
           {/* === КОНТЕНТ СПРАВА === */}
-          <div style={{ flex: 1, minWidth: '300px', background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '50px', boxShadow: '0 30px 60px rgba(0,0,0,0.2)' }}>
+          <div className="legal-card-content" style={{ flex: 1, minWidth: '300px', background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '50px', boxShadow: '0 30px 60px rgba(0,0,0,0.2)' }}>
             
             <style>{`
               .legal-content h2 { color: #fff; font-size: 24px; font-weight: 800; margin: 40px 0 15px; letter-spacing: -0.5px; }
@@ -152,6 +152,7 @@ export default function Legal() {
                     <li>Provide accurate, current, and complete information in your profile and resume.</li>
                     <li>Not use the platform for any unlawful purpose.</li>
                     <li>Respect the communication channels and not spam employers.</li>
+                    <li>Not discriminate based on protected characteristics like race or religion.</li>
                   </ul>
 
                   <h2>4. Platform Rules for Employers</h2>

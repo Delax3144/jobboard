@@ -26,61 +26,87 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div style={{ padding: '100px 0', minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ 
-        width: '100%', maxWidth: '450px', 
-        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', 
-        borderRadius: '32px', padding: '40px' 
-      }}>
-        
-        {status === "success" ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '50px', marginBottom: '20px' }}>✉️</div>
-            <h2 style={{ color: '#10b981', fontSize: '24px', marginBottom: '10px' }}>Check your inbox!</h2>
-            <p style={{ color: '#888', marginBottom: '30px', lineHeight: '1.5' }}>
-              If an account exists for <b style={{ color: '#fff' }}>{email}</b>, we have sent a secure password reset link.
-            </p>
-            <Link to="/login" className="btn btnPrimary" style={{ padding: '12px 30px', borderRadius: '12px', display: 'inline-block' }}>
-              Return to Login
-            </Link>
-          </div>
-        ) : (
-          <>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '10px', textAlign: 'center' }}>
-              Reset <span style={{ color: '#10b981' }}>Password</span>
-            </h1>
-            <p style={{ color: '#666', textAlign: 'center', marginBottom: '30px', lineHeight: '1.5' }}>
-              Enter your email address and we'll send you a link to securely reset your password.
-            </p>
+    <div style={{
+      background: '#050505',
+      width: '100vw',
+      position: 'relative',
+      left: '50%',
+      right: '50%',
+      marginLeft: '-50vw',
+      marginRight: '-50vw',
+      minHeight: 'calc(100vh - 80px)',
+      overflowX: 'clip',
+      paddingBottom: '100px'
+    }}>
 
-            {status === "error" && (
-              <div style={{ background: 'rgba(255,75,75,0.1)', border: '1px solid #ff4b4b', color: '#ff4b4b', padding: '12px', borderRadius: '12px', marginBottom: '20px', fontSize: '14px', textAlign: 'center' }}>
-                {errorMsg}
+      {/* Декоративные свечения */}
+      <div style={{ position: 'absolute', top: '0', left: '10%', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: '0', right: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '60px 20px', position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+        <div style={{
+          width: '100%', maxWidth: '500px',
+          background: 'rgba(15, 15, 15, 0.6)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          borderRadius: '32px',
+          padding: '50px',
+          boxShadow: '0 30px 60px rgba(0,0,0,0.4)'
+        }}>
+          
+          {status === "success" ? (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '70px', marginBottom: '25px', display: 'flex', justifyContent: 'center' }}>
+                ✉️
               </div>
-            )}
+              <h2 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '15px', letterSpacing: '-1px', color: '#fff' }}>
+                Check your <span style={{ background: 'linear-gradient(135deg, #10b981, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>inbox!</span>
+              </h2>
+              <p style={{ color: '#aaa', marginBottom: '35px', lineHeight: '1.8', fontSize: '16px' }}>
+                If an account exists for <b style={{ color: '#fff' }}>{email}</b>, we have sent a secure password reset link.
+              </p>
+              <Link to="/login" className="btn btnPrimary pill" style={{ display: 'inline-flex', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', padding: '16px 32px', borderRadius: '16px', textDecoration: 'none', fontWeight: 800, fontSize: '15px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', transition: 'transform 0.2s' }}>
+                Return to Login
+              </Link>
+            </div>
+          ) : (
+            <>
+              <h1 style={{ fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: '950', marginBottom: '15px', textAlign: 'center', letterSpacing: '-1.5px', color: '#fff' }}>
+                Reset <span style={{ background: 'linear-gradient(135deg, #10b981, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Password</span>
+              </h1>
+              <p style={{ color: '#bbb', textAlign: 'center', marginBottom: '35px', lineHeight: '1.8', fontSize: '16px' }}>
+                Enter your email address and we'll send you a link to securely reset your password.
+              </p>
 
-            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
-              <div>
-                <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', fontWeight: 600 }}>EMAIL ADDRESS</label>
-                <input 
-                  className="input" type="email" required 
-                  value={email} onChange={e => setEmail(e.target.value)} 
-                  placeholder="name@example.com" 
-                  style={{ background: '#000', border: '1px solid #222', width: '100%', padding: '14px', borderRadius: '12px', color: '#fff' }} 
-                />
-              </div>
+              {status === "error" && (
+                <div style={{ background: 'rgba(255,75,75,0.05)', border: '1px solid rgba(255,75,75,0.2)', color: '#ff4b4b', padding: '16px', borderRadius: '16px', marginBottom: '20px', fontSize: '14px', textAlign: 'center', fontWeight: 600 }}>
+                  {errorMsg}
+                </div>
+              )}
 
-              <button type="submit" className="btn btnPrimary" disabled={status === "loading"} style={{ padding: '14px', borderRadius: '12px', fontSize: '15px', fontWeight: 700, marginTop: '10px' }}>
-                {status === "loading" ? "Sending Link..." : "Send Reset Link"}
-              </button>
-            </form>
+              <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '25px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#666', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', display: 'block' }}>EMAIL ADDRESS</label>
+                  <input 
+                    className="input" type="email" required 
+                    value={email} onChange={e => setEmail(e.target.value)} 
+                    placeholder="name@example.com" 
+                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', width: '100%', padding: '16px 20px', borderRadius: '16px', color: '#fff' }} 
+                  />
+                </div>
 
-            <p style={{ textAlign: 'center', marginTop: '25px', color: '#666', fontSize: '14px' }}>
-              Remember your password? <Link to="/login" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 600 }}>Back to Login</Link>
-            </p>
-          </>
-        )}
+                <button type="submit" className="btn btnPrimary pill" disabled={status === "loading"} style={{ padding: '16px 32px', borderRadius: '16px', fontSize: '15px', fontWeight: 800, marginTop: '10px', width: '100%', border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', transition: 'transform 0.2s', opacity: status === "loading" ? 0.7 : 1 }}>
+                  {status === "loading" ? "Sending Link..." : "Send Reset Link"}
+                </button>
+              </form>
 
+              <p style={{ textAlign: 'center', marginTop: '25px', color: '#666', fontSize: '14px', lineHeight: '1.5' }}>
+                Remember your password? <Link to="/login" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 600 }}>Back to Login</Link>
+              </p>
+            </>
+          )}
+
+        </div>
       </div>
     </div>
   );

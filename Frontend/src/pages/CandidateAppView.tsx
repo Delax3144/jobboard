@@ -71,8 +71,8 @@ export default function CandidateAppView({ app }: { app: any }) {
             display: 'flex', flexDirection: 'column', gap: '30px'
           }}>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
-              <div style={{ display: 'flex', gap: '25px', alignItems: 'center' }}>
+            <div className="app-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+              <div className="app-title-group" style={{ display: 'flex', gap: '25px', alignItems: 'center' }}>
                 <div style={{ width: '80px', height: '80px', borderRadius: '20px', background: '#111', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: '32px', fontWeight: 900, color: '#555', boxShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>
                   {app.job.companyLogo ? (
                     <img src={app.job.companyLogo?.startsWith('http') ? app.job.companyLogo : `${apiUrl}${app.job.companyLogo}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -92,7 +92,7 @@ export default function CandidateAppView({ app }: { app: any }) {
               </div>
 
               {/* БЕЙДЖ СТАТУСА */}
-              <div style={{ textAlign: 'right' }}>
+              <div className="app-status-wrapper" style={{ textAlign: 'right' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: statusBg, border: statusBorder, color: statusColor, padding: '10px 20px', borderRadius: '16px', fontWeight: 800, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', boxShadow: isInvited ? '0 10px 30px -10px rgba(16, 185, 129, 0.5)' : 'none' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'currentColor', boxShadow: isInvited ? '0 0 10px #10b981' : 'none', animation: isInvited ? 'pulse 2s infinite' : 'none' }} />
                   {statusText}
@@ -105,7 +105,7 @@ export default function CandidateAppView({ app }: { app: any }) {
 
             <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)' }} />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="app-footer-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ margin: 0, color: '#aaa', fontSize: '15px' }}>
                 {isInvited ? 'The hiring team wants to connect! Open the chat to respond.' : (isRejected ? 'Unfortunately, this application was not successful.' : 'Your profile and application are currently being evaluated.')}
               </p>
@@ -116,10 +116,10 @@ export default function CandidateAppView({ app }: { app: any }) {
           </div>
 
           {/* === BENTO-GRID ДЛЯ ДЕТАЛЕЙ === */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', alignItems: 'start' }}>
+          <div className="app-bento-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', alignItems: 'start' }}>
             
             {/* ЛЕВАЯ КОЛОНКА: PITCH (COVER LETTER) */}
-            <div style={{ background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '40px', gridColumn: 'auto / span 2' }}>
+            <div className="about-card" style={{ background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '40px', gridColumn: 'auto / span 2' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', color: '#10b981' }}>
                 <Icons.Quote />
                 <h3 style={{ margin: 0, fontSize: '14px', color: '#fff', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Your Motivation Pitch</h3>
@@ -133,7 +133,7 @@ export default function CandidateAppView({ app }: { app: any }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
               
               {/* Блок резюме */}
-              <div style={{ background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '35px' }}>
+              <div className="about-card" style={{ background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '35px' }}>
                 <div style={{ fontSize: '12px', color: '#888', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '20px' }}>Attached Documents</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '15px 20px', borderRadius: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

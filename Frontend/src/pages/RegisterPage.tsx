@@ -62,7 +62,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ 
+    <div className="auth-container" style={{ 
       padding: '60px 0', minHeight: 'calc(100vh - 80px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: '#050505', position: 'relative', overflow: 'hidden',
       width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw'
@@ -71,8 +71,8 @@ export default function RegisterPage() {
       <div style={{ position: 'absolute', top: '5%', left: '15%', width: '700px', height: '700px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '5%', right: '15%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
 
-      <div style={{ 
-        width: '100%', maxWidth: '480px', position: 'relative', zIndex: 1, // <-- ИЗМЕНИЛИ ШИРИНУ ТУТ
+      <div className="auth-card" style={{ 
+        width: '100%', maxWidth: '480px', position: 'relative', zIndex: 1,
         background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', 
         border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '50px 40px',
         boxShadow: '0 30px 60px rgba(0,0,0,0.4)'
@@ -111,7 +111,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', alignItems: 'center' }}>
+            <div className="auth-social-row" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', alignItems: 'center' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }}>
                 <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError('Google sign up failed')} type="icon" theme="filled_black" shape="circle" size="large" />
               </div>
@@ -125,10 +125,10 @@ export default function RegisterPage() {
               </button>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', margin: '30px 0' }}><div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }}></div><span style={{ padding: '0 15px', color: '#666', fontSize: '11px', fontWeight: 800, letterSpacing: '1px' }}>OR EMAIL REGISTER</span><div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }}></div></div>
+            <div style={{ display: 'flex', alignItems: 'center', margin: '30px 0' }}><div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }}></div><span style={{ padding: '0 15px', color: '#666', fontSize: '11px', fontWeight: 800, letterSpacing: '1px', textAlign: 'center' }}>OR EMAIL REGISTER</span><div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }}></div></div>
             
             <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div className="prof-grid-two-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                 <div><label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>First Name *</label><input required value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="John" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} /></div>
                 <div><label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Last Name *</label><input required value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Doe" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} /></div>
               </div>
@@ -159,7 +159,7 @@ export default function RegisterPage() {
               </button>
             </form>
             
-            <p style={{ textAlign: 'center', marginTop: '30px', color: '#888', fontSize: '14px' }}>
+            <p style={{ textAlign: 'center', marginTop: '30px', color: '#888', fontSize: '14px'}}>
               Already have an account? <Link to="/login" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 600 }}>Login here</Link>
             </p>
           </>

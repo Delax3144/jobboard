@@ -22,7 +22,6 @@ export default function PublicProfile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Делаем запрос к нашему бэкенду
     api.get(`/auth/users/${id}`)
       .then(res => setCandidate(res.data))
       .catch(err => console.error("Failed to load profile", err))
@@ -32,7 +31,6 @@ export default function PublicProfile() {
   if (loading) return <div style={{ color: '#fff', textAlign: 'center', padding: '100px' }}>Loading Talent Profile...</div>;
   if (!candidate) return <div style={{ color: '#fff', textAlign: 'center', padding: '100px' }}>Candidate not found or private.</div>;
 
-  // Фейковые данные для красоты (пока их нет в БД)
   const skills = ["React", "TypeScript", "Node.js", "Next.js", "GraphQL", "TailwindCSS", "PostgreSQL"];
   const bio = "I am a passionate software engineer with a strong focus on frontend architecture and user experience. I love building scalable applications and working closely with design teams to bring ideas to life. Always eager to learn new technologies and improve my craft.";
 
@@ -53,7 +51,7 @@ export default function PublicProfile() {
       <div style={{ position: 'absolute', top: '-10%', right: '10%', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ position: 'absolute', bottom: '10%', left: '-10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '60px 20px', position: 'relative', zIndex: 1 }}>
+      <div className="container" style={{ maxWidth: '1000px', margin: '0 auto', padding: '60px 20px', position: 'relative', zIndex: 1 }}>
         
         <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#10b981', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px', marginBottom: '30px', textTransform: 'uppercase', letterSpacing: '0.5px', padding: 0 }}>
           <Icons.Back /> Back to Candidates
@@ -63,10 +61,10 @@ export default function PublicProfile() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
           {/* ШАПКА */}
-          <div style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '30px', boxShadow: '0 30px 60px rgba(0,0,0,0.4)' }}>
+          <div className="public-prof-card" style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '30px', boxShadow: '0 30px 60px rgba(0,0,0,0.4)' }}>
             
-            <div style={{ display: 'flex', gap: '30px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'linear-gradient(135deg, #10b981, #059669)', border: '4px solid #1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '42px', fontWeight: 900, color: '#000', overflow: 'hidden', boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)' }}>
+            <div className="public-prof-info-flex" style={{ display: 'flex', gap: '30px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'linear-gradient(135deg, #10b981, #059669)', border: '4px solid #1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '42px', fontWeight: 900, color: '#000', overflow: 'hidden', boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)', flexShrink: 0 }}>
                 {candidate.avatarUrl ? (
                   <img src={candidate.avatarUrl.startsWith('http') ? candidate.avatarUrl : `${apiUrl}${candidate.avatarUrl}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
@@ -86,25 +84,25 @@ export default function PublicProfile() {
                 
                 <div style={{ color: '#888', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', fontWeight: 500 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icons.Location /> Remote / Europe</span>
-                  <span style={{ width: '4px', height: '4px', background: '#333', borderRadius: '50%' }}></span>
+                  <span style={{ width: '4px', height: '4px', background: '#333', borderRadius: '50%' }} className="hidden-mobile"></span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>@{candidate.username || 'candidate'}</span>
                 </div>
               </div>
             </div>
 
             {/* Кнопки действий (Чат и Резюме) */}
-            <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-              <button style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px 24px', borderRadius: '16px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}>
+            <div className="public-prof-actions" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+              <button style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px 24px', borderRadius: '16px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s', justifyContent: 'center' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}>
                 <Icons.Download /> Get Resume
               </button>
-              <Link to={`/messages/${candidate.id}`} style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', padding: '16px 28px', borderRadius: '16px', textDecoration: 'none', fontWeight: 800, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', transition: 'transform 0.2s', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+              <Link to={`/messages/${candidate.id}`} style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', padding: '16px 28px', borderRadius: '16px', textDecoration: 'none', fontWeight: 800, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', transition: 'transform 0.2s', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', justifyContent: 'center' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
                 <Icons.Message /> Message
               </Link>
             </div>
           </div>
 
           {/* BENTO GRID ДЛЯ КОНТЕНТА */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px', alignItems: 'start' }}>
+          <div className="public-prof-layout" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px', alignItems: 'start' }}>
             
             {/* Левая колонка (Обо мне & Опыт) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
@@ -118,7 +116,7 @@ export default function PublicProfile() {
                 </p>
               </div>
 
-              {/* Заглушка для опыта работы */}
+              {/* Опыт работы */}
               <div style={{ background: 'rgba(15, 15, 15, 0.4)', border: '1px solid rgba(255,255,255,0.03)', padding: '35px', borderRadius: '24px' }}>
                 <h3 style={{ margin: '0 0 20px', fontSize: '18px', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Icons.Code /> Professional Experience
@@ -136,7 +134,7 @@ export default function PublicProfile() {
             </div>
 
             {/* Правая колонка (Контакты & Скиллы) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', position: 'sticky', top: '100px' }}>
+            <div className="public-prof-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '30px', position: 'sticky', top: '100px' }}>
               
               <div style={{ background: 'rgba(15, 15, 15, 0.4)', border: '1px solid rgba(255,255,255,0.03)', padding: '30px', borderRadius: '24px' }}>
                 <h3 style={{ margin: '0 0 25px', fontSize: '16px', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact Info</h3>
@@ -144,15 +142,15 @@ export default function PublicProfile() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div>
                     <div style={{ color: '#666', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Email Address</div>
-                    <div style={{ color: '#fff', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ color: '#10b981' }}><Icons.Mail /></span> {candidate.email}
+                    <div style={{ color: '#fff', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', wordBreak: 'break-all' }}>
+                      <span style={{ color: '#10b981', flexShrink: 0 }}><Icons.Mail /></span> {candidate.email}
                     </div>
                   </div>
 
                   <div>
                     <div style={{ color: '#666', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Phone Number</div>
                     <div style={{ color: '#fff', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ color: '#10b981' }}><Icons.Phone /></span> {candidate.phone || "Not provided"}
+                      <span style={{ color: '#10b981', flexShrink: 0 }}><Icons.Phone /></span> {candidate.phone || "Not provided"}
                     </div>
                   </div>
                 </div>
