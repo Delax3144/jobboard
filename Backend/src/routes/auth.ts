@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../prisma";
 import { authMiddleware } from "../middleware/auth";
-import { uploadAvatar } from "../lib/upload";
+import { uploadAvatar, uploadCV } from "../lib/upload";
 import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
 import nodemailer from "nodemailer";
@@ -106,8 +106,12 @@ authRouter.post("/login", async (req, res) => {
   }
 
   const token = signToken(user);
+  
+  // Делаем то же самое: отрезаем пароли и отдаем всего юзера целиком
+  const { passwordHash: ph, twoFactorSecret, verificationToken, resetToken, ...safeUser } = user;
+  
   res.json({ 
-    user: { id: user.id, email: user.email, role: user.role, username: user.username, firstName: user.firstName, lastName: user.lastName, phone: user.phone, avatarUrl: user.avatarUrl, isTwoFactorEnabled: user.isTwoFactorEnabled }, 
+    user: safeUser, 
     token 
   });
 });
@@ -220,12 +224,18 @@ authRouter.post("/github", async (req, res) => {
 });
 
 authRouter.put("/profile", authMiddleware, async (req: any, res) => {
-  const { firstName, lastName, phone, status, bio, skills } = req.body; 
+  // ДОБАВЛЕН location:
+  const { firstName, lastName, phone, status, bio, skills, isPublic, showEmail, soundEnabled, toastsEnabled, experience, location } = req.body; 
   try {
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
-      data: { firstName, lastName, phone, status, bio, skills },
-      select: { id: true, email: true, role: true, username: true, firstName: true, lastName: true, phone: true, avatarUrl: true, status: true, bio: true, skills: true, isTwoFactorEnabled: true }
+      // ДОБАВЛЕН location:
+      data: { firstName, lastName, phone, status, bio, skills, isPublic, showEmail, soundEnabled, toastsEnabled, experience, location },
+      select: { 
+        id: true, email: true, role: true, username: true, firstName: true, lastName: true, phone: true, avatarUrl: true, status: true, bio: true, skills: true, isTwoFactorEnabled: true,
+        isPublic: true, showEmail: true, soundEnabled: true, toastsEnabled: true, experience: true, resumeUrl: true, 
+        location: true // <-- ДОБАВЛЕНО
+      }
     });
     res.json({ user: updatedUser });
   } catch (err) {
@@ -235,10 +245,15 @@ authRouter.put("/profile", authMiddleware, async (req: any, res) => {
 
 authRouter.get("/me", authMiddleware, async (req: any, res) => {
   const user = await prisma.user.findUnique({
-    where: { id: req.user.id },
-    select: { id: true, email: true, role: true, username: true, firstName: true, lastName: true, phone: true, avatarUrl: true, isTwoFactorEnabled: true }
+    where: { id: req.user.id }
   });
-  res.json({ user });
+  
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  // Магия: отрезаем секретные данные, а всё остальное (location, resumeUrl и т.д.) отдаем на фронт!
+  const { passwordHash, twoFactorSecret, verificationToken, resetToken, ...safeUser } = user;
+  
+  res.json({ user: safeUser });
 });
 
 authRouter.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), async (req: any, res: any) => {
@@ -435,7 +450,10 @@ authRouter.get('/users/:id', async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id },
       select: {
-        id: true, firstName: true, lastName: true, username: true, email: true, phone: true, avatarUrl: true, status: true, role: true
+        id: true, firstName: true, lastName: true, username: true, email: true, phone: true, avatarUrl: true, status: true, role: true,
+        isPublic: true, showEmail: true, bio: true, skills: true,
+        // Добавили сюда тоже!
+        location: true, experience: true, resumeUrl: true
       }
     });
 
@@ -443,5 +461,22 @@ authRouter.get('/users/:id', async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// БЫЛО: authRouter.post('/resume', authMiddleware, uploadAvatar.single('resume'), ...
+// СТАЛО (используем uploadCV):
+authRouter.post('/resume', authMiddleware, uploadCV.single('resume'), async (req: any, res: any) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+    const resumeUrl = req.file.path; 
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { resumeUrl },
+      select: { id: true, resumeUrl: true }
+    });
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ message: "Resume upload failed" });
   }
 });

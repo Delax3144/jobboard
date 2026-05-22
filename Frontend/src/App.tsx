@@ -27,6 +27,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import PublicProfile from './pages/PublicProfile';
 import Legal from './pages/Legal';
 import Blog from './pages/Blog';
+import ScrollToTop from "./components/ScrollToTop";
 
 // Импорт компонентов
 import TopNav from "./components/TopNav";
@@ -161,6 +162,7 @@ export default function App() {
     <GoogleOAuthProvider clientId={googleClientId}>
       <AuthProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <TopNav mode={mode} setMode={setMode} />
           <div className="grid-canvas" style={{ minHeight: '80vh', position: 'relative' }}>
             <AppRoutes mode={mode} />

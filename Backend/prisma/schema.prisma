@@ -49,6 +49,15 @@ model User {
   
   // ДОБАВИЛИ: Связь с сохраненными вакансиями
   savedJobs    SavedJob[] 
+
+  // === НОВЫЕ ПОЛЯ НАСТРОЕК (ПРИВАТНОСТЬ И УВЕДОМЛЕНИЯ) ===
+  isPublic        Boolean @default(true)
+  showEmail       Boolean @default(false)
+  soundEnabled    Boolean @default(true)
+  toastsEnabled   Boolean @default(true)
+  
+  resumeUrl       String?
+  location        String?
 }
 
 model Job {

@@ -16,6 +16,9 @@ const Icons = {
   Bell: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>,
   ZoomOut: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" /></svg>,
   ZoomIn: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>,
+  Plus: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path></svg>,
+  Trash: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>,
+  FileText: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>,
 };
 
 // --- Компонент переключателя (Toggle) ---
@@ -82,10 +85,13 @@ export default function Profile() {
   const [countryCode, setCountryCode] = useState(initialPhone.code);
   const [phoneNumber, setPhoneNumber] = useState(initialPhone.number);
   const [status, setStatus] = useState((user as any)?.status || "Open to work");
+  const [location, setLocation] = useState((user as any)?.location || "");
   
   // States - Professional
   const [bio, setBio] = useState((user as any)?.bio || "");
   const [skills, setSkills] = useState((user as any)?.skills || "");
+  const [experience, setExperience] = useState<any[]>(typeof (user as any)?.experience === 'string' ? JSON.parse((user as any).experience) : ((user as any)?.experience || []));
+  const [resumeUrl, setResumeUrl] = useState((user as any)?.resumeUrl || null);
   
   // Privacy States
   const [isPublic, setIsPublic] = useState((user as any)?.isPublic ?? true);
@@ -104,7 +110,9 @@ export default function Profile() {
   
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   const [isResetting, setIsResetting] = useState(false);
   const [resetMsg, setResetMsg] = useState("");
@@ -133,11 +141,12 @@ export default function Profile() {
     setStatus((user as any)?.status || "Open to work");
     setBio((user as any)?.bio || ""); 
     setSkills((user as any)?.skills || "");
+    setExperience(typeof (user as any)?.experience === 'string' ? JSON.parse((user as any).experience) : ((user as any)?.experience || []));
     setIsEditing(false);
     setMessage("");
+    setLocation((user as any)?.location || "");
   };
 
-  // Сохранение основных и профессиональных данных
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isEditing) return;
@@ -147,7 +156,7 @@ export default function Profile() {
     
     try {
       const res = await api.put("/auth/profile", { 
-        firstName, lastName, phone: fullPhone, status, bio, skills 
+        firstName, lastName, phone: fullPhone, status, bio, skills, experience, location 
       });
       setUser(res.data.user);
       setMessage("Profile updated successfully.");
@@ -160,24 +169,48 @@ export default function Profile() {
     }
   };
 
-  // Сохранение настроек (Privacy & Notifications)
-  const handleSaveSettings = async (settingType: 'privacy' | 'notifications') => {
+  const handleSaveSettings = async (fieldsToUpdate: Record<string, any>) => {
     try {
-      const payload = settingType === 'privacy' 
-        ? { isPublic, showEmail } 
-        : { soundEnabled, toastsEnabled };
-        
-      console.log(`Sending to backend:`, payload); 
-      
-      setUser({ ...user, ...payload } as any);
+      const res = await api.put("/auth/profile", fieldsToUpdate);
+      setUser(res.data.user);
       setMessage("Settings saved successfully! ⚙️");
       setTimeout(() => setMessage(""), 3000);
     } catch (err) {
-      alert("Failed to save settings");
+      alert("Failed to save settings. Please make sure the backend is running and updated.");
     }
   };
 
-  // === ЛОГИКА АВАТАРКИ И КРОППЕРА ===
+  // --- Загрузка Резюме ---
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("resume", file);
+
+    try {
+      setMessage("Uploading resume...");
+      const res = await api.post("/auth/resume", formData, { headers: { "Content-Type": "multipart/form-data" } });
+      setResumeUrl(res.data.user.resumeUrl);
+      setUser({ ...user, resumeUrl: res.data.user.resumeUrl } as any);
+      setMessage("Resume uploaded successfully! 📄");
+      setTimeout(() => setMessage(""), 3000);
+    } catch (err) {
+      alert("Failed to upload resume. Ensure the backend endpoint exists.");
+      setMessage("");
+    }
+  };
+
+  // --- Работа с массивом Опыта ---
+  const addExperience = () => {
+    setExperience([...experience, { id: Date.now(), title: "", company: "", period: "", description: "" }]);
+  };
+  const updateExperience = (id: number, field: string, value: string) => {
+    setExperience(experience.map(exp => exp.id === id ? { ...exp, [field]: value } : exp));
+  };
+  const removeExperience = (id: number) => {
+    setExperience(experience.filter(exp => exp.id !== id));
+  };
+
   const handleAvatarClick = () => fileInputRef.current?.click();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,7 +253,6 @@ export default function Profile() {
     }
   };
 
-  // === ЛОГИКА ПАРОЛЯ И 2FA ===
   const handlePasswordResetRequest = async () => {
     setIsResetting(true);
     try {
@@ -286,19 +318,19 @@ export default function Profile() {
     { id: 'notifications', label: 'Notifications', icon: <Icons.Bell /> },
     { id: 'security', label: 'Security & Password', icon: <Icons.Lock /> }
   ];
+
   return (
     <div className="prof-page-container" style={{ 
       background: '#050505', width: '100vw', position: 'relative', left: '50%', right: '50%',
       marginLeft: '-50vw', marginRight: '-50vw', minHeight: 'calc(100vh - 100px)', overflowX: 'clip' 
     }}>
       
-      {/* Декоративные мягкие свечения на фоне */}
       <div style={{ position: 'absolute', top: '0', left: '20%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ position: 'absolute', bottom: '0', right: '10%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div className="prof-layout-wrapper" style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 20px', display: 'flex', gap: '50px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
         
-        {/* === ЛЕВАЯ ПАНЕЛЬ (НАВИГАЦИЯ И АВА) === */}
+        {/* === ЛЕВАЯ ПАНЕЛЬ === */}
         <div className="prof-sidebar-panel" style={{ width: '300px', flexShrink: 0 }}>
           <div style={{ 
             background: 'rgba(15, 15, 15, 0.7)', backdropFilter: 'blur(20px)', 
@@ -359,7 +391,7 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* === ПРАВАЯ ПАНЕЛЬ (КОНТЕНТ ВКЛАДОК) === */}
+        {/* === ПРАВАЯ ПАНЕЛЬ === */}
         <div className="prof-content-panel" style={{ flex: 1, minWidth: 0 }}>
           <div style={{ 
             background: 'rgba(15, 15, 15, 0.7)', backdropFilter: 'blur(20px)', 
@@ -367,7 +399,6 @@ export default function Profile() {
             padding: '50px', boxShadow: '0 30px 60px rgba(0,0,0,0.4)' 
           }}>
             
-            {/* ШАПКА ФОРМЫ (Общая для General и Professional) */}
             {(activeTab === "general" || activeTab === "professional") && (
               <div className="prof-form-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px', gap: '20px' }}>
                 <div>
@@ -404,14 +435,34 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  <div>
-                    <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Career Status</label>
-                    <select disabled={!isEditing} value={status} onChange={e => setStatus(e.target.value)} style={{ ...inputStyle, appearance: isEditing ? 'auto' : 'none' }}>
-                      <option value="Open to work">Open to work</option>
-                      <option value="Passive looking">Passive looking</option>
-                      <option value="Not looking">Not looking</option>
-                      <option value="Hidden">Hidden (Private)</option>
-                    </select>
+                  {/* === УМНЫЙ БЛОК: РАЗНЫЕ ПОЛЯ ДЛЯ КАНДИДАТА И РАБОТОДАТЕЛЯ === */}
+                  <div className="prof-grid-two-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
+                    {user.role === 'candidate' ? (
+                      <div>
+                        <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Career Status</label>
+                        <select disabled={!isEditing} value={status} onChange={e => setStatus(e.target.value)} style={{ ...inputStyle, appearance: isEditing ? 'auto' : 'none' }}>
+                          <option value="Open to work">Open to work</option>
+                          <option value="Passive looking">Passive looking</option>
+                          <option value="Not looking">Not looking</option>
+                          <option value="Hidden">Hidden (Private)</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Your Role & Company</label>
+                        <input 
+                          value={bio} onChange={e => setBio(e.target.value)} disabled={!isEditing} 
+                          placeholder={isEditing ? "e.g. HR Manager at TechCorp" : "Not specified"} style={inputStyle} 
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Location</label>
+                      <input 
+                        value={location} onChange={e => setLocation(e.target.value)} disabled={!isEditing} 
+                        placeholder={isEditing ? "e.g. Warsaw, Poland or Remote" : "Remote / Global"} style={inputStyle} 
+                      />
+                    </div>
                   </div>
 
                   <div className="prof-grid-two-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
@@ -432,9 +483,37 @@ export default function Profile() {
                 </div>
               )}
 
-              {/* === ВКЛАДКА 2: ПРОФЕССИОНАЛЬНОЕ === */}
+              {/* === ВКЛАДКА 2: PROFESSIONAL === */}
               {activeTab === "professional" && (
-                <div style={{ display: 'grid', gap: '30px', animation: 'fadeIn 0.3s ease-out' }}>
+                <div style={{ display: 'grid', gap: '35px', animation: 'fadeIn 0.3s ease-out' }}>
+                  
+                  {/* Загрузка Резюме */}
+                  <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px dashed rgba(16, 185, 129, 0.3)', padding: '30px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
+                    <div>
+                      <h3 style={{ margin: '0 0 5px', color: '#fff', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}><Icons.FileText /> Resume (CV)</h3>
+                      <p style={{ margin: 0, color: '#888', fontSize: '14px' }}>{resumeUrl ? "You have uploaded a resume. Employers can download it from your profile." : "Upload your resume in PDF format to stand out."}</p>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                      {/* НОВАЯ КНОПКА: ПОСМОТРЕТЬ РЕЗЮМЕ */}
+                      {resumeUrl && (
+                        <a 
+                          href={resumeUrl.startsWith('http') ? resumeUrl : `${apiUrl}/${resumeUrl}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          style={{ color: '#10b981', fontWeight: 800, textDecoration: 'none', fontSize: '14px', border: '1px solid #10b981', padding: '12px 20px', borderRadius: '12px' }}
+                        >
+                          View My Resume
+                        </a>
+                      )}
+                      
+                      <input type="file" accept=".pdf,.doc,.docx" ref={resumeInputRef} onChange={handleResumeUpload} style={{ display: 'none' }} />
+                      <button type="button" onClick={() => resumeInputRef.current?.click()} style={{ background: '#10b981', color: '#000', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                        {resumeUrl ? "Update Resume" : "Upload Resume"}
+                      </button>
+                    </div>
+                  </div>
+
                   <div>
                     <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Bio / About Me</label>
                     <textarea 
@@ -451,10 +530,43 @@ export default function Profile() {
                       style={inputStyle} 
                     />
                   </div>
+
+                  {/* БЛОК ОПЫТА РАБОТЫ */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                      <label style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Professional Experience</label>
+                      {isEditing && (
+                        <button type="button" onClick={addExperience} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '13px' }}>
+                          <Icons.Plus /> Add Role
+                        </button>
+                      )}
+                    </div>
+
+                    {experience.length === 0 && !isEditing && <div style={{ color: '#666', fontStyle: 'italic', fontSize: '14px' }}>No experience added yet.</div>}
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {experience.map((exp) => (
+                        <div key={exp.id} style={{ background: isEditing ? 'rgba(255,255,255,0.02)' : 'transparent', border: isEditing ? '1px solid rgba(255,255,255,0.05)' : 'none', padding: isEditing ? '20px' : '0', borderRadius: '16px', position: 'relative' }}>
+                          {isEditing && (
+                            <button type="button" onClick={() => removeExperience(exp.id)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer' }}>
+                              <Icons.Trash />
+                            </button>
+                          )}
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                            <input value={exp.title} onChange={e => updateExperience(exp.id, 'title', e.target.value)} disabled={!isEditing} placeholder="Job Title (e.g. Frontend Engineer)" style={{ ...inputStyle, padding: '12px 16px', fontSize: '14px', fontWeight: isEditing ? 400 : 700, color: '#fff', border: isEditing ? inputStyle.border : 'none', background: isEditing ? inputStyle.background : 'transparent' }} />
+                            <input value={exp.company} onChange={e => updateExperience(exp.id, 'company', e.target.value)} disabled={!isEditing} placeholder="Company Name" style={{ ...inputStyle, padding: '12px 16px', fontSize: '14px', border: isEditing ? inputStyle.border : 'none', background: isEditing ? inputStyle.background : 'transparent', paddingLeft: isEditing ? '16px' : '0' }} />
+                          </div>
+                          
+                          <input value={exp.period} onChange={e => updateExperience(exp.id, 'period', e.target.value)} disabled={!isEditing} placeholder="Period (e.g. Jan 2021 - Present)" style={{ ...inputStyle, padding: '12px 16px', fontSize: '13px', color: '#888', marginBottom: '15px', border: isEditing ? inputStyle.border : 'none', background: isEditing ? inputStyle.background : 'transparent', paddingLeft: isEditing ? '16px' : '0' }} />
+                          <textarea value={exp.description} onChange={e => updateExperience(exp.id, 'description', e.target.value)} disabled={!isEditing} placeholder="Describe your achievements..." style={{ ...inputStyle, padding: '12px 16px', fontSize: '14px', minHeight: '80px', border: isEditing ? inputStyle.border : 'none', background: isEditing ? inputStyle.background : 'transparent', paddingLeft: isEditing ? '16px' : '0' }} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* КНОПКИ СОХРАНЕНИЯ ДЛЯ GENERAL И PRO */}
               {(activeTab === "general" || activeTab === "professional") && isEditing && (
                 <div style={{ display: 'flex', gap: '15px', marginTop: '30px', paddingTop: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   <button 
@@ -485,7 +597,11 @@ export default function Profile() {
                       <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700, marginBottom: '5px' }}>Public Profile</div>
                       <div style={{ color: '#666', fontSize: '14px' }}>Allow verified employers to find you in search results.</div>
                     </div>
-                    <Toggle active={isPublic} onClick={() => { setIsPublic(!isPublic); handleSaveSettings('privacy'); }} />
+                    <Toggle active={isPublic} onClick={() => { 
+                      const nextVal = !isPublic;
+                      setIsPublic(nextVal); 
+                      handleSaveSettings({ isPublic: nextVal, showEmail }); 
+                    }} />
                   </div>
 
                   <div className="prof-settings-row" style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
@@ -493,7 +609,11 @@ export default function Profile() {
                       <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700, marginBottom: '5px' }}>Show Email Address</div>
                       <div style={{ color: '#666', fontSize: '14px' }}>Visible only to companies you've explicitly applied to.</div>
                     </div>
-                    <Toggle active={showEmail} onClick={() => { setShowEmail(!showEmail); handleSaveSettings('privacy'); }} />
+                    <Toggle active={showEmail} onClick={() => { 
+                      const nextVal = !showEmail;
+                      setShowEmail(nextVal); 
+                      handleSaveSettings({ isPublic, showEmail: nextVal }); 
+                    }} />
                   </div>
                 </div>
               </div>
@@ -511,7 +631,11 @@ export default function Profile() {
                       <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700, marginBottom: '5px' }}>In-App Push Notifications</div>
                       <div style={{ color: '#666', fontSize: '14px' }}>Show real-time alerts in the bottom right corner of your screen.</div>
                     </div>
-                    <Toggle active={toastsEnabled} onClick={() => { setToastsEnabled(!toastsEnabled); handleSaveSettings('notifications'); }} />
+                    <Toggle active={toastsEnabled} onClick={() => { 
+                      const nextVal = !toastsEnabled;
+                      setToastsEnabled(nextVal); 
+                      handleSaveSettings({ soundEnabled, toastsEnabled: nextVal }); 
+                    }} />
                   </div>
 
                   <div className="prof-settings-row" style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
@@ -519,7 +643,11 @@ export default function Profile() {
                       <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700, marginBottom: '5px' }}>Sound Alerts</div>
                       <div style={{ color: '#666', fontSize: '14px' }}>Play a soft notification sound when a new message arrives.</div>
                     </div>
-                    <Toggle active={soundEnabled} onClick={() => { setSoundEnabled(!soundEnabled); handleSaveSettings('notifications'); }} />
+                    <Toggle active={soundEnabled} onClick={() => { 
+                      const nextVal = !soundEnabled;
+                      setSoundEnabled(nextVal); 
+                      handleSaveSettings({ soundEnabled: nextVal, toastsEnabled }); 
+                    }} />
                   </div>
                 </div>
               </div>
@@ -534,8 +662,6 @@ export default function Profile() {
                 </div>
 
                 <div style={{ display: 'grid', gap: '25px' }}>
-                  
-                  {/* Блок 2FA */}
                   <div className="prof-settings-row" style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '35px', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
                     <div>
                       <div style={{ color: '#10b981', fontWeight: 800, marginBottom: '5px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '1px' }}>Recommended</div>
@@ -545,7 +671,6 @@ export default function Profile() {
                     <Toggle active={twoFactor} onClick={handleToggle2FA} />
                   </div>
 
-                  {/* Блок сброса пароля */}
                   <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '35px' }}>
                     <h3 style={{ margin: '0 0 15px', fontSize: '20px', color: '#fff', fontWeight: 800 }}>Change Password</h3>
                     <p style={{ color: '#888', fontSize: '15px', lineHeight: '1.6', marginBottom: '30px', maxWidth: '550px' }}>
@@ -570,7 +695,6 @@ export default function Profile() {
               </div>
             )}
 
-            {/* Всплывающее уведомление об успехе */}
             {message && (
               <div style={{ position: 'fixed', bottom: '40px', right: '40px', background: '#10b981', color: '#000', padding: '16px 32px', borderRadius: '16px', fontWeight: 800, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', zIndex: 100 }}>
                 <Icons.Check /> {message}
@@ -613,7 +737,7 @@ export default function Profile() {
         </div>
       )}
 
-      {/* === МОДАЛКА КРОППЕРА (PREMIUM DESIGN) === */}
+      {/* === МОДАЛКА КРОППЕРА === */}
       <Modal open={openCropper} title="Adjust your Profile Picture" onClose={() => setOpenCropper(false)}>
         <div className="prof-cropper-modal-container">
           <p style={{ color: '#888', marginTop: 0, marginBottom: '25px', fontSize: '15px' }}>
@@ -672,7 +796,6 @@ export default function Profile() {
   );
 }
 
-// === ФУНКЦИЯ ДЛЯ КРОПА ===
 const getCroppedImg = async (imageSrc: string, pixelCrop: any): Promise<Blob | null> => {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');

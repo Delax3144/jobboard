@@ -33,18 +33,18 @@ const jobStorage = new CloudinaryStorage({
 });
 export const uploadJob = multer({ storage: jobStorage });
 
-// ==========================================
-// 4. Настройки для РЕЗЮМЕ (CV)
-// ==========================================
+// Backend/src/lib/upload.ts
+
 const cvStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (_req, _file) => ({
     folder: 'jobboard/cvs',
-    resource_type: 'auto', // ВАЖНО: разрешает загружать не только картинки, но и документы (PDF)
+    resource_type: 'auto', 
     allowed_formats: ['pdf', 'doc', 'docx'],
   }),
 });
+
 export const uploadCV = multer({ 
   storage: cvStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Твой лимит: 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 }, 
 });
