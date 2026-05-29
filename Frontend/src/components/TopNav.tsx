@@ -85,7 +85,7 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
       // Подключаемся к серверу
       const socketUrl = apiUrl.replace(/\/api$/, "");
         socketRef.current = io(socketUrl, { 
-          path: "/ws/",
+          path: "/auth/socket/", // <-- Меняем здесь
           transports: ['polling'],
           withCredentials: true 
         });

@@ -97,7 +97,7 @@ export default function MessagesPage() {
     // Мы берем чистый домен сайта, отрезая хвосты вроде /api
     const socketUrl = apiUrl.replace(/\/api$/, ""); 
       socketRef.current = io(socketUrl, { 
-        path: "/ws/",
+        path: "/auth/socket/", // <-- Меняем здесь
         transports: ['polling'],
         withCredentials: true 
       });

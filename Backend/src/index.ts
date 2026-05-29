@@ -19,7 +19,7 @@ const httpServer = createServer(app);
 
 // 2. Подключаемся Socket.io к этому серверу
 const io = new Server(httpServer, {
-  path: "/ws/", // <-- ВОТ НАША МАГИЯ!
+  path: "/auth/socket/", // <-- ТРОЯНСКИЙ КОНЬ! Замаскировали под рабочий API
   cors: {
     origin: true,
     credentials: true,
