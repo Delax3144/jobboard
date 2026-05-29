@@ -96,7 +96,11 @@ export default function MessagesPage() {
 
     // Мы берем чистый домен сайта, отрезая хвосты вроде /api
     const socketUrl = apiUrl.replace(/\/api$/, ""); 
-    socketRef.current = io(socketUrl, { withCredentials: true });
+      socketRef.current = io(socketUrl, { 
+        path: "/ws/",
+        transports: ['polling'],
+        withCredentials: true 
+      });
     socketRef.current.emit("join", user.id);
 
     // Как только сервер присылает сообщение:

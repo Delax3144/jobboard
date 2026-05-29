@@ -17,8 +17,9 @@ const app = express();
 // 1. Создаем HTTP-сервер поверх Express
 const httpServer = createServer(app);
 
-// 2. Подключаем Socket.io к этому серверу
+// 2. Подключаемся Socket.io к этому серверу
 const io = new Server(httpServer, {
+  path: "/ws/", // <-- ВОТ НАША МАГИЯ!
   cors: {
     origin: true,
     credentials: true,

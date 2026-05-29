@@ -83,7 +83,12 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
 
       // 2. === МАГИЯ WEBSOCKETS ===
       // Подключаемся к серверу
-      socketRef.current = io(apiUrl, { withCredentials: true });
+      const socketUrl = apiUrl.replace(/\/api$/, "");
+        socketRef.current = io(socketUrl, { 
+          path: "/ws/",
+          transports: ['polling'],
+          withCredentials: true 
+        });
 
       // Сообщаем серверу свой ID, чтобы он знал, куда слать уведомления
       socketRef.current.emit("join", user.id);
