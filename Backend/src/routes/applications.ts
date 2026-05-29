@@ -22,6 +22,10 @@ applicationsRouter.post("/", authMiddleware, uploadCV.single("cv"), async (req: 
   const cvUrl = req.file ? req.file.path : null;
 
   try {
+    // Сначала находим вакансию, чтобы знать, кто её владелец (работодатель)
+    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
     const application = await prisma.application.create({
       data: {
         jobId,
@@ -31,6 +35,16 @@ applicationsRouter.post("/", authMiddleware, uploadCV.single("cv"), async (req: 
         status: "new"
       }
     });
+
+    // === СОКЕТ: Уведомляем работодателя ===
+    const io = req.app.get("io");
+    if (io) {
+      io.to(job.ownerId).emit("new_notification", {
+        type: "new_application",
+        message: `Новый отклик на вакансию ${job.title}`
+      });
+    }
+
     res.status(201).json(application);
   } catch (error: any) {
     if (error.code === 'P2002') {
@@ -123,6 +137,17 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
       }
     }
 
+    // === СОКЕТ: Уведомляем кандидата о смене статуса ===
+    const io = req.app.get("io");
+    if (io) {
+      io.to(updated.candidateId).emit("new_notification", {
+        type: "status_update",
+        applicationId: updated.id,
+        jobTitle: updated.job.title,
+        status: updated.status
+      });
+    }
+
     res.json(updated);
   } catch (err) {
     res.status(500).json({ message: "Update error" });
@@ -209,9 +234,10 @@ applicationsRouter.post("/:id/messages", authMiddleware, async (req: any, res) =
   const { id } = req.params;
 
   try {
+    // Достаем отклик вместе с вакансией, чтобы знать ID работодателя
     const app = await prisma.application.findUnique({
       where: { id },
-      include: { messages: true }
+      include: { messages: true, job: true }
     });
 
     if (!app) return res.status(404).json({ message: "Отклик не найден" });
@@ -227,6 +253,25 @@ applicationsRouter.post("/:id/messages", authMiddleware, async (req: any, res) =
         text
       }
     });
+
+    // === СОКЕТ: Отправляем сообщение второму участнику ===
+    const io = req.app.get("io");
+    if (io) {
+      // Определяем, кому слать уведомление
+      const recipientId = req.user.role === 'employer' ? app.candidateId : app.job.ownerId;
+      
+      // Отправляем само сообщение (чтобы обновить чат)
+      io.to(recipientId).emit("new_message", {
+        applicationId: id,
+        message
+      });
+      
+      // Отправляем сигнал для "колокольчика" и звука
+      io.to(recipientId).emit("new_notification", {
+        type: "new_message",
+        applicationId: id
+      });
+    }
 
     res.status(201).json(message);
   } catch (error) {

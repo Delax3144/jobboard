@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { io } from "socket.io-client";
 
 const Icons = {
   Send: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>,
@@ -77,13 +78,42 @@ export default function MessagesPage() {
     return () => clearInterval(interval);
   }, [user]);
 
-  useEffect(() => { fetchChats(); }, [user, id]);
+  // === НОВАЯ ЛОГИКА ЧАТА ЧЕРЕЗ WEBSOCKETS ===
   
-  useEffect(() => { 
+  const socketRef = useRef<any>(null);
+  const activeChatIdRef = useRef(id); // Храним актуальный ID чата для сокета
+
+  // 1. При переключении чатов: обновляем реф и подтягиваем данные
+  useEffect(() => {
+    activeChatIdRef.current = id;
+    fetchChats();
     fetchCurrentChat();
-    const interval = setInterval(fetchCurrentChat, 5000);
-    return () => clearInterval(interval);
-  }, [id]);
+  }, [id, user]);
+
+  // 2. Подключение к сокету и прослушивание новых сообщений
+  useEffect(() => {
+    if (!user) return;
+
+    socketRef.current = io(apiUrl, { withCredentials: true });
+    socketRef.current.emit("join", user.id);
+
+    // Как только сервер присылает сообщение:
+    socketRef.current.on("new_message", (data: any) => {
+      // 1. Обновляем левое меню (чтобы загорелась зеленая точка)
+      fetchChats(); 
+
+      // 2. Если мы сейчас находимся именно в этом чате - мгновенно подгружаем новые сообщения!
+      if (activeChatIdRef.current === data.applicationId) {
+        api.get(`/applications/${data.applicationId}`).then(res => {
+          setAppWithScroll(res.data);
+        });
+      }
+    });
+
+    return () => {
+      if (socketRef.current) socketRef.current.disconnect();
+    };
+  }, [user]);
 
   const sendMsg = async () => {
     if (!msg.trim() || !id) return;

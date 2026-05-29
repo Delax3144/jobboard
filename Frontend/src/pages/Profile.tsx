@@ -100,6 +100,7 @@ export default function Profile() {
   // Notifications States
   const [soundEnabled, setSoundEnabled] = useState((user as any)?.soundEnabled ?? true);
   const [toastsEnabled, setToastsEnabled] = useState((user as any)?.toastsEnabled ?? true);
+  const [notificationVolume, setNotificationVolume] = useState((user as any)?.notificationVolume ?? 50);
   
   // Security States (2FA)
   const [twoFactor, setTwoFactor] = useState((user as any)?.isTwoFactorEnabled || false);
@@ -634,7 +635,7 @@ export default function Profile() {
                     <Toggle active={toastsEnabled} onClick={() => { 
                       const nextVal = !toastsEnabled;
                       setToastsEnabled(nextVal); 
-                      handleSaveSettings({ soundEnabled, toastsEnabled: nextVal }); 
+                      handleSaveSettings({ soundEnabled, toastsEnabled: nextVal, notificationVolume }); 
                     }} />
                   </div>
 
@@ -646,9 +647,77 @@ export default function Profile() {
                     <Toggle active={soundEnabled} onClick={() => { 
                       const nextVal = !soundEnabled;
                       setSoundEnabled(nextVal); 
-                      handleSaveSettings({ soundEnabled: nextVal, toastsEnabled }); 
+                      handleSaveSettings({ soundEnabled: nextVal, toastsEnabled, notificationVolume }); 
                     }} />
                   </div>
+                  {/* === НОВЫЙ БЛОК: ПОЛУЗОНОК ГРОМКОСТИ === */}
+                    {soundEnabled && (
+                      <div className="prof-settings-row" style={{ 
+                        background: 'rgba(255,255,255,0.02)', 
+                        padding: '30px', 
+                        borderRadius: '24px', 
+                        border: '1px solid rgba(255,255,255,0.05)', 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '20px',
+                        animation: 'fadeIn 0.2s ease-out'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700, marginBottom: '5px' }}>Alert Volume</div>
+                            <div style={{ color: '#666', fontSize: '14px' }}>Adjust the loudness of real-time audio alerts.</div>
+                          </div>
+                          {/* Красивый индикатор текущего процента громкости */}
+                          <span style={{ 
+                            color: '#10b981', 
+                            fontWeight: 800, 
+                            fontSize: '14px', 
+                            background: 'rgba(16, 185, 129, 0.1)', 
+                            padding: '6px 14px', 
+                            borderRadius: '10px',
+                            border: '1px solid rgba(16, 185, 129, 0.15)'
+                          }}>
+                            {notificationVolume}%
+                          </span>
+                        </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                          <input 
+                            type="range" 
+                            min={0} 
+                            max={100} 
+                            step={5}
+                            value={notificationVolume} 
+                            onChange={(e) => setNotificationVolume(Number(e.target.value))} 
+                            onMouseUp={() => {
+                              // Сохраняем в базу только когда отпустили мышку
+                              handleSaveSettings({ soundEnabled, toastsEnabled, notificationVolume });
+                              // Воспроизводим новый приятный клик для теста громкости
+                              const testAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2357/2357-preview.mp3');
+                              testAudio.volume = notificationVolume / 100;
+                              testAudio.play().catch(() => {});
+                            }}
+                            onTouchEnd={() => {
+                              // То же самое для мобилок (когда убрали палец с экрана)
+                              handleSaveSettings({ soundEnabled, toastsEnabled, notificationVolume });
+                              const testAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2357/2357-preview.mp3');
+                              testAudio.volume = notificationVolume / 100;
+                              testAudio.play().catch(() => {});
+                            }}
+                            style={{ 
+                              flex: 1, 
+                              cursor: 'pointer', 
+                              accentColor: '#10b981', 
+                              background: '#222', 
+                              height: '6px', 
+                              borderRadius: '3px', 
+                              appearance: 'none', 
+                              outline: 'none' 
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             )}

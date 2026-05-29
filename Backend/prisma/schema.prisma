@@ -54,6 +54,7 @@ model User {
   isPublic        Boolean @default(true)
   showEmail       Boolean @default(false)
   soundEnabled    Boolean @default(true)
+  notificationVolume Int @default(50)
   toastsEnabled   Boolean @default(true)
   
   resumeUrl       String?
