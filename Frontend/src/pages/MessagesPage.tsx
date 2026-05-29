@@ -94,7 +94,9 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user) return;
 
-    socketRef.current = io(apiUrl, { withCredentials: true });
+    // Мы берем чистый домен сайта, отрезая хвосты вроде /api
+    const socketUrl = apiUrl.replace(/\/api$/, ""); 
+    socketRef.current = io(socketUrl, { withCredentials: true });
     socketRef.current.emit("join", user.id);
 
     // Как только сервер присылает сообщение:
