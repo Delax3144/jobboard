@@ -224,17 +224,18 @@ authRouter.post("/github", async (req, res) => {
 });
 
 authRouter.put("/profile", authMiddleware, async (req: any, res) => {
-  // ДОБАВЛЕН location:
-  const { firstName, lastName, phone, status, bio, skills, isPublic, showEmail, soundEnabled, toastsEnabled, experience, location } = req.body; 
+  // 1. Сюда добавили notificationVolume в самый конец деструктуризации:
+  const { firstName, lastName, phone, status, bio, skills, isPublic, showEmail, soundEnabled, toastsEnabled, experience, location, notificationVolume } = req.body; 
   try {
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
-      // ДОБАВЛЕН location:
-      data: { firstName, lastName, phone, status, bio, skills, isPublic, showEmail, soundEnabled, toastsEnabled, experience, location },
+      // 2. И сюда добавили notificationVolume, чтобы Prisma сохранила его в базу Neon:
+      data: { firstName, lastName, phone, status, bio, skills, isPublic, showEmail, soundEnabled, toastsEnabled, experience, location, notificationVolume },
       select: { 
         id: true, email: true, role: true, username: true, firstName: true, lastName: true, phone: true, avatarUrl: true, status: true, bio: true, skills: true, isTwoFactorEnabled: true,
         isPublic: true, showEmail: true, soundEnabled: true, toastsEnabled: true, experience: true, resumeUrl: true, 
-        location: true // <-- ДОБАВЛЕНО
+        location: true,
+        notificationVolume: true // <-- Выберем его тоже для ответа фронтенду
       }
     });
     res.json({ user: updatedUser });
