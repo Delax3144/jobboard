@@ -16,7 +16,7 @@ const Icons = {
 
 // Инициализируем плеер ОДИН раз за пределами компонента, чтобы обходить блокировки браузеров
 // Заменили ссылку на приятный, мягкий и футуристичный UI-клик вместо старого едкого звука
-const notificationAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2357/2357-preview.mp3');
+const notificationAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
 const playNotificationSound = (volumePercentage: number = 50) => {
   try {
