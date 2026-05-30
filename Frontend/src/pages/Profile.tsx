@@ -693,14 +693,14 @@ export default function Profile() {
                               // Сохраняем в базу только когда отпустили мышку
                               handleSaveSettings({ soundEnabled, toastsEnabled, notificationVolume });
                               // Воспроизводим новый приятный клик для теста громкости
-                              const testAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2357/2357-preview.mp3');
+                              const testAudio = new Audio('/notify.mp3');
                               testAudio.volume = notificationVolume / 100;
                               testAudio.play().catch(() => {});
                             }}
                             onTouchEnd={() => {
                               // То же самое для мобилок (когда убрали палец с экрана)
                               handleSaveSettings({ soundEnabled, toastsEnabled, notificationVolume });
-                              const testAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2357/2357-preview.mp3');
+                              const testAudio = new Audio('/notify.mp3');
                               testAudio.volume = notificationVolume / 100;
                               testAudio.play().catch(() => {});
                             }}
