@@ -1,30 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/ws",
-      "destination": "http://178.105.184.114/ws/"
-    },
-    {
-      "source": "/ws/:path*",
-      "destination": "http://178.105.184.114/ws/:path*"
-    },
-    {
-      "source": "/applications/:path*",
-      "destination": "http://178.105.184.114/applications/:path*"
-    },
-    {
-      "source": "/auth/:path*",
-      "destination": "http://178.105.184.114/auth/:path*"
-    },
-    {
-      "source": "/bookmarks/:path*",
-      "destination": "http://178.105.184.114/bookmarks/:path*"
-    },
-    {
-      "source": "/jobs/:path*",
-      "destination": "http://178.105.184.114/jobs/:path*"
-    },
-    {
       "source": "/:path*",
       "destination": "/index.html"
     }
