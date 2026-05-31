@@ -1,6 +1,6 @@
 import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import toast from 'react-hot-toast'; // <-- Импорт для пушей
+import toast from 'react-hot-toast';
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { type UserMode } from "../lib/userMode";
@@ -14,19 +14,13 @@ const Icons = {
   Briefcase: () => <svg width="20" height="20" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
 };
 
-// Инициализируем плеер ОДИН раз за пределами компонента, чтобы обходить блокировки браузеров
-// Заменили ссылку на приятный, мягкий и футуристичный UI-клик вместо старого едкого звука
+// Инициализируем плеер ОДИН раз за пределами компонента
 const notificationAudio = new Audio('/notify.mp3');
 
 const playNotificationSound = (volumePercentage: number = 50) => {
   try {
-    // Переводим громкость из базы данных (0-100) в системный формат HTML5 Audio (0.0-1.0)
     notificationAudio.volume = volumePercentage / 100;
-    
-    // Сбрасываем проигрывание на начало. Это ключевой момент! 
-    // Теперь звук будет играть при каждом уведомлении, даже если прошлый еще не доиграл.
     notificationAudio.currentTime = 0;
-    
     notificationAudio.play().catch(e => console.log("Audio autoplay blocked by browser", e));
   } catch (err) {
     console.error("Audio playback error:", err);
@@ -38,31 +32,28 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
   const navigate = useNavigate();
   const { user, logout, isLoading } = useAuth();
   
-  const [hasInvite, setHasInvite] = useState(false);
+  // ЗАМЕНИЛИ hasInvite на unreadCount
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  // Реф, чтобы не спамить звуком на одно и то же сообщение
   const notifiedEventsRef = useRef<Set<string>>(new Set());
-  
+  const socketRef = useRef<any>(null);
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Реф для хранения подключения к сокету
-  const socketRef = useRef<any>(null);
-
   useEffect(() => {
     if (user) {
       setMode(user.role === 'employer' ? 'employer' : 'candidate');
 
-      // 1. Делаем только ОДИН запрос при загрузке страницы, чтобы зажечь точку, если есть старые непрочитанные
+      // Вынесли логику проверки обновлений в отдельную функцию
       const checkUpdates = async () => {
         try {
           const endpoint = user.role === 'employer' ? '/applications/owner' : '/applications/my';
           const res = await api.get(endpoint);
-          let hasUnread = false;
+          let count = 0;
 
           res.data.forEach((app: any) => {
             const isEmployer = user.role === 'employer';
@@ -70,40 +61,40 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
             const lastViewed = isEmployer ? app.lastViewedByOwner : app.lastViewedByCandidate;
             
             if (lastUpdate > lastViewed || (!isEmployer && app.status === 'invited' && lastUpdate > lastViewed)) {
-              hasUnread = true;
+              count++; // Считаем количество непрочитанных чатов
             }
           });
-          setHasInvite(hasUnread);
+          setUnreadCount(count);
         } catch (err) {
           console.error("Error checking updates", err);
         }
       };
 
-      checkUpdates(); // Вызываем один раз!
+      checkUpdates(); // Вызываем при загрузке
 
-      // 2. === МАГИЯ WEBSOCKETS ===
+      // Слушаем глобальное событие из MessagesPage.tsx, чтобы сбросить счетчик
+      window.addEventListener('update_unread', checkUpdates);
+
+      // === МАГИЯ WEBSOCKETS (Чистое подключение) ===
       socketRef.current = io(apiUrl, { 
         withCredentials: true 
       });
 
-      // Сообщаем серверу свой ID, чтобы он знал, куда слать уведомления
       socketRef.current.emit("join", user.id);
 
-      // Ловим летящие события 'new_notification' от бэкенда
       socketRef.current.on("new_notification", (data: any) => {
-        
         // Если юзер прямо сейчас открыл этот чат - не спамим тостами
         if (data.applicationId && location.pathname === `/messages/${data.applicationId}`) return;
 
-        // Моментально зажигаем зеленую точку у кнопки!
-        setHasInvite(true);
+        // Запрашиваем с бэкенда новую цифру бейджа
+        checkUpdates();
 
-        // 3. Воспроизводим звук (с нужной громкостью из базы)
+        // Воспроизводим звук
         if ((user as any).soundEnabled !== false) {
           playNotificationSound((user as any).notificationVolume ?? 50);
         }
 
-        // 4. Показываем красивый тост-пуш
+        // Показываем красивый тост-пуш
         if ((user as any).toastsEnabled !== false) {
           const isMessage = data.type === 'new_message';
 
@@ -151,9 +142,10 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
         }
       });
 
-      // При закрытии страницы - отключаемся от сокета
+      // При закрытии страницы - отключаемся от сокета и удаляем слушатель
       return () => {
         if (socketRef.current) socketRef.current.disconnect();
+        window.removeEventListener('update_unread', checkUpdates);
       };
     }
   }, [user, setMode, location.pathname, navigate]);
@@ -179,8 +171,24 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
         .top-nav-link { text-decoration: none; color: #888; font-weight: 600; font-size: 14px; padding: 10px 18px; border-radius: 16px; transition: all 0.2s ease; display: flex; align-items: center; position: relative; }
         .top-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
         .top-nav-link.active { color: #fff; background: rgba(255, 255, 255, 0.08); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .glowing-dot { width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-left: 8px; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        
+        /* === НОВЫЙ БЕЙДЖ С ЦИФРОЙ ВМЕСТО ТОЧКИ === */
+        .premium-badge { 
+          background: #10b981; 
+          color: #000; 
+          font-size: 11px; 
+          font-weight: 900; 
+          padding: 2px 6px; 
+          border-radius: 8px; 
+          margin-left: 8px; 
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); 
+          display: inline-flex; 
+          align-items: center; 
+          justify-content: center; 
+          min-width: 20px;
+          animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes badgePop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
         
         /* Анимации для Тостов */
         .animate-enter { animation: toastEnter 0.4s cubic-bezier(0.21, 1.02, 0.73, 1) forwards; }
@@ -206,12 +214,12 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
             <NavLink to="/jobs" className={navLinkClass}>Explore Jobs</NavLink>
             {user?.role === 'candidate' && (
               <>
-                <NavLink to="/applications" className={navLinkClass}>My Applications {hasInvite && <span className="glowing-dot" />}</NavLink>
+                <NavLink to="/applications" className={navLinkClass}>My Applications {unreadCount > 0 && <span className="premium-badge">{unreadCount}</span>}</NavLink>
                 <NavLink to="/saved" className={navLinkClass}>Saved Jobs</NavLink>
               </>
             )}
             {user?.role === 'employer' && (
-              <NavLink to="/employer" className={navLinkClass}>Employer Console {hasInvite && <span className="glowing-dot" />}</NavLink>
+              <NavLink to="/employer" className={navLinkClass}>Employer Console {unreadCount > 0 && <span className="premium-badge">{unreadCount}</span>}</NavLink>
             )}
             <NavLink to="/contact" className={navLinkClass}>Support</NavLink>
           </nav>
@@ -247,12 +255,12 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
         <NavLink to="/jobs" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>Explore Jobs</NavLink>
         {user?.role === 'candidate' && (
           <>
-            <NavLink to="/applications" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>My Applications {hasInvite && <span className="glowing-dot" style={{ marginLeft: '12px' }} />}</NavLink>
+            <NavLink to="/applications" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>My Applications {unreadCount > 0 && <span className="premium-badge" style={{ marginLeft: '12px' }}>{unreadCount}</span>}</NavLink>
             <NavLink to="/saved" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>Saved Jobs</NavLink>
           </>
         )}
         {user?.role === 'employer' && (
-          <NavLink to="/employer" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>Employer Console {hasInvite && <span className="glowing-dot" style={{ marginLeft: '12px' }} />}</NavLink>
+          <NavLink to="/employer" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>Employer Console {unreadCount > 0 && <span className="premium-badge" style={{ marginLeft: '12px' }}>{unreadCount}</span>}</NavLink>
         )}
         <NavLink to="/contact" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>Support</NavLink>
         

@@ -61,6 +61,11 @@ export default function MessagesPage() {
     try {
       const res = await api.get(`/applications/${id}`);
       setAppWithScroll(res.data);
+      
+      // === ВОТ ЭТА МАГИЧЕСКАЯ СТРОКА ===
+      // Сообщаем всей системе, что мы прочитали чат!
+      window.dispatchEvent(new Event('update_unread')); 
+      
     } catch (err) { console.error(err); }
   };
 
