@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+// src/pages/LoginPage.tsx
+import { Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import api from "../lib/api";
+import { useLogin } from "../hooks/useLogin";
 
 const Icons = {
   ShieldCheck: () => <svg width="48" height="48" fill="none" stroke="#10b981" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
@@ -10,93 +9,29 @@ const Icons = {
 };
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false); 
-  const { googleLogin, githubLogin } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const {
+    email, setEmail, password, setPassword, rememberMe, setRememberMe,
+    requires2FA, setRequires2FA, twoFactorCode, setTwoFactorCode, isVerifying,
+    handleSubmit, handleVerify2FA, handleGoogleSuccess, handleGithubClick
+  } = useLogin();
 
-  // Состояния для 2FA
-  const [requires2FA, setRequires2FA] = useState(false);
-  const [userIdFor2FA, setUserIdFor2FA] = useState("");
-  const [twoFactorCode, setTwoFactorCode] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const code = urlParams.get("code");
-    if (code) {
-      window.history.replaceState({}, document.title, "/login");
-      const savedRole = localStorage.getItem("github_role") || "candidate";
-      githubLogin(code, savedRole)
-        .then(() => { localStorage.removeItem("github_role"); navigate("/"); })
-        .catch(() => console.log("Вторая попытка входа отменена"));
-    }
-  }, [location.search, githubLogin, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await api.post("/auth/login", { email, password });
-      
-      if (res.data.requires2FA) {
-        setUserIdFor2FA(res.data.userId);
-        setRequires2FA(true); 
-      } else {
-        localStorage.setItem("token", res.data.token);
-        if (rememberMe) localStorage.setItem('remembered_email', email);
-        window.location.href = "/"; 
-      }
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Invalid credentials");
-    }
-  };
-
-  const handleVerify2FA = async (safeE: React.FormEvent) => {
-    safeE.preventDefault();
-    if (twoFactorCode.length !== 6) return alert("Code must be 6 digits");
-    
-    setIsVerifying(true);
-    try {
-      const res = await api.post("/auth/verify-2fa-login", { userId: userIdFor2FA, code: twoFactorCode });
-      localStorage.setItem("token", res.data.token);
-      if (rememberMe) localStorage.setItem('remembered_email', email);
-      window.location.href = "/"; 
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Invalid 2FA code");
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    try {
-      await googleLogin(credentialResponse.credential);
-      navigate("/");
-    } catch (err) { alert("Google login failed"); }
-  };
-
-  const handleGithubClick = () => {
-    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=user:email`;
+  const inputStyle = {
+    width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', 
+    color: '#fff', padding: '16px 20px', borderRadius: '16px', outline: 'none', fontSize: '15px', transition: 'border-color 0.2s'
   };
 
   return (
     <div className="auth-container" style={{ 
       padding: '60px 0', minHeight: 'calc(100vh - 80px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#050505', position: 'relative', overflow: 'hidden',
-      width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw'
+      background: '#050505', position: 'relative', overflow: 'hidden', width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw'
     }}>
       
       <div style={{ position: 'absolute', top: '10%', left: '20%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '10%', right: '20%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
 
       <div className="auth-card" style={{ 
-        width: '100%', maxWidth: '480px', position: 'relative', zIndex: 1,
-        background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', 
-        border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '50px 40px',
-        boxShadow: '0 30px 60px rgba(0,0,0,0.4)'
+        width: '100%', maxWidth: '480px', position: 'relative', zIndex: 1, background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', 
+        border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '50px 40px', boxShadow: '0 30px 60px rgba(0,0,0,0.4)'
       }}>
         
         {!requires2FA ? (
@@ -109,12 +44,12 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
               <div>
                 <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Email Address</label>
-                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', padding: '16px 20px', borderRadius: '16px', outline: 'none', fontSize: '15px', transition: 'border-color 0.2s' }} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
               </div>
 
               <div>
                 <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Password</label>
-                <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', padding: '16px 20px', borderRadius: '16px', outline: 'none', fontSize: '15px', transition: 'border-color 0.2s' }} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
+                <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
               </div>
 
               <div className="auth-options-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '5px', flexWrap: 'wrap', gap: '10px' }}>
@@ -131,9 +66,9 @@ export default function LoginPage() {
             </form>
 
             <div style={{ display: 'flex', alignItems: 'center', margin: '30px 0' }}>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
               <span style={{ padding: '0 15px', color: '#666', fontSize: '11px', fontWeight: 800, letterSpacing: '1px', textAlign: 'center' }}>OR CONTINUE WITH</span>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
             </div>
 
             <div className="auth-social-row" style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
@@ -142,11 +77,9 @@ export default function LoginPage() {
               </div>
 
               <button
-                type="button"
-                onClick={handleGithubClick}
+                type="button" onClick={handleGithubClick}
                 style={{
-                  width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, transition: 'background 0.2s'
+                  width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, transition: 'background 0.2s'
                 }}
                 onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                 onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
@@ -178,9 +111,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleVerify2FA}>
               <input 
-                type="text" 
-                placeholder="000000" 
-                maxLength={6}
+                type="text" placeholder="000000" maxLength={6}
                 value={twoFactorCode}
                 onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))} 
                 style={{ 
@@ -192,13 +123,11 @@ export default function LoginPage() {
               />
 
               <button 
-                type="submit" 
-                disabled={isVerifying || twoFactorCode.length !== 6} 
+                type="submit" disabled={isVerifying || twoFactorCode.length !== 6} 
                 style={{ 
                   width: '100%', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', 
                   padding: '18px', borderRadius: '16px', fontSize: '16px', fontWeight: 800, border: 'none', 
-                  cursor: twoFactorCode.length === 6 ? 'pointer' : 'not-allowed', 
-                  opacity: twoFactorCode.length === 6 ? 1 : 0.5,
+                  cursor: twoFactorCode.length === 6 ? 'pointer' : 'not-allowed', opacity: twoFactorCode.length === 6 ? 1 : 0.5,
                   boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', transition: 'all 0.2s' 
                 }}
               >

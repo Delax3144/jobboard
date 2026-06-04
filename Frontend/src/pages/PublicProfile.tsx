@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import api from "../lib/api";
+// src/pages/PublicProfile.tsx
+import { Link } from "react-router-dom";
+import { usePublicProfile } from "../hooks/usePublicProfile";
 
 const Icons = {
   Back: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>,
@@ -15,42 +15,13 @@ const Icons = {
 };
 
 export default function PublicProfile() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
-  
-  const [candidate, setCandidate] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get(`/auth/users/${id}`)
-      .then(res => setCandidate(res.data))
-      .catch(err => console.error("Failed to load profile", err))
-      .finally(() => setLoading(false));
-  }, [id]);
+  const { navigate, apiUrl, candidate, loading, profileData } = usePublicProfile();
 
   if (loading) return <div style={{ color: '#fff', textAlign: 'center', padding: '100px' }}>Loading Talent Profile...</div>;
-  if (!candidate) return <div style={{ color: '#fff', textAlign: 'center', padding: '100px' }}>Candidate not found.</div>;
-
-  const isProfilePrivate = candidate.isPublic === false || candidate.status === "Hidden";
-  const skills = candidate.skills ? candidate.skills.split(',').map((s: string) => s.trim()) : [];
-  const bio = candidate.bio || "This candidate hasn't added a bio yet.";
-  
-  // Парсим опыт из БД, если он есть
-  const experience = typeof candidate.experience === 'string' ? JSON.parse(candidate.experience) : (candidate.experience || []);
+  if (!candidate || !profileData) return <div style={{ color: '#fff', textAlign: 'center', padding: '100px' }}>Candidate not found.</div>;
 
   return (
-    <div style={{ 
-      background: '#050505', 
-      width: '100vw', 
-      position: 'relative', 
-      left: '50%',
-      right: '50%',
-      marginLeft: '-50vw',
-      marginRight: '-50vw',
-      minHeight: 'calc(100vh - 100px)', 
-      overflowX: 'clip' 
-    }}>
+    <div style={{ background: '#050505', width: '100vw', position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', minHeight: 'calc(100vh - 100px)', overflowX: 'clip' }}>
       
       {/* Декоративные свечения */}
       <div style={{ position: 'absolute', top: '-10%', right: '10%', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
@@ -62,8 +33,8 @@ export default function PublicProfile() {
           <Icons.Back /> Back to Candidates
         </button>
 
-        {isProfilePrivate ? (
-          /* === ПРИВАТНЫЙ ПРОФИЛЬ (ЗАГЛУШКА) === */
+        {profileData.isPrivate ? (
+          /* === ПРИВАТНЫЙ ПРОФИЛЬ === */
           <div style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '60px 40px', textAlign: 'center', boxShadow: '0 30px 60px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '2px dashed rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', marginBottom: '20px' }}>
               <Icons.Lock />
@@ -77,7 +48,7 @@ export default function PublicProfile() {
             </div>
           </div>
         ) : (
-          /* === ПУБЛИЧНЫЙ ПРОФИЛЬ (ОТКРЫТЫЙ) === */
+          /* === ПУБЛИЧНЫЙ ПРОФИЛЬ === */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', animation: 'fadeIn 0.4s ease-out' }}>
             
             {/* ШАПКА */}
@@ -110,10 +81,8 @@ export default function PublicProfile() {
                 </div>
               </div>
 
-              {/* Кнопки действий (Чат и Резюме) */}
+              {/* Кнопки действий */}
               <div className="public-prof-actions" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-                
-                {/* === КНОПКА СКАЧАТЬ РЕЗЮМЕ === */}
                 {candidate.resumeUrl && (
                   <a 
                     href={candidate.resumeUrl.startsWith('http') ? candidate.resumeUrl : `${apiUrl}/${candidate.resumeUrl}`} 
@@ -136,27 +105,19 @@ export default function PublicProfile() {
             {/* BENTO GRID ДЛЯ КОНТЕНТА */}
             <div className="public-prof-layout" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px', alignItems: 'start' }}>
               
-              {/* Левая колонка (Обо мне & Опыт) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                
                 <div style={{ background: 'rgba(15, 15, 15, 0.4)', border: '1px solid rgba(255,255,255,0.03)', padding: '35px', borderRadius: '24px' }}>
-                  <h3 style={{ margin: '0 0 20px', fontSize: '18px', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Icons.User /> About Me
-                  </h3>
+                  <h3 style={{ margin: '0 0 20px', fontSize: '18px', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}><Icons.User /> About Me</h3>
                   <p style={{ color: '#aaa', fontSize: '16px', lineHeight: '1.8', margin: 0, whiteSpace: 'pre-wrap' }}>
-                    {bio}
+                    {profileData.bio}
                   </p>
                 </div>
 
-                {/* === ОПЫТ РАБОТЫ (ИЗ БАЗЫ ДАННЫХ) === */}
                 <div style={{ background: 'rgba(15, 15, 15, 0.4)', border: '1px solid rgba(255,255,255,0.03)', padding: '35px', borderRadius: '24px' }}>
-                  <h3 style={{ margin: '0 0 20px', fontSize: '18px', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Icons.Code /> Professional Experience
-                  </h3>
-                  
-                  {experience.length > 0 ? (
+                  <h3 style={{ margin: '0 0 20px', fontSize: '18px', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}><Icons.Code /> Professional Experience</h3>
+                  {profileData.experience.length > 0 ? (
                     <div style={{ borderLeft: '2px solid rgba(16, 185, 129, 0.3)', paddingLeft: '20px', marginLeft: '10px', display: 'flex', flexDirection: 'column', gap: '25px' }}>
-                      {experience.map((exp: any, i: number) => (
+                      {profileData.experience.map((exp: any, i: number) => (
                         <div key={i} style={{ position: 'relative' }}>
                           <div style={{ position: 'absolute', left: '-27px', top: '0', width: '12px', height: '12px', borderRadius: '50%', background: '#10b981', border: '2px solid #050505' }} />
                           <h4 style={{ margin: '0 0 5px', color: '#fff', fontSize: '16px' }}>{exp.title}</h4>
@@ -169,28 +130,19 @@ export default function PublicProfile() {
                     <p style={{ color: '#666', fontStyle: 'italic', fontSize: '15px', margin: 0 }}>No professional experience listed.</p>
                   )}
                 </div>
-
               </div>
 
-              {/* Правая колонка (Контакты & Скиллы) */}
               <div className="public-prof-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '30px', position: 'sticky', top: '100px' }}>
-                
                 <div style={{ background: 'rgba(15, 15, 15, 0.4)', border: '1px solid rgba(255,255,255,0.03)', padding: '30px', borderRadius: '24px' }}>
                   <h3 style={{ margin: '0 0 25px', fontSize: '16px', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact Info</h3>
-                  
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     <div>
                       <div style={{ color: '#666', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Email Address</div>
                       <div style={{ color: '#fff', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', wordBreak: 'break-all' }}>
                         <span style={{ color: '#10b981', flexShrink: 0 }}><Icons.Mail /></span> 
-                        {candidate.showEmail === false ? (
-                          <span style={{ color: '#666', fontStyle: 'italic', fontSize: '14px' }}>Hidden by candidate</span>
-                        ) : (
-                          candidate.email
-                        )}
+                        {candidate.showEmail === false ? <span style={{ color: '#666', fontStyle: 'italic', fontSize: '14px' }}>Hidden by candidate</span> : candidate.email}
                       </div>
                     </div>
-
                     <div>
                       <div style={{ color: '#666', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Phone Number</div>
                       <div style={{ color: '#fff', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -203,14 +155,11 @@ export default function PublicProfile() {
                 <div style={{ background: 'rgba(15, 15, 15, 0.4)', border: '1px solid rgba(255,255,255,0.03)', padding: '30px', borderRadius: '24px' }}>
                   <h3 style={{ margin: '0 0 20px', fontSize: '16px', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>Top Skills</h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                    {skills.length > 0 ? skills.map((skill: string) => (
-                      <span key={skill} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#ccc', padding: '8px 14px', borderRadius: '12px', fontSize: '13px', fontWeight: 600 }}>
-                        {skill}
-                      </span>
+                    {profileData.skills.length > 0 ? profileData.skills.map((skill: string) => (
+                      <span key={skill} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#ccc', padding: '8px 14px', borderRadius: '12px', fontSize: '13px', fontWeight: 600 }}>{skill}</span>
                     )) : <span style={{ color: '#666', fontSize: '14px' }}>No skills added.</span>}
                   </div>
                 </div>
-
               </div>
             </div>
           </div>

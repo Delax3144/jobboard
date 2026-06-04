@@ -1,160 +1,16 @@
-import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
-import toast from 'react-hot-toast';
-import api from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+// src/components/TopNav.tsx
+import { NavLink, Link } from "react-router-dom";
+import { useTopNav } from "../hooks/useTopNav";
 import { type UserMode } from "../lib/userMode";
-import { io } from "socket.io-client";
 
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>,
   Close: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>,
-  LogOut: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>,
-  Message: () => <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>,
-  Briefcase: () => <svg width="20" height="20" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-};
-
-// Инициализируем плеер ОДИН раз за пределами компонента
-const notificationAudio = new Audio('/notify.mp3');
-
-const playNotificationSound = (volumePercentage: number = 50) => {
-  try {
-    notificationAudio.volume = volumePercentage / 100;
-    notificationAudio.currentTime = 0;
-    notificationAudio.play().catch(e => console.log("Audio autoplay blocked by browser", e));
-  } catch (err) {
-    console.error("Audio playback error:", err);
-  }
+  LogOut: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
 };
 
 export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserMode) => void }) {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, logout, isLoading } = useAuth();
-  
-  // ЗАМЕНИЛИ hasInvite на unreadCount
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
-  const notifiedEventsRef = useRef<Set<string>>(new Set());
-  const socketRef = useRef<any>(null);
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
-
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (user) {
-      setMode(user.role === 'employer' ? 'employer' : 'candidate');
-
-      // Вынесли логику проверки обновлений в отдельную функцию
-      const checkUpdates = async () => {
-        try {
-          const endpoint = user.role === 'employer' ? '/applications/owner' : '/applications/my';
-          const res = await api.get(endpoint);
-          let count = 0;
-
-          res.data.forEach((app: any) => {
-            const isEmployer = user.role === 'employer';
-            const lastUpdate = app.messages?.[0]?.createdAt || app.createdAt;
-            const lastViewed = isEmployer ? app.lastViewedByOwner : app.lastViewedByCandidate;
-            
-            if (lastUpdate > lastViewed || (!isEmployer && app.status === 'invited' && lastUpdate > lastViewed)) {
-              count++; // Считаем количество непрочитанных чатов
-            }
-          });
-          setUnreadCount(count);
-        } catch (err) {
-          console.error("Error checking updates", err);
-        }
-      };
-
-      checkUpdates(); // Вызываем при загрузке
-
-      // Слушаем глобальное событие из MessagesPage.tsx, чтобы сбросить счетчик
-      window.addEventListener('update_unread', checkUpdates);
-
-      // === МАГИЯ WEBSOCKETS (Чистое подключение) ===
-      socketRef.current = io(apiUrl, { 
-        withCredentials: true 
-      });
-
-      socketRef.current.emit("join", user.id);
-
-      socketRef.current.on("new_notification", (data: any) => {
-        // Если юзер прямо сейчас открыл этот чат - не спамим тостами
-        if (data.applicationId && location.pathname === `/messages/${data.applicationId}`) return;
-
-        // Запрашиваем с бэкенда новую цифру бейджа
-        checkUpdates();
-
-        // Воспроизводим звук
-        if ((user as any).soundEnabled !== false) {
-          playNotificationSound((user as any).notificationVolume ?? 50);
-        }
-
-        // Показываем красивый тост-пуш
-        if ((user as any).toastsEnabled !== false) {
-          const isMessage = data.type === 'new_message';
-
-          let title = "Notification";
-          let desc = "You have a new update";
-
-          if (data.type === "new_application") {
-            title = "New Application";
-            desc = data.message;
-          } else if (data.type === "status_update") {
-            title = "Status Update";
-            desc = `Action required for ${data.jobTitle}`;
-          } else if (data.type === "new_message") {
-            title = "New Message";
-            desc = "You received a new message";
-          }
-
-          toast.custom((t) => (
-            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full`} style={{ 
-              background: 'rgba(15, 15, 15, 0.8)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', 
-              borderRadius: '24px', padding: '20px', display: 'flex', gap: '15px', alignItems: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-              cursor: 'pointer', transition: 'all 0.2s'
-            }}
-            onClick={() => { 
-              toast.dismiss(t.id); 
-              if (data.applicationId) navigate(`/messages/${data.applicationId}`); 
-              else navigate(user.role === 'employer' ? '/employer' : '/applications');
-            }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(25, 25, 25, 0.9)'}
-            onMouseOut={e => e.currentTarget.style.background = 'rgba(15, 15, 15, 0.8)'}
-            >
-              <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: isMessage ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {isMessage ? <Icons.Message /> : <Icons.Briefcase />}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: isMessage ? '#10b981' : '#3b82f6', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-                  {title}
-                </div>
-                <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700 }}>
-                  {desc}
-                </div>
-              </div>
-            </div>
-          ), { duration: 5000 });
-        }
-      });
-
-      // При закрытии страницы - отключаемся от сокета и удаляем слушатель
-      return () => {
-        if (socketRef.current) socketRef.current.disconnect();
-        window.removeEventListener('update_unread', checkUpdates);
-      };
-    }
-  }, [user, setMode, location.pathname, navigate]);
-
-  useEffect(() => {
-    if (!isLoading && user && user.role === "candidate" && location.pathname.startsWith("/employer")) {
-      navigate("/", { replace: true });
-    }
-  }, [user, isLoading, location.pathname, navigate]);
+  const { user, logout, unreadCount, isMobileMenuOpen, setIsMobileMenuOpen, apiUrl } = useTopNav(setMode);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) => 
     `top-nav-link ${isActive ? 'active' : ''}`;
@@ -172,25 +28,13 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
         .top-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
         .top-nav-link.active { color: #fff; background: rgba(255, 255, 255, 0.08); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         
-        /* === НОВЫЙ БЕЙДЖ С ЦИФРОЙ ВМЕСТО ТОЧКИ === */
         .premium-badge { 
-          background: #10b981; 
-          color: #000; 
-          font-size: 11px; 
-          font-weight: 900; 
-          padding: 2px 6px; 
-          border-radius: 8px; 
-          margin-left: 8px; 
-          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); 
-          display: inline-flex; 
-          align-items: center; 
-          justify-content: center; 
-          min-width: 20px;
+          background: #10b981; color: #000; font-size: 11px; font-weight: 900; padding: 2px 6px; borderRadius: 8px; margin-left: 8px; 
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); display: inline-flex; alignItems: center; justify-content: center; min-width: 20px;
           animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
         @keyframes badgePop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
         
-        /* Анимации для Тостов */
         .animate-enter { animation: toastEnter 0.4s cubic-bezier(0.21, 1.02, 0.73, 1) forwards; }
         .animate-leave { animation: toastLeave 0.4s forwards; }
         @keyframes toastEnter { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -199,7 +43,6 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
         .mobile-menu-btn { display: none; background: transparent; border: none; color: #fff; cursor: pointer; padding: 8px; }
         @media (max-width: 950px) { .center-nav-island { display: none; } .desktop-actions { display: none !important; } .mobile-menu-btn { display: block; } }
         
-        /* Улучшенное Мобильное Меню */
         .mobile-dropdown { position: fixed; top: 80px; left: 0; width: 100vw; height: calc(100vh - 80px); background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px); z-index: 999; display: flex; flex-direction: column; padding: 30px 25px; gap: 15px; transform: translateY(-100%); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
         .mobile-dropdown.open { transform: translateY(0); opacity: 1; pointer-events: all; }
         .mobile-link { font-size: 20px; font-weight: 800; color: #888; text-decoration: none; transition: color 0.2s; display: flex; align-items: center; padding: 10px 0; border-radius: 12px; }
@@ -208,7 +51,9 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
 
       <header className="premium-header">
         <div className="premium-header-inner">
-          <Link to="/" style={{ textDecoration: 'none', color: '#fff', fontWeight: 900, fontSize: '24px', letterSpacing: '-0.5px' }}>Job<span style={{ color: '#10b981' }}>Board</span></Link>
+          <Link to="/" style={{ textDecoration: 'none', color: '#fff', fontWeight: 900, fontSize: '24px', letterSpacing: '-0.5px' }}>
+            Job<span style={{ color: '#10b981' }}>Board</span>
+          </Link>
 
           <nav className="center-nav-island">
             <NavLink to="/jobs" className={navLinkClass}>Explore Jobs</NavLink>

@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+// src/pages/RegisterPage.tsx
+import { Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { useRegister } from "../hooks/useRegister";
 
 const Icons = {
   Eye: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>,
@@ -10,72 +10,36 @@ const Icons = {
 };
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); 
-  const [showPassword, setShowPassword] = useState(false); 
-  const [username, setUsername] = useState(""); 
-  const [firstName, setFirstName] = useState(""); 
-  const [lastName, setLastName] = useState(""); 
-  const [phone, setPhone] = useState(""); 
-  const [role, setRole] = useState<"candidate" | "employer">("candidate");
-  
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  const { register, googleLogin } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (password !== confirmPassword) { setError("Passwords do not match!"); return; }
-    setIsSubmitting(true);
-    try {
-      await register({ email, password, username, firstName, lastName, phone, role });
-      setIsSuccess(true);
-    } catch (err: any) {
-      const message = err.response?.data?.message || "";
-      if (message.includes("email")) setError("This email is already registered. Try logging in?");
-      else if (message.includes("username")) setError("Username is already taken. Try another one.");
-      else setError("Registration failed. Check your data.");
-    } finally { setIsSubmitting(false); }
-  };
-
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    try {
-      await googleLogin(credentialResponse.credential, role);
-      navigate("/");
-    } catch (err) { setError("Google Registration failed."); }
-  };
-
-  const handleGithubClick = () => {
-    localStorage.setItem("github_role", role);
-    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=user:email`;
-  };
+  const { 
+    formData, handleChange, showPassword, setShowPassword, 
+    role, setRole, error, isSubmitting, isSuccess, 
+    handleSubmit, handleGoogleSuccess, handleGithubClick 
+  } = useRegister();
 
   const inputStyle = {
     width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
     color: '#fff', padding: '16px 20px', borderRadius: '16px', outline: 'none', fontSize: '15px', transition: 'border-color 0.2s'
   };
 
+  const getPasswordBorderStyle = () => {
+    if (formData.password && formData.confirmPassword) {
+      return formData.password === formData.confirmPassword ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 75, 75, 0.5)';
+    }
+    return 'rgba(255,255,255,0.05)';
+  };
+
   return (
     <div className="auth-container" style={{ 
       padding: '60px 0', minHeight: 'calc(100vh - 80px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#050505', position: 'relative', overflow: 'hidden',
-      width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw'
+      background: '#050505', position: 'relative', overflow: 'hidden', width: '100vw', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw'
     }}>
       
       <div style={{ position: 'absolute', top: '5%', left: '15%', width: '700px', height: '700px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '5%', right: '15%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
 
       <div className="auth-card" style={{ 
-        width: '100%', maxWidth: '480px', position: 'relative', zIndex: 1,
-        background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', 
-        border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '50px 40px',
-        boxShadow: '0 30px 60px rgba(0,0,0,0.4)'
+        width: '100%', maxWidth: '480px', position: 'relative', zIndex: 1, background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', 
+        border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '50px 40px', boxShadow: '0 30px 60px rgba(0,0,0,0.4)'
       }}>
         
         {isSuccess ? (
@@ -87,7 +51,7 @@ export default function RegisterPage() {
             </div>
             <h2 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '15px', color: '#fff', letterSpacing: '-0.5px' }}>Check your inbox!</h2>
             <p style={{ color: '#888', lineHeight: '1.6', fontSize: '16px', marginBottom: '40px' }}>
-              We've sent a verification link to <br/><b style={{ color: '#fff' }}>{email}</b>.<br/><br/>
+              We've sent a verification link to <br/><b style={{ color: '#fff' }}>{formData.email}</b>.<br/><br/>
               Please click the link to activate your account.
             </p>
             <Link to="/login" style={{ display: 'inline-block', width: '100%', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', padding: '18px', borderRadius: '16px', fontSize: '16px', fontWeight: 800, textDecoration: 'none', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
@@ -113,36 +77,54 @@ export default function RegisterPage() {
 
             <div className="auth-social-row" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', alignItems: 'center' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }}>
-                <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError('Google sign up failed')} type="icon" theme="filled_black" shape="circle" size="large" />
+                <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => alert('Google sign up failed')} type="icon" theme="filled_black" shape="circle" size="large" />
               </div>
               <button 
                 type="button" onClick={handleGithubClick} 
                 style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, transition: 'background 0.2s' }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
               >
                 <svg fill="#fff" viewBox="0 0 24 24" width="22" height="22"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
               </button>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', margin: '30px 0' }}><div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }}></div><span style={{ padding: '0 15px', color: '#666', fontSize: '11px', fontWeight: 800, letterSpacing: '1px', textAlign: 'center' }}>OR EMAIL REGISTER</span><div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }}></div></div>
+            <div style={{ display: 'flex', alignItems: 'center', margin: '30px 0' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
+              <span style={{ padding: '0 15px', color: '#666', fontSize: '11px', fontWeight: 800, letterSpacing: '1px' }}>OR EMAIL REGISTER</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
+            </div>
             
             <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
               <div className="prof-grid-two-cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                <div><label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>First Name *</label><input required value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="John" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} /></div>
-                <div><label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Last Name *</label><input required value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Doe" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} /></div>
+                <div>
+                  <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>First Name *</label>
+                  <input required name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Last Name *</label>
+                  <input required name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
+                </div>
               </div>
               
-              <div><label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Username *</label><input required value={username} onChange={e => setUsername(e.target.value)} placeholder="johndoe77" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} /></div>
+              <div>
+                <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Username *</label>
+                <input required name="username" value={formData.username} onChange={handleChange} placeholder="johndoe77" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
+              </div>
               
-              <div><label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Email Address *</label><input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} /></div>
+              <div>
+                <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Email Address *</label>
+                <input type="email" required name="email" value={formData.email} onChange={handleChange} placeholder="name@example.com" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
+              </div>
               
-              <div><label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Phone Number (Optional)</label><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+48 123 456 789" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} /></div>
+              <div>
+                <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Phone Number (Optional)</label>
+                <input name="phone" value={formData.phone} onChange={handleChange} placeholder="+48 123 456 789" style={inputStyle} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
+              </div>
               
               <div>
                 <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Password *</label>
                 <div style={{ position: 'relative' }}>
-                  <input type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ ...inputStyle, paddingRight: '45px' }} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
+                  <input type={showPassword ? "text" : "password"} required name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" style={{ ...inputStyle, paddingRight: '45px' }} onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'} />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#666', cursor: 'pointer', display: 'flex' }}>
                     {showPassword ? <Icons.EyeOff /> : <Icons.Eye />}
                   </button>
@@ -151,7 +133,12 @@ export default function RegisterPage() {
 
               <div>
                 <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>Confirm Password *</label>
-                <input type={showPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" style={{ ...inputStyle, borderColor: password && confirmPassword ? (password === confirmPassword ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 75, 75, 0.5)') : 'rgba(255,255,255,0.05)' }} onFocus={e => e.target.style.borderColor = password && confirmPassword && password !== confirmPassword ? 'rgba(255, 75, 75, 0.5)' : 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = password && confirmPassword && password !== confirmPassword ? 'rgba(255, 75, 75, 0.5)' : 'rgba(255,255,255,0.05)'} />
+                <input 
+                  type={showPassword ? "text" : "password"} required name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" 
+                  style={{ ...inputStyle, borderColor: getPasswordBorderStyle() }} 
+                  onFocus={e => e.target.style.borderColor = formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword ? 'rgba(255, 75, 75, 0.5)' : 'rgba(16, 185, 129, 0.4)'} 
+                  onBlur={e => e.target.style.borderColor = formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword ? 'rgba(255, 75, 75, 0.5)' : 'rgba(255,255,255,0.05)'} 
+                />
               </div>
 
               <button type="submit" disabled={isSubmitting} style={{ width: '100%', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', padding: '18px', borderRadius: '16px', fontSize: '16px', fontWeight: 800, marginTop: '10px', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', transition: 'transform 0.2s', opacity: isSubmitting ? 0.7 : 1 }} onMouseOver={e => { if(!isSubmitting) e.currentTarget.style.transform = 'translateY(-2px)' }} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
