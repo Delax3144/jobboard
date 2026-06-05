@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import api from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+// src/pages/Contact.tsx
+import { useContact } from "../hooks/useContact";
 
 const Icons = {
   Email: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>,
@@ -13,47 +12,7 @@ const Icons = {
 };
 
 export default function Contact() {
-  const { user } = useAuth();
-  
-  const [view, setView] = useState<"form" | "tickets">("form");
-  const [tickets, setTickets] = useState<any[]>([]);
-
-  const [formData, setFormData] = useState({
-    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : "",
-    email: user?.email || "",
-    subject: "",
-    message: ""
-  });
-  
-  const [status, setStatus] = useState<"typing" | "sending" | "success" | "error">("typing");
-  const [errorMsg, setErrorMsg] = useState("");
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setStatus("sending");
-    setErrorMsg("");
-
-    try {
-      await api.post("/auth/contact", { ...formData, userId: user?.id });
-      setStatus("success");
-      setFormData({ ...formData, subject: "", message: "" });
-    } catch (err: any) {
-      setStatus("error");
-      setErrorMsg(err.response?.data?.message || "Something went wrong. Please try again.");
-    }
-  };
-
-  useEffect(() => {
-    if (view === "tickets" && user) {
-      api.get("/auth/support-tickets")
-        .then(res => setTickets(res.data))
-        .catch(err => console.error("Error loading tickets", err));
-    }
-  }, [view, user]);
+  const { user, view, setView, tickets, formData, status, setStatus, errorMsg, handleChange, handleSubmit } = useContact();
 
   const inputStyle = {
     background: 'rgba(255,255,255,0.02)',
@@ -107,7 +66,6 @@ export default function Contact() {
           </p>
         </div>
 
-        {/* Сетка: alignItems 'stretch' делает карточки всегда одинаковой высоты */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '40px', alignItems: 'stretch' }}>
           
           {/* === ЛЕВАЯ ЧАСТЬ: ИНФО И КНОПКА ТИКЕТОВ === */}
@@ -115,7 +73,7 @@ export default function Contact() {
             background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(20px)', 
             border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', 
             padding: '50px', boxShadow: '0 30px 60px rgba(0,0,0,0.2)',
-            display: 'flex', flexDirection: 'column' // Flexbox для прижатия кнопок вниз
+            display: 'flex', flexDirection: 'column'
           }}>
             
             <div>
@@ -157,7 +115,6 @@ export default function Contact() {
               </div>
             </div>
               
-            {/* РАЗДЕЛИТЕЛЬ И КНОПКА ТИКЕТОВ (Прижато к низу через marginTop: 'auto') */}
             {user && (
               <div style={{ marginTop: 'auto' }}>
                 <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', marginBottom: '20px' }} />
@@ -188,9 +145,6 @@ export default function Contact() {
           }}>
             
             {view === "form" ? (
-              // =========================
-              // ВИД: ФОРМА КОНТАКТОВ
-              // =========================
               status === "success" ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', animation: 'fadeIn 0.4s ease-out', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '25px' }}>
@@ -241,7 +195,6 @@ export default function Contact() {
                     <textarea required name="message" value={formData.message} onChange={handleChange} style={{ ...inputStyle, minHeight: '160px', resize: 'vertical' }} placeholder="Please describe your issue in detail..." onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.4)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}></textarea>
                   </div>
 
-                  {/* Кнопка отправки прижата к низу через marginTop: 'auto' */}
                   <button 
                     type="submit" 
                     disabled={status === "sending"} 
@@ -261,10 +214,6 @@ export default function Contact() {
                 </form>
               )
             ) : (
-
-              // =========================
-              // ВИД: СПИСОК ТИКЕТОВ
-              // =========================
               <div style={{ animation: 'fadeIn 0.3s ease-out', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <h3 style={{ fontSize: '24px', fontWeight: 900, color: '#fff', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Icons.Ticket /> Open Requests
@@ -305,9 +254,7 @@ export default function Contact() {
                   )}
                 </div>
               </div>
-
             )}
-
           </div>
         </div>
       </div>
