@@ -17,7 +17,7 @@ export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery
   const navigate = useNavigate();
 
   return (
-    <div style={{ width: '380px', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', background: '#0a0a0a', flexShrink: 0 }}>
+    <div className="msg-sidebar-panel" style={{ width: '380px', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', background: '#0a0a0a', flexShrink: 0 }}>
       <div style={{ padding: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <h2 style={{ margin: '0 0 20px', fontSize: '24px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>Messages</h2>
         <div style={{ position: 'relative' }}>

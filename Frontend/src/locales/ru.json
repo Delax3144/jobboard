@@ -1,0 +1,14 @@
+{
+  "nav": {
+    "explore_jobs": "Вакансии",
+    "my_applications": "Мои отклики",
+    "saved_jobs": "Сохраненные",
+    "employer_console": "Управление",
+    "support": "Поддержка",
+    "login": "Войти",
+    "sign_up": "Регистрация",
+    "sign_up_free": "Создать аккаунт",
+    "my_profile": "Мой профиль",
+    "logout": "Выйти"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "nav": {
+    "explore_jobs": "Explore Jobs",
+    "my_applications": "My Applications",
+    "saved_jobs": "Saved Jobs",
+    "employer_console": "Employer Console",
+    "support": "Support",
+    "login": "Log In",
+    "sign_up": "Sign Up",
+    "sign_up_free": "Sign Up Free",
+    "my_profile": "My Profile",
+    "logout": "Logout"
+  }
+}

@@ -10,12 +10,12 @@ export default function MessagesPage() {
   }
 
   return (
-    <div style={{ background: '#050505', minHeight: 'calc(100vh - 80px)', display: 'flex', justifyContent: 'center', padding: '30px 20px', position: 'relative', overflow: 'hidden' }}>
+    <div className="msg-page-wrapper" style={{ background: '#050505', minHeight: 'calc(100vh - 80px)', display: 'flex', justifyContent: 'center', padding: '30px 20px', position: 'relative', overflow: 'hidden' }}>
       
       {/* Premium Dark Glow */}
       <div style={{ position: 'absolute', top: '10%', left: '15%', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
-      <div style={{ width: '100%', maxWidth: '1280px', height: 'calc(100vh - 140px)', background: 'rgba(10, 10, 10, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', display: 'flex', overflow: 'hidden', boxShadow: '0 40px 80px rgba(0,0,0,0.5)', zIndex: 1 }}>
+      <div className={`msg-messenger-container ${chatLogic.id ? 'chat-active' : 'list-active'}`} style={{ width: '100%', maxWidth: '1280px', height: 'calc(100vh - 140px)', background: 'rgba(10, 10, 10, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', display: 'flex', overflow: 'hidden', boxShadow: '0 40px 80px rgba(0,0,0,0.5)', zIndex: 1 }}>
         
         <ChatSidebar 
           filteredChats={chatLogic.filteredChats}

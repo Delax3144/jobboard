@@ -2,15 +2,24 @@
 import { NavLink, Link } from "react-router-dom";
 import { useTopNav } from "../hooks/useTopNav";
 import { type UserMode } from "../lib/userMode";
+import { useTranslation } from "react-i18next";
 
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>,
   Close: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>,
-  LogOut: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+  LogOut: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>,
+  Globe: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path strokeLinecap="round" strokeLinejoin="round" d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2 12h20"></path></svg>
 };
 
 export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserMode) => void }) {
   const { user, logout, unreadCount, isMobileMenuOpen, setIsMobileMenuOpen, apiUrl } = useTopNav(setMode);
+
+  const { t, i18n } = useTranslation();
+  
+  const toggleLanguage = () => {
+    const newLang = i18n.language.startsWith('ru') ? 'en' : 'ru';
+    i18n.changeLanguage(newLang);
+  };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) => 
     `top-nav-link ${isActive ? 'active' : ''}`;
@@ -29,8 +38,8 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
         .top-nav-link.active { color: #fff; background: rgba(255, 255, 255, 0.08); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         
         .premium-badge { 
-          background: #10b981; color: #000; font-size: 11px; font-weight: 900; padding: 2px 6px; borderRadius: 8px; margin-left: 8px; 
-          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); display: inline-flex; alignItems: center; justify-content: center; min-width: 20px;
+          background: #10b981; color: #000; font-size: 11px; font-weight: 900; padding: 2px 6px; border-radius: 8px; margin-left: 8px; 
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); display: inline-flex; align-items: center; justify-content: center; min-width: 20px;
           animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
         @keyframes badgePop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
@@ -43,7 +52,7 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
         .mobile-menu-btn { display: none; background: transparent; border: none; color: #fff; cursor: pointer; padding: 8px; }
         @media (max-width: 950px) { .center-nav-island { display: none; } .desktop-actions { display: none !important; } .mobile-menu-btn { display: block; } }
         
-        .mobile-dropdown { position: fixed; top: 80px; left: 0; width: 100vw; height: calc(100vh - 80px); background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px); z-index: 999; display: flex; flex-direction: column; padding: 30px 25px; gap: 15px; transform: translateY(-100%); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
+        .mobile-dropdown { position: fixed; top: 80px; left: 0; width: 100vw; height: calc(100vh - 80px); background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px); z-index: 999; display: flex; flex-direction: column; padding: 30px 25px; gap: 15px; transform: translateY(-100%); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; overflow-y: auto; }
         .mobile-dropdown.open { transform: translateY(0); opacity: 1; pointer-events: all; }
         .mobile-link { font-size: 20px; font-weight: 800; color: #888; text-decoration: none; transition: color 0.2s; display: flex; align-items: center; padding: 10px 0; border-radius: 12px; }
         .mobile-link:hover, .mobile-link.active { color: #fff; }
@@ -56,20 +65,26 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
           </Link>
 
           <nav className="center-nav-island">
-            <NavLink to="/jobs" className={navLinkClass}>Explore Jobs</NavLink>
+            <NavLink to="/jobs" className={navLinkClass}>{t('nav.explore_jobs', 'Explore Jobs')}</NavLink>
             {user?.role === 'candidate' && (
               <>
-                <NavLink to="/applications" className={navLinkClass}>My Applications {unreadCount > 0 && <span className="premium-badge">{unreadCount}</span>}</NavLink>
-                <NavLink to="/saved" className={navLinkClass}>Saved Jobs</NavLink>
+                <NavLink to="/applications" className={navLinkClass}>{t('nav.my_applications', 'My Applications')} {unreadCount > 0 && <span className="premium-badge">{unreadCount}</span>}</NavLink>
+                <NavLink to="/saved" className={navLinkClass}>{t('nav.saved_jobs', 'Saved Jobs')}</NavLink>
               </>
             )}
             {user?.role === 'employer' && (
-              <NavLink to="/employer" className={navLinkClass}>Employer Console {unreadCount > 0 && <span className="premium-badge">{unreadCount}</span>}</NavLink>
+              <NavLink to="/employer" className={navLinkClass}>{t('nav.employer_console', 'Employer Console')} {unreadCount > 0 && <span className="premium-badge">{unreadCount}</span>}</NavLink>
             )}
-            <NavLink to="/contact" className={navLinkClass}>Support</NavLink>
+            <NavLink to="/contact" className={navLinkClass}>{t('nav.support', 'Support')}</NavLink>
           </nav>
 
           <div className="desktop-actions" style={{ display: "flex", gap: "15px", alignItems: "center" }}>
+            
+            {/* КНОПКА СМЕНЫ ЯЗЫКА (ДЕСКТОП) */}
+            <button onClick={toggleLanguage} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', padding: '8px 14px', borderRadius: '20px', cursor: 'pointer', fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }} onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'; }} onMouseOut={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
+              <Icons.Globe /> {i18n.language.startsWith('ru') ? 'RU' : 'EN'}
+            </button>
+
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Link to="/profile" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", cursor: "pointer", padding: "6px 16px 6px 6px", borderRadius: "24px", background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', transition: "all 0.2s" }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
@@ -81,12 +96,12 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
                     <span style={{ color: "#10b981", fontSize: '10px', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.5px' }}>{user.role}</span>
                   </div>
                 </Link>
-                <button onClick={logout} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex', transition: 'all 0.2s' }} title="Logout" onMouseOver={e => e.currentTarget.style.color = '#ff4b4b'} onMouseOut={e => e.currentTarget.style.color = '#666'}><Icons.LogOut /></button>
+                <button onClick={logout} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex', transition: 'all 0.2s' }} title={t('nav.logout', 'Logout')} onMouseOver={e => e.currentTarget.style.color = '#ff4b4b'} onMouseOut={e => e.currentTarget.style.color = '#666'}><Icons.LogOut /></button>
               </div>
             ) : (
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <NavLink to="/login" style={{ color: '#aaa', textDecoration: 'none', fontWeight: 700, fontSize: '14px', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#fff'} onMouseOut={e => e.currentTarget.style.color = '#aaa'}>Log in</NavLink>
-                <NavLink to="/register" style={{ background: '#fff', color: '#000', padding: '10px 20px', borderRadius: '14px', textDecoration: 'none', fontWeight: 800, fontSize: '14px', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>Sign Up</NavLink>
+                <NavLink to="/login" style={{ color: '#aaa', textDecoration: 'none', fontWeight: 700, fontSize: '14px', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#fff'} onMouseOut={e => e.currentTarget.style.color = '#aaa'}>{t('nav.login', 'Log in')}</NavLink>
+                <NavLink to="/register" style={{ background: '#fff', color: '#000', padding: '10px 20px', borderRadius: '14px', textDecoration: 'none', fontWeight: 800, fontSize: '14px', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>{t('nav.sign_up', 'Sign Up')}</NavLink>
               </div>
             )}
           </div>
@@ -97,32 +112,37 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
 
       {/* МОБИЛЬНОЕ МЕНЮ */}
       <div className={`mobile-dropdown ${isMobileMenuOpen ? 'open' : ''}`}>
-        <NavLink to="/jobs" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>Explore Jobs</NavLink>
+        <NavLink to="/jobs" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.explore_jobs', 'Explore Jobs')}</NavLink>
         {user?.role === 'candidate' && (
           <>
-            <NavLink to="/applications" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>My Applications {unreadCount > 0 && <span className="premium-badge" style={{ marginLeft: '12px' }}>{unreadCount}</span>}</NavLink>
-            <NavLink to="/saved" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>Saved Jobs</NavLink>
+            <NavLink to="/applications" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.my_applications', 'My Applications')} {unreadCount > 0 && <span className="premium-badge" style={{ marginLeft: '12px' }}>{unreadCount}</span>}</NavLink>
+            <NavLink to="/saved" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.saved_jobs', 'Saved Jobs')}</NavLink>
           </>
         )}
         {user?.role === 'employer' && (
-          <NavLink to="/employer" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>Employer Console {unreadCount > 0 && <span className="premium-badge" style={{ marginLeft: '12px' }}>{unreadCount}</span>}</NavLink>
+          <NavLink to="/employer" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.employer_console', 'Employer Console')} {unreadCount > 0 && <span className="premium-badge" style={{ marginLeft: '12px' }}>{unreadCount}</span>}</NavLink>
         )}
-        <NavLink to="/contact" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>Support</NavLink>
+        <NavLink to="/contact" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.support', 'Support')}</NavLink>
         
         <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '15px 0' }} />
         
+        {/* КНОПКА СМЕНЫ ЯЗЫКА (МОБИЛКА) */}
+        <button onClick={toggleLanguage} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '14px', borderRadius: '16px', cursor: 'pointer', fontWeight: 800, fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'all 0.2s', marginBottom: '10px' }}>
+          <Icons.Globe /> {i18n.language.startsWith('ru') ? 'English (EN)' : 'Русский (RU)'}
+        </button>
+
         {user ? (
           <>
-            <NavLink to="/profile" className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <NavLink to="/profile" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
               <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, #10b981, #059669)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", color: "#000", overflow: "hidden" }}>{user.avatarUrl ? <img src={user.avatarUrl?.startsWith('http') ? user.avatarUrl : `${apiUrl}${user.avatarUrl}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : user.email[0].toUpperCase()}</div>
-              My Profile
+              {t('nav.my_profile', 'My Profile')}
             </NavLink>
-            <button onClick={logout} style={{ background: 'transparent', border: 'none', color: '#ff4b4b', fontSize: '20px', fontWeight: 800, textAlign: 'left', padding: '10px 0', cursor: 'pointer' }}>Logout</button>
+            <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} style={{ background: 'transparent', border: 'none', color: '#ff4b4b', fontSize: '20px', fontWeight: 800, textAlign: 'left', padding: '10px 0', cursor: 'pointer' }}>{t('nav.logout', 'Logout')}</button>
           </>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '10px' }}>
-            <NavLink to="/register" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', padding: '16px', borderRadius: '16px', textDecoration: 'none', fontWeight: 800, fontSize: '16px', textAlign: 'center', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)' }}>Sign Up Free</NavLink>
-            <NavLink to="/login" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px', borderRadius: '16px', textDecoration: 'none', fontWeight: 700, fontSize: '16px', textAlign: 'center' }}>Log In</NavLink>
+            <NavLink to="/register" onClick={() => setIsMobileMenuOpen(false)} style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', padding: '16px', borderRadius: '16px', textDecoration: 'none', fontWeight: 800, fontSize: '16px', textAlign: 'center', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)' }}>{t('nav.sign_up_free', 'Sign Up Free')}</NavLink>
+            <NavLink to="/login" onClick={() => setIsMobileMenuOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px', borderRadius: '16px', textDecoration: 'none', fontWeight: 700, fontSize: '16px', textAlign: 'center' }}>{t('nav.login', 'Log In')}</NavLink>
           </div>
         )}
       </div>

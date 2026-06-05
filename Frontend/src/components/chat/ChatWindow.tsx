@@ -5,7 +5,8 @@ const Icons = {
   Send: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>,
   Search: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
   Lock: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
-  Check: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+  Check: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>,
+  ArrowLeft: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
 };
 
 export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, user, apiUrl, msg, setMsg, sendMsg, scrollContainerRef, checkIsOnline }: any) {
@@ -13,7 +14,7 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
 
   if (!currentApp) {
     return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="msg-chat-window" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', color: '#555' }}>
           <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: '#111', border: '1px solid #222', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}><Icons.Search /></div>
           <h3 style={{ fontSize: '24px', fontWeight: 900, color: '#fff', marginBottom: '10px', letterSpacing: '-0.5px' }}>Your Messages</h3>
@@ -29,10 +30,15 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
   const isOnline = checkIsOnline(user?.role === 'employer' ? currentApp.candidate?.lastActive : currentApp.job?.owner?.lastActive);
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(5, 5, 5, 0.4)', minWidth: 0, position: 'relative' }}>
+    <div className="msg-chat-window" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(5, 5, 5, 0.4)', minWidth: 0, position: 'relative' }}>
       {/* HEADER */}
-      <div style={{ padding: '20px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(10, 10, 10, 0.8)', backdropFilter: 'blur(10px)', zIndex: 10 }}>
+      <div className="msg-chat-header" style={{ padding: '20px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(10, 10, 10, 0.8)', backdropFilter: 'blur(10px)', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          
+          <button className="msg-back-to-list-btn" onClick={() => navigate('/messages')} style={{ display: 'none', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', padding: '8px', borderRadius: '12px' }}>
+            <Icons.ArrowLeft />
+          </button>
+
           <div style={{ width: '48px', height: '48px', borderRadius: user?.role === 'employer' ? '50%' : '12px', background: '#111', border: '1px solid #222', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555', fontSize: '18px' }}>
             {partnerAvatar ? <img src={partnerAvatar?.startsWith('http') ? partnerAvatar : `${apiUrl}${partnerAvatar}`} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <span>{partnerName[0].toUpperCase()}</span>}
           </div>
@@ -45,7 +51,7 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
             </div>
           </div>
         </div>
-        <div style={{ background: '#111', border: '1px solid #222', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', color: '#888', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+        <div className="msg-chat-header-job-badge" style={{ background: '#111', border: '1px solid #222', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', color: '#888', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
           <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 800 }}>Context</span>
           <span style={{ color: '#fff', fontWeight: 600 }}>{currentApp.job.title}</span>
         </div>
