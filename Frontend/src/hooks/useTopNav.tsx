@@ -1,4 +1,4 @@
-// src/hooks/useTopNav.ts
+// src/hooks/useTopNav.tsx
 import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from 'react-hot-toast';
@@ -33,97 +33,117 @@ export function useTopNav(setMode: (m: UserMode) => void) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const socketRef = useRef<any>(null);
+  const pathnameRef = useRef(location.pathname);
+  
+  // === НОВЫЙ ХАК: ТИХАЯ ССЫЛКА НА ЮЗЕРА ===
+  const userRef = useRef(user);
+
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
   useEffect(() => {
+    pathnameRef.current = location.pathname;
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
+  // Тихо обновляем данные юзера, не вызывая переподключение сокетов
   useEffect(() => {
-    if (user) {
-      setMode(user.role === 'employer' ? 'employer' : 'candidate');
+    userRef.current = user;
+  }, [user]);
 
-      const checkUpdates = async () => {
-        try {
-          const endpoint = user.role === 'employer' ? '/applications/owner' : '/applications/my';
-          const res = await api.get(endpoint);
-          let count = 0;
+  // Вытаскиваем ID (примитив), чтобы сокет подключался только 1 раз при логине
+  const userId = user?.id;
 
-          res.data.forEach((app: any) => {
-            const isEmployer = user.role === 'employer';
-            const lastUpdate = app.messages?.[0]?.createdAt || app.createdAt;
-            const lastViewed = isEmployer ? app.lastViewedByOwner : app.lastViewedByCandidate;
-            
-            if (lastUpdate > lastViewed || (!isEmployer && app.status === 'invited' && lastUpdate > lastViewed)) {
-              count++;
-            }
-          });
-          setUnreadCount(count);
-        } catch (err) {
-          console.error("Error checking updates", err);
-        }
-      };
+  useEffect(() => {
+    if (!userId) return; // Запускаем ТОЛЬКО если есть ID
+
+    const currentUser = userRef.current;
+    if (currentUser?.role) {
+      setMode(currentUser.role === 'employer' ? 'employer' : 'candidate');
+    }
+
+    const checkUpdates = async () => {
+      try {
+        const currentRole = userRef.current?.role;
+        const endpoint = currentRole === 'employer' ? '/applications/owner' : '/applications/my';
+        const res = await api.get(endpoint);
+        let count = 0;
+
+        res.data.forEach((app: any) => {
+          const isEmployer = currentRole === 'employer';
+          const lastUpdate = app.messages?.[0]?.createdAt || app.createdAt;
+          const lastViewed = isEmployer ? app.lastViewedByOwner : app.lastViewedByCandidate;
+          
+          if (lastUpdate > lastViewed || (!isEmployer && app.status === 'invited' && lastUpdate > lastViewed)) {
+            count++;
+          }
+        });
+        setUnreadCount(count);
+      } catch (err) {
+        console.error("Error checking updates", err);
+      }
+    };
+
+    checkUpdates();
+    window.addEventListener('update_unread', checkUpdates);
+
+    socketRef.current = io(apiUrl, { withCredentials: true });
+    socketRef.current.emit("join", userId);
+
+    socketRef.current.on("new_notification", (data: any) => {
+      if (data.applicationId && pathnameRef.current === `/messages/${data.applicationId}`) return;
 
       checkUpdates();
-      window.addEventListener('update_unread', checkUpdates);
 
-      socketRef.current = io(apiUrl, { withCredentials: true });
-      socketRef.current.emit("join", user.id);
+      const latestUser = userRef.current; // Берем всегда свежие настройки юзера!
+      if ((latestUser as any)?.soundEnabled !== false) {
+        playNotificationSound((latestUser as any)?.notificationVolume ?? 50);
+      }
 
-      socketRef.current.on("new_notification", (data: any) => {
-        if (data.applicationId && location.pathname === `/messages/${data.applicationId}`) return;
+      if ((latestUser as any)?.toastsEnabled !== false) {
+        const isMessage = data.type === 'new_message';
+        let title = "Notification";
+        let desc = "You have a new update";
 
-        checkUpdates();
+        if (data.type === "new_application") { title = "New Application"; desc = data.message; }
+        else if (data.type === "status_update") { title = "Status Update"; desc = `Action required for ${data.jobTitle}`; }
+        else if (data.type === "new_message") { title = "New Message"; desc = "You received a new message"; }
 
-        if ((user as any).soundEnabled !== false) {
-          playNotificationSound((user as any).notificationVolume ?? 50);
-        }
-
-        if ((user as any).toastsEnabled !== false) {
-          const isMessage = data.type === 'new_message';
-          let title = "Notification";
-          let desc = "You have a new update";
-
-          if (data.type === "new_application") { title = "New Application"; desc = data.message; }
-          else if (data.type === "status_update") { title = "Status Update"; desc = `Action required for ${data.jobTitle}`; }
-          else if (data.type === "new_message") { title = "New Message"; desc = "You received a new message"; }
-
-          toast.custom((t) => (
-            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full`} style={{ 
-              background: 'rgba(15, 15, 15, 0.8)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', 
-              borderRadius: '24px', padding: '20px', display: 'flex', gap: '15px', alignItems: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-              cursor: 'pointer', transition: 'all 0.2s'
-            }}
-            onClick={() => { 
-              toast.dismiss(t.id); 
-              if (data.applicationId) navigate(`/messages/${data.applicationId}`); 
-              else navigate(user.role === 'employer' ? '/employer' : '/applications');
-            }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(25, 25, 25, 0.9)'}
-            onMouseOut={e => e.currentTarget.style.background = 'rgba(15, 15, 15, 0.8)'}
-            >
-              <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: isMessage ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {isMessage ? <ToastIcons.Message /> : <ToastIcons.Briefcase />}
+        toast.custom((t) => (
+          <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full`} style={{ 
+            background: 'rgba(15, 15, 15, 0.8)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', 
+            borderRadius: '24px', padding: '20px', display: 'flex', gap: '15px', alignItems: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+            cursor: 'pointer', transition: 'all 0.2s'
+          }}
+          onClick={() => { 
+            toast.dismiss(t.id); 
+            if (data.applicationId) navigate(`/messages/${data.applicationId}`); 
+            else navigate(latestUser?.role === 'employer' ? '/employer' : '/applications');
+          }}
+          onMouseOver={e => e.currentTarget.style.background = 'rgba(25, 25, 25, 0.9)'}
+          onMouseOut={e => e.currentTarget.style.background = 'rgba(15, 15, 15, 0.8)'}
+          >
+            <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: isMessage ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {isMessage ? <ToastIcons.Message /> : <ToastIcons.Briefcase />}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '13px', color: isMessage ? '#10b981' : '#3b82f6', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
+                {title}
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', color: isMessage ? '#10b981' : '#3b82f6', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-                  {title}
-                </div>
-                <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700 }}>
-                  {desc}
-                </div>
+              <div style={{ color: '#fff', fontSize: '16px', fontWeight: 700 }}>
+                {desc}
               </div>
             </div>
-          ), { duration: 5000 });
-        }
-      });
+          </div>
+        ), { duration: 5000 });
+      }
+    });
 
-      return () => {
-        if (socketRef.current) socketRef.current.disconnect();
-        window.removeEventListener('update_unread', checkUpdates);
-      };
-    }
-  }, [user, setMode, location.pathname, navigate, apiUrl]);
+    return () => {
+      if (socketRef.current) socketRef.current.disconnect();
+      window.removeEventListener('update_unread', checkUpdates);
+    };
+  // === ВАЖНО: Зависимости теперь только ID юзера и API_URL ===
+  }, [userId, apiUrl, setMode, navigate]);
 
   useEffect(() => {
     if (!isLoading && user && user.role === "candidate" && location.pathname.startsWith("/employer")) {

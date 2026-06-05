@@ -24,6 +24,14 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ ОШИБКА NODEMAILER (Связь с Google не установлена):", error.message);
+  } else {
+    console.log("✅ Nodemailer успешно подключен! Сервер готов отправлять письма.");
+  }
+});
+
 function signToken(user: { id: string; role: string }) {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error("JWT_SECRET not set");
@@ -50,7 +58,12 @@ authRouter.post("/register", async (req, res) => {
     });
 
     const verifyLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-    await transporter.sendMail({
+    
+    // === 1. СНАЧАЛА ОТДАЕМ ОТВЕТ ФРОНТЕНДУ ===
+    res.status(201).json({ message: "Успешная регистрация. Проверьте почту!" });
+
+    // === 2. ПОТОМ ОТПРАВЛЯЕМ ПИСЬМО В ФОНЕ (fire-and-forget) ===
+    transporter.sendMail({
       from: `"JobBoard Team" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Confirm your email on JobBoard",
@@ -62,9 +75,8 @@ authRouter.post("/register", async (req, res) => {
           <a href="${verifyLink}" style="display: inline-block; padding: 12px 24px; background: #10b981; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 15px;">Verify Email</a>
         </div>
       `
-    });
+    }).catch(err => console.error("Ошибка отправки письма (Регистрация):", err));
 
-    res.status(201).json({ message: "Успешная регистрация. Проверьте почту!" });
   } catch (err) {
     res.status(500).json({ message: "Database or email error" });
   }
@@ -87,7 +99,6 @@ authRouter.post('/verify-email', async (req, res) => {
   }
 });
 
-// === ОБНОВЛЕННЫЙ ВХОД С ПРОВЕРКОЙ 2FA ===
 authRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const user = await prisma.user.findUnique({ where: { email } });
@@ -100,14 +111,12 @@ authRouter.post("/login", async (req, res) => {
     return res.status(403).json({ message: "Please verify your email first. Check your inbox!" });
   }
 
-  // Если у юзера включена 2FA - НЕ ДАЕМ ТОКЕН, просим код!
   if (user.isTwoFactorEnabled) {
     return res.json({ requires2FA: true, userId: user.id });
   }
 
   const token = signToken(user);
   
-  // Делаем то же самое: отрезаем пароли и отдаем всего юзера целиком
   const { passwordHash: ph, twoFactorSecret, verificationToken, resetToken, ...safeUser } = user;
   
   res.json({ 
@@ -116,7 +125,6 @@ authRouter.post("/login", async (req, res) => {
   });
 });
 
-// === НОВЫЙ РОУТ: ПОДТВЕРЖДЕНИЕ КОДА 2FA ПРИ ВХОДЕ ===
 authRouter.post("/verify-2fa-login", async (req, res) => {
   const { userId, code } = req.body;
   
@@ -133,7 +141,6 @@ authRouter.post("/verify-2fa-login", async (req, res) => {
 
     if (!verified) return res.status(401).json({ message: "Invalid 2FA code" });
 
-    // Если код верный, отдаем заветный токен!
     const token = signToken(user);
     res.json({ 
       user: { id: user.id, email: user.email, role: user.role, username: user.username, firstName: user.firstName, lastName: user.lastName, phone: user.phone, avatarUrl: user.avatarUrl, isTwoFactorEnabled: user.isTwoFactorEnabled }, 
@@ -144,7 +151,6 @@ authRouter.post("/verify-2fa-login", async (req, res) => {
   }
 });
 
-// === ВХОД И РЕГИСТРАЦИЯ ЧЕРЕЗ GOOGLE ===
 authRouter.post("/google", async (req, res) => {
   const { credential, role } = req.body;
   try {
@@ -178,7 +184,6 @@ authRouter.post("/google", async (req, res) => {
   }
 });
 
-// === ВХОД И РЕГИСТРАЦИЯ ЧЕРЕЗ GITHUB ===
 authRouter.post("/github", async (req, res) => {
   const { code, role } = req.body;
   try {
@@ -224,18 +229,16 @@ authRouter.post("/github", async (req, res) => {
 });
 
 authRouter.put("/profile", authMiddleware, async (req: any, res) => {
-  // 1. Сюда добавили notificationVolume в самый конец деструктуризации:
   const { firstName, lastName, phone, status, bio, skills, isPublic, showEmail, soundEnabled, toastsEnabled, experience, location, notificationVolume } = req.body; 
   try {
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
-      // 2. И сюда добавили notificationVolume, чтобы Prisma сохранила его в базу Neon:
       data: { firstName, lastName, phone, status, bio, skills, isPublic, showEmail, soundEnabled, toastsEnabled, experience, location, notificationVolume },
       select: { 
         id: true, email: true, role: true, username: true, firstName: true, lastName: true, phone: true, avatarUrl: true, status: true, bio: true, skills: true, isTwoFactorEnabled: true,
         isPublic: true, showEmail: true, soundEnabled: true, toastsEnabled: true, experience: true, resumeUrl: true, 
         location: true,
-        notificationVolume: true // <-- Выберем его тоже для ответа фронтенду
+        notificationVolume: true 
       }
     });
     res.json({ user: updatedUser });
@@ -251,7 +254,6 @@ authRouter.get("/me", authMiddleware, async (req: any, res) => {
   
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  // Магия: отрезаем секретные данные, а всё остальное (location, resumeUrl и т.д.) отдаем на фронт!
   const { passwordHash, twoFactorSecret, verificationToken, resetToken, ...safeUser } = user;
   
   res.json({ user: safeUser });
@@ -290,7 +292,11 @@ authRouter.post('/request-password-reset', async (req, res) => {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     
-    await transporter.sendMail({
+    // === 1. СНАЧАЛА ОТДАЕМ ОТВЕТ ФРОНТЕНДУ ===
+    res.json({ message: "Письмо со ссылкой отправлено!" });
+
+    // === 2. ПОТОМ ОТПРАВЛЯЕМ ПИСЬМО В ФОНЕ ===
+    transporter.sendMail({
       from: `"JobBoard Security" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Password Reset Request",
@@ -303,8 +309,8 @@ authRouter.post('/request-password-reset', async (req, res) => {
           <p style="margin-top: 20px; font-size: 12px; color: #666;">If you didn't request this, just ignore this email.</p>
         </div>
       `
-    });
-    res.json({ message: "Письмо со ссылкой отправлено!" });
+    }).catch(err => console.error("Ошибка отправки письма (Сброс пароля):", err));
+
   } catch (err) {
     res.status(500).json({ message: "Ошибка сервера" });
   }
@@ -328,7 +334,6 @@ authRouter.post('/reset-password', async (req, res) => {
   }
 });
 
-// === ОБНОВЛЕННАЯ ОТПРАВКА СООБЩЕНИЯ (ТЕПЕРЬ С СОХРАНЕНИЕМ В БД) ===
 authRouter.post('/contact', async (req: any, res) => {
   const { name, email, subject, message, userId } = req.body;
 
@@ -337,7 +342,6 @@ authRouter.post('/contact', async (req: any, res) => {
   }
 
   try {
-    // 1. Сохраняем в базу данных
     const ticket = await prisma.supportTicket.create({
       data: {
         name,
@@ -348,8 +352,11 @@ authRouter.post('/contact', async (req: any, res) => {
       }
     });
 
-    // 2. Отправляем письмо (как и раньше)
-    await transporter.sendMail({
+    // === 1. СНАЧАЛА ОТДАЕМ ОТВЕТ ФРОНТЕНДУ ===
+    res.json({ message: "Message sent and ticket created!", ticket });
+
+    // === 2. ПОТОМ ОТПРАВЛЯЕМ ПИСЬМО В ФОНЕ ===
+    transporter.sendMail({
       from: `"JobBoard Support" <${process.env.EMAIL_USER}>`, 
       replyTo: email,
       to: process.env.EMAIL_USER,
@@ -364,15 +371,13 @@ authRouter.post('/contact', async (req: any, res) => {
           <p>${message}</p>
         </div>
       `
-    });
+    }).catch(err => console.error("Ошибка отправки письма (Контакты):", err));
 
-    res.json({ message: "Message sent and ticket created!", ticket });
   } catch (err) {
     res.status(500).json({ message: "Failed to process request." });
   }
 });
 
-// === ПОЛУЧЕНИЕ МОИХ ТИКЕТОВ ===
 authRouter.get('/support-tickets', authMiddleware, async (req: any, res) => {
   try {
     const tickets = await prisma.supportTicket.findMany({
@@ -385,7 +390,6 @@ authRouter.get('/support-tickets', authMiddleware, async (req: any, res) => {
   }
 });
 
-// === 2FA РОУТЫ ===
 authRouter.post('/2fa/generate', authMiddleware, async (req: any, res: any) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
@@ -453,7 +457,6 @@ authRouter.get('/users/:id', async (req, res) => {
       select: {
         id: true, firstName: true, lastName: true, username: true, email: true, phone: true, avatarUrl: true, status: true, role: true,
         isPublic: true, showEmail: true, bio: true, skills: true,
-        // Добавили сюда тоже!
         location: true, experience: true, resumeUrl: true
       }
     });
@@ -465,8 +468,6 @@ authRouter.get('/users/:id', async (req, res) => {
   }
 });
 
-// БЫЛО: authRouter.post('/resume', authMiddleware, uploadAvatar.single('resume'), ...
-// СТАЛО (используем uploadCV):
 authRouter.post('/resume', authMiddleware, uploadCV.single('resume'), async (req: any, res: any) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });

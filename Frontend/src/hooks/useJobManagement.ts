@@ -36,7 +36,7 @@ export function useJobManagement() {
 
   const handleUpdateStatus = async (appId: string, newStatus: string) => {
     try {
-      await api.patch(`/applications/${appId}`, { status: newStatus });
+      await api.patch(`/applications/${appId}/status`, { status: newStatus });
       setApplications(apps => apps.map(app => app.id === appId ? { ...app, status: newStatus } : app));
     } catch (err) {
       alert("Error updating status");

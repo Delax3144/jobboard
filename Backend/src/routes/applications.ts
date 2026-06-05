@@ -11,8 +11,8 @@ export const applicationsRouter = Router();
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'vasyakr14@gmail.com', // Замени на свою почту
-    pass: 'xxxv zewe uobu ynmm' // Вставь пароль приложения без пробелов
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
