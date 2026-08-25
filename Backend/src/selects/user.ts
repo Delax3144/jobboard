@@ -24,3 +24,13 @@ export const safeUserSelect = {
   resumeUrl: true,
   location: true,
 } satisfies Prisma.UserSelect;
+
+export const applicationCandidateSelect = {
+  id: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  phone: true,
+  avatarUrl: true,
+  lastActive: true,
+} satisfies Prisma.UserSelect;

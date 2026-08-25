@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authMiddleware } from "../middleware/auth";
 import { uploadCV } from "../lib/upload";
+import { applicationCandidateSelect } from "../selects/user";
 import nodemailer from "nodemailer";
 
 export const applicationsRouter = Router();
@@ -66,8 +67,12 @@ applicationsRouter.get("/job/:jobId", authMiddleware, async (req: any, res) => {
 
     const apps = await prisma.application.findMany({
       where: { jobId },
-      include: { candidate: true },
-      orderBy: { createdAt: 'desc' }
+      include: {
+        candidate: {
+          select: applicationCandidateSelect,
+        },
+      },
+      orderBy: { createdAt: "desc" },
     });
     res.json(apps);
   } catch (err) {
@@ -85,9 +90,11 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
       where: { id: req.params.id },
       data: { status },
       include: {
-        candidate: true,
-        job: true
-      }
+        candidate: {
+          select: applicationCandidateSelect,
+        },
+        job: true,
+      },
     });
 
     // Формируем письмо в зависимости от статуса
