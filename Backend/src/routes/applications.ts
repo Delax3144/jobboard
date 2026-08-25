@@ -4,6 +4,12 @@ import { authMiddleware } from "../middleware/auth";
 import { uploadCV } from "../lib/upload";
 import { applicationCandidateSelect } from "../selects/user";
 import nodemailer from "nodemailer";
+import {
+  applicationIdSchema,
+  createApplicationSchema,
+  jobIdSchema,
+  sendMessageSchema
+} from "../validation/applications";
 
 export const applicationsRouter = Router();
 
@@ -19,7 +25,16 @@ const transporter = nodemailer.createTransport({
 
 // 1. ОТПРАВИТЬ ОТКЛИК
 applicationsRouter.post("/", authMiddleware, uploadCV.single("cv"), async (req: any, res) => {
-  const { jobId, coverLetter } = req.body;
+  const parsed = createApplicationSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "Invalid application data",
+      errors: parsed.error.flatten().fieldErrors,
+    });
+  }
+
+  const { jobId, coverLetter } = parsed.data;
   const cvUrl = req.file ? req.file.path : null;
 
   if (req.user.role !== "candidate") {
@@ -66,8 +81,19 @@ applicationsRouter.get("/job/:jobId", authMiddleware, async (req: any, res) => {
   }
 
   try {
-    const { jobId } = req.params;
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    const parsedJobId = jobIdSchema.safeParse(req.params.jobId);
+
+    if (!parsedJobId.success) {
+      return res.status(400).json({
+        message: "Invalid job id",
+      });
+    }
+
+    const jobId = parsedJobId.data;
+
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+    });;
     
     if (!job || job.ownerId !== req.user.id) {
       return res.status(403).json({ message: "Access denied" });
@@ -92,6 +118,16 @@ applicationsRouter.get("/job/:jobId", authMiddleware, async (req: any, res) => {
 applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
   const { status } = req.body; // status: 'invited' или 'rejected'
 
+  const parsedId = applicationIdSchema.safeParse(req.params.id);
+
+  if (!parsedId.success) {
+    return res.status(400).json({
+      message: "Invalid application id",
+    });
+  }
+
+  const applicationId = parsedId.data;
+
   const allowedStatuses = ["invited", "rejected"];
 
   if (!allowedStatuses.includes(status)) {
@@ -104,7 +140,7 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
   
   try {
     const application = await prisma.application.findUnique({
-      where: { id: req.params.id },
+      where: { id: applicationId },
       select: {
         id: true,
         job: {
@@ -125,7 +161,7 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
 
     // Обновляем статус в базе и достаем инфу для письма
     const updated = await prisma.application.update({
-      where: { id: req.params.id },
+      where: { id: applicationId },
       data: { status },
       include: {
         candidate: {
@@ -246,7 +282,15 @@ applicationsRouter.get("/owner", authMiddleware, async (req: any, res) => {
 // 6. ПОЛУЧИТЬ ОДИН ОТКЛИК ПО ID (ИСПРАВЛЕНО)
 applicationsRouter.get("/:id", authMiddleware, async (req: any, res) => {
   try {
-    const { id } = req.params;
+    const parsedId = applicationIdSchema.safeParse(req.params.id);
+
+    if (!parsedId.success) {
+      return res.status(400).json({
+        message: "Invalid application id",
+      });
+    }
+
+    const id = parsedId.data;
 
     const existingApp = await prisma.application.findUnique({
       where: { id },
@@ -305,8 +349,25 @@ applicationsRouter.get("/:id", authMiddleware, async (req: any, res) => {
 
 // 7. ОТПРАВИТЬ СООБЩЕНИЕ В ЧАТ
 applicationsRouter.post("/:id/messages", authMiddleware, async (req: any, res) => {
-  const { text } = req.body;
-  const { id } = req.params;
+  const parsedId = applicationIdSchema.safeParse(req.params.id);
+
+  if (!parsedId.success) {
+    return res.status(400).json({
+      message: "Invalid application id",
+    });
+  }
+
+  const parsedBody = sendMessageSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    return res.status(400).json({
+      message: "Invalid message data",
+      errors: parsedBody.error.flatten().fieldErrors,
+    });
+  }
+
+  const id = parsedId.data;
+  const { text } = parsedBody.data;
 
   try {
     // Достаем отклик вместе с вакансией, чтобы знать ID работодателя
