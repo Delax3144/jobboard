@@ -3,25 +3,63 @@ import { prisma } from "../prisma";
 import { authMiddleware } from "../middleware/auth";
 import { uploadJob } from "../lib/upload";
 import { sanitizeRichText } from "../lib/sanitizeHtml";
-import { Request } from "express";
+import {
+  createJobSchema,
+  jobIdSchema,
+  updateJobSchema,
+  ownerIdSchema
+} from "../validation/jobs";
 
 export const jobsRouter = Router();
 
 // 1. Получение всех или по владельцу
 jobsRouter.get("/", async (req, res) => {
-  const { ownerId } = req.query; 
+  const { ownerId } = req.query;
+
+  if (ownerId !== undefined) {
+    const parsedOwnerId = ownerIdSchema.safeParse(ownerId);
+
+    if (!parsedOwnerId.success) {
+      return res.status(400).json({
+        message: "Invalid owner id",
+      });
+    }
+
+    const jobs = await prisma.job.findMany({
+      where: { ownerId: parsedOwnerId.data },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.json({ jobs });
+  }
+
   const jobs = await prisma.job.findMany({
-    where: ownerId ? { ownerId: ownerId as string } : { status: "published" },
-    orderBy: { createdAt: "desc" }
+    where: { status: "published" },
+    orderBy: { createdAt: "desc" },
   });
+
   res.json({ jobs });
 });
 
 // 2. Получение одной
 jobsRouter.get("/:id", async (req, res) => {
+  const parsedId = jobIdSchema.safeParse(req.params.id);
+
+  if (!parsedId.success) {
+    return res.status(400).json({
+      message: "Invalid job id",
+    });
+  }
+
   try {
-    const job = await prisma.job.findUnique({ where: { id: req.params.id } });
-    if (!job) return res.status(404).json({ message: "Вакансия не найдена" });
+    const job = await prisma.job.findUnique({
+      where: { id: parsedId.data },
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Вакансия не найдена" });
+    }
+
     res.json(job);
   } catch (error) {
     res.status(500).json({ message: "Ошибка сервера" });
@@ -30,10 +68,33 @@ jobsRouter.get("/:id", async (req, res) => {
 
 // 3. Создание
 jobsRouter.post("/", authMiddleware, uploadJob.single("logo"), async (req: any, res) => {
-  if (req.user.role !== "employer") return res.status(403).json({ message: "Employers only" });
-  const { title, companyName, location, salaryFrom, salaryTo, description, tags, level, status } = req.body;
+  if (req.user.role !== "employer") {
+    return res.status(403).json({ message: "Employers only" });
+  }
+
+  const parsed = createJobSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "Invalid job data",
+      errors: parsed.error.flatten().fieldErrors,
+    });
+  }
+
+  const {
+    title,
+    companyName,
+    location,
+    salaryFrom,
+    salaryTo,
+    description,
+    tags,
+    level,
+    status,
+  } = parsed.data;
+
   const companyLogo = req.file ? req.file.path : null;
-  const sanitizedDescription = sanitizeRichText(description ?? "");
+  const sanitizedDescription = sanitizeRichText(description);
 
   try {
     const job = await prisma.job.create({
@@ -43,12 +104,12 @@ jobsRouter.post("/", authMiddleware, uploadJob.single("logo"), async (req: any, 
         companyLogo,
         location,
         description: sanitizedDescription,
-        level: level || "Junior",
-        salaryFrom: Number(salaryFrom) || 0,
-        salaryTo: Number(salaryTo) || 0,
-        tags: tags || "",
+        level,
+        salaryFrom,
+        salaryTo,
+        tags,
         ownerId: req.user.id,
-        status: status || "published",
+        status,
       }
     });
     res.status(201).json(job);
@@ -57,25 +118,71 @@ jobsRouter.post("/", authMiddleware, uploadJob.single("logo"), async (req: any, 
   }
 });
 
-// 4. РЕДАКТИРОВАНИЕ (Исправляет ошибку 404)
+// 4. РЕДАКТИРОВАНИЕ 
 jobsRouter.patch("/:id", authMiddleware, uploadJob.single("logo"), async (req: any, res) => {
   const { id } = req.params;
-  const { title, companyName, location, salaryFrom, salaryTo, description, tags, level, status } = req.body;
+
+  const parsedId = jobIdSchema.safeParse(id);
+
+  if (!parsedId.success) {
+    return res.status(400).json({
+      message: "Invalid job id",
+    });
+  }
+
+  const parsed = updateJobSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "Invalid job data",
+      errors: parsed.error.flatten().fieldErrors,
+    });
+  }
+
+  const jobId = parsedId.data;
+
+  const {
+    title,
+    companyName,
+    location,
+    salaryFrom,
+    salaryTo,
+    description,
+    tags,
+    level,
+    status,
+  } = parsed.data;
   const sanitizedDescription =
-  typeof description === "string"
+  description !== undefined
     ? sanitizeRichText(description)
     : undefined;
 
   try {
-    const existingJob = await prisma.job.findUnique({ where: { id } });
+    const existingJob = await prisma.job.findUnique({ where: { id: jobId } });
     if (!existingJob || existingJob.ownerId !== req.user.id) {
       return res.status(403).json({ message: "Access denied" });
+    }
+
+    const nextSalaryFrom = salaryFrom ?? existingJob.salaryFrom;
+    const nextSalaryTo = salaryTo ?? existingJob.salaryTo;
+
+    if (
+      nextSalaryFrom !== null &&
+      nextSalaryTo !== null &&
+      nextSalaryFrom > nextSalaryTo
+    ) {
+      return res.status(400).json({
+        message: "Invalid job data",
+        errors: {
+          salaryTo: ["Minimum salary cannot exceed maximum salary"],
+        },
+      });
     }
 
     const companyLogo = req.file ? req.file.path : undefined;
 
     const updatedJob = await prisma.job.update({
-      where: { id },
+      where: { id: jobId },
       data: {
         title,
         companyName,
@@ -84,8 +191,8 @@ jobsRouter.patch("/:id", authMiddleware, uploadJob.single("logo"), async (req: a
         description: sanitizedDescription,
         tags,
         status,
-        salaryFrom: salaryFrom ? Number(salaryFrom) : undefined,
-        salaryTo: salaryTo ? Number(salaryTo) : undefined,
+        salaryFrom,
+        salaryTo,
         ...(companyLogo && { companyLogo }),
       }
     });
@@ -96,23 +203,34 @@ jobsRouter.patch("/:id", authMiddleware, uploadJob.single("logo"), async (req: a
 });
 
 // 5. Удаление
-// Находишь этот роут в самом низу backend/src/routes/jobs.ts и заменяешь:
 jobsRouter.delete("/:id", authMiddleware, async (req: any, res) => {
+  const parsedId = jobIdSchema.safeParse(req.params.id);
+
+  if (!parsedId.success) {
+    return res.status(400).json({
+      message: "Invalid job id",
+    });
+  }
+
+  const jobId = parsedId.data;
+
   try {
-    const jobId = req.params.id;
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
-    
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+    });
+
     if (!job || job.ownerId !== req.user.id) {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    // ВАЖНО: Сначала удаляем все отклики, связанные с этой вакансией,
-    // чтобы избежать ошибки Foreign Key Constraint (ошибка 500)
-    await prisma.application.deleteMany({ where: { jobId: jobId } });
+    await prisma.application.deleteMany({
+      where: { jobId },
+    });
 
-    // Теперь, когда вакансия "свободна", удаляем её
-    await prisma.job.delete({ where: { id: jobId } });
-    
+    await prisma.job.delete({
+      where: { id: jobId },
+    });
+
     res.status(204).send();
   } catch (error) {
     console.error("Delete error:", error);
