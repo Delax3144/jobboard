@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { authenticateSocket } from "./socket/authenticateSocket";
 // 1. СНАЧАЛА ЗАГРУЖАЕМ ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ!
 dotenv.config();
 
@@ -25,20 +26,19 @@ const io = new Server(httpServer, {
   }
 });
 
+io.use(authenticateSocket);
+
 app.set("io", io);
 
 io.on("connection", (socket) => {
-  console.log("New socket connection:", socket.id);
+  const user = socket.data.user;
 
-  socket.on("join", (userId) => {
-    if (userId) {
-      socket.join(userId);
-      console.log(`User ${userId} joined their personal room`);
-    }
-  });
+  socket.join(user.id);
+
+  console.log(`User ${user.id} connected:`, socket.id);
 
   socket.on("disconnect", () => {
-    console.log("Socket disconnected:", socket.id);
+    console.log(`User ${user.id} disconnected:`, socket.id);
   });
 });
 

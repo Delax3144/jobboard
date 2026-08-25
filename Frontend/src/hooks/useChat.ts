@@ -110,18 +110,28 @@ export function useChat() {
 
   useEffect(() => {
     if (!user) return;
-    socketRef.current = io(apiUrl, { withCredentials: true });
-    socketRef.current.emit("join", user.id);
+
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    socketRef.current = io(apiUrl, {
+      auth: { token },
+      withCredentials: true,
+    });
 
     socketRef.current.on("new_message", (data: any) => {
-      fetchChats(); 
+      fetchChats();
+
       if (activeChatIdRef.current === data.applicationId) {
-        api.get(`/applications/${data.applicationId}`).then(res => setAppWithScroll(res.data));
+        api
+          .get(`/applications/${data.applicationId}`)
+          .then((res) => setAppWithScroll(res.data));
       }
     });
 
     return () => {
-      if (socketRef.current) socketRef.current.disconnect();
+      socketRef.current?.disconnect();
     };
   }, [user]);
 

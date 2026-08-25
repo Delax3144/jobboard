@@ -83,11 +83,17 @@ export function useTopNav(setMode: (m: UserMode) => void) {
       }
     };
 
-    checkUpdates();
-    window.addEventListener('update_unread', checkUpdates);
+    const token = localStorage.getItem("token");
 
-    socketRef.current = io(apiUrl, { withCredentials: true });
-    socketRef.current.emit("join", userId);
+    if (!token) return;
+
+    checkUpdates();
+    window.addEventListener("update_unread", checkUpdates);
+
+    socketRef.current = io(apiUrl, {
+      auth: { token },
+      withCredentials: true,
+    });
 
     socketRef.current.on("new_notification", (data: any) => {
       if (data.applicationId && pathnameRef.current === `/messages/${data.applicationId}`) return;
