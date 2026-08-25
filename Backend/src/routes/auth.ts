@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../prisma";
 import { authMiddleware } from "../middleware/auth";
 import { uploadAvatar, uploadCV } from "../lib/upload";
+import { safeUserSelect } from "../selects/user";
 import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
 import nodemailer from "nodemailer";
@@ -43,18 +44,40 @@ authRouter.post("/register", async (req, res) => {
   if (!email || !password || !role || !username || !firstName || !lastName) {
     return res.status(400).json({ message: "All required fields must be filled" });
   }
-  const existingEmail = await prisma.user.findUnique({ where: { email } });
-  if (existingEmail) return res.status(409).json({ message: "email" });
-  const existingUser = await prisma.user.findUnique({ where: { username } });
-  if (existingUser) return res.status(409).json({ message: "username" });
+  const existingEmail = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  if (existingEmail) {
+    return res.status(409).json({ message: "email" });
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { username },
+    select: { id: true },
+  });
+
+  if (existingUser) {
+    return res.status(409).json({ message: "username" });
+  }
 
   const passwordHash = await bcrypt.hash(password, 10);
   const verificationToken = crypto.randomBytes(32).toString('hex'); 
 
   try {
-    const user = await prisma.user.create({
-      data: { email, passwordHash, role, username, firstName, lastName, phone, verificationToken },
-      select: { id: true, email: true, role: true, username: true, firstName: true, lastName: true, phone: true, isTwoFactorEnabled: true }
+    await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        role,
+        username,
+        firstName,
+        lastName,
+        phone,
+        verificationToken,
+      },
+      select: { id: true },
     });
 
     const verifyLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
@@ -85,7 +108,10 @@ authRouter.post("/register", async (req, res) => {
 authRouter.post('/verify-email', async (req, res) => {
   const { token } = req.body;
   try {
-    const user = await prisma.user.findFirst({ where: { verificationToken: token } });
+    const user = await prisma.user.findFirst({
+      where: { verificationToken: token },
+      select: { id: true },
+    });
     if (!user) return res.status(400).json({ message: "Неверный или устаревший токен" });
 
     await prisma.user.update({
@@ -101,7 +127,14 @@ authRouter.post('/verify-email', async (req, res) => {
 
 authRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      ...safeUserSelect,
+      passwordHash: true,
+      isVerified: true,
+    },
+  });
   
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
     return res.status(401).json({ message: "Invalid credentials" });
@@ -116,20 +149,30 @@ authRouter.post("/login", async (req, res) => {
   }
 
   const token = signToken(user);
-  
-  const { passwordHash: ph, twoFactorSecret, verificationToken, resetToken, ...safeUser } = user;
-  
-  res.json({ 
-    user: safeUser, 
-    token 
+
+  const {
+    passwordHash,
+    isVerified,
+    ...safeUser
+  } = user;
+
+  res.json({
+    user: safeUser,
+    token,
   });
-});
+  });
 
 authRouter.post("/verify-2fa-login", async (req, res) => {
   const { userId, code } = req.body;
   
   try {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        ...safeUserSelect,
+        twoFactorSecret: true,
+      },
+    });
     if (!user || !user.twoFactorSecret) return res.status(400).json({ message: "Invalid request" });
 
     const verified = speakeasy.totp.verify({
@@ -142,9 +185,15 @@ authRouter.post("/verify-2fa-login", async (req, res) => {
     if (!verified) return res.status(401).json({ message: "Invalid 2FA code" });
 
     const token = signToken(user);
-    res.json({ 
-      user: { id: user.id, email: user.email, role: user.role, username: user.username, firstName: user.firstName, lastName: user.lastName, phone: user.phone, avatarUrl: user.avatarUrl, isTwoFactorEnabled: user.isTwoFactorEnabled }, 
-      token 
+
+    const {
+      twoFactorSecret,
+      ...safeUser
+    } = user;
+
+    res.json({
+      user: safeUser,
+      token,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -159,7 +208,10 @@ authRouter.post("/google", async (req, res) => {
     if (!payload || !payload.email) return res.status(400).json({ message: "Некорректный токен Google" });
 
     const { email, given_name, family_name, picture } = payload;
-    let user = await prisma.user.findUnique({ where: { email } });
+    let user = await prisma.user.findUnique({
+      where: { email },
+      select: safeUserSelect,
+    });
 
     if (!user) {
       const randomPassword = Math.random().toString(36).slice(-10) + 'A1!';
@@ -169,16 +221,25 @@ authRouter.post("/google", async (req, res) => {
 
       user = await prisma.user.create({
         data: { 
-          email, passwordHash, role: role || 'candidate', username, 
-          firstName: given_name || 'User', lastName: family_name || '', 
-          avatarUrl: picture, phone: '', 
-          isVerified: true 
-        }
+          email,
+          passwordHash,
+          role: role || "candidate",
+          username,
+          firstName: given_name || "User",
+          lastName: family_name || "",
+          avatarUrl: picture,
+          phone: "",
+          isVerified: true,
+        },
+        select: safeUserSelect,
       });
     }
 
     const token = signToken(user);
-    res.json({ user: { id: user.id, email: user.email, role: user.role, username: user.username, firstName: user.firstName, lastName: user.lastName, avatarUrl: user.avatarUrl, isTwoFactorEnabled: user.isTwoFactorEnabled }, token });
+    res.json({
+      user,
+      token,
+    });
   } catch (err) {
     res.status(500).json({ message: "Ошибка авторизации через Google" });
   }
@@ -203,7 +264,10 @@ authRouter.post("/github", async (req, res) => {
 
     if (!email) return res.status(400).json({ message: "Не удалось получить email из GitHub" });
 
-    let user = await prisma.user.findUnique({ where: { email } });
+    let user = await prisma.user.findUnique({
+      where: { email },
+      select: safeUserSelect,
+    });
 
     if (!user) {
       const randomPassword = Math.random().toString(36).slice(-10) + 'A1!';
@@ -213,16 +277,22 @@ authRouter.post("/github", async (req, res) => {
 
       user = await prisma.user.create({
         data: { 
-          email, passwordHash, role: role || 'candidate', username, 
-          firstName: githubUser.name?.split(' ')[0] || githubUser.login, lastName: githubUser.name?.split(' ').slice(1).join(' ') || '', 
-          avatarUrl: githubUser.avatar_url, phone: '',
+          email,
+          passwordHash,
+          role: role || 'candidate',
+          username, 
+          firstName: githubUser.name?.split(' ')[0] || githubUser.login,
+          lastName: githubUser.name?.split(' ').slice(1).join(' ') || '', 
+          avatarUrl: githubUser.avatar_url,
+          phone: '',
           isVerified: true
-        }
+        },
+        select: safeUserSelect,
       });
     }
 
     const token = signToken(user);
-    res.json({ user: { ...user, isTwoFactorEnabled: user.isTwoFactorEnabled }, token });
+    res.json({ user, token });
   } catch (err) {
     res.status(500).json({ message: "Ошибка авторизации через GitHub" });
   }
@@ -233,13 +303,22 @@ authRouter.put("/profile", authMiddleware, async (req: any, res) => {
   try {
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
-      data: { firstName, lastName, phone, status, bio, skills, isPublic, showEmail, soundEnabled, toastsEnabled, experience, location, notificationVolume },
-      select: { 
-        id: true, email: true, role: true, username: true, firstName: true, lastName: true, phone: true, avatarUrl: true, status: true, bio: true, skills: true, isTwoFactorEnabled: true,
-        isPublic: true, showEmail: true, soundEnabled: true, toastsEnabled: true, experience: true, resumeUrl: true, 
-        location: true,
-        notificationVolume: true 
-      }
+      data: {
+        firstName,
+        lastName,
+        phone,
+        status,
+        bio,
+        skills,
+        isPublic,
+        showEmail,
+        soundEnabled,
+        toastsEnabled,
+        experience,
+        location,
+        notificationVolume,
+      },
+      select: safeUserSelect,
     });
     res.json({ user: updatedUser });
   } catch (err) {
@@ -249,14 +328,15 @@ authRouter.put("/profile", authMiddleware, async (req: any, res) => {
 
 authRouter.get("/me", authMiddleware, async (req: any, res) => {
   const user = await prisma.user.findUnique({
-    where: { id: req.user.id }
+    where: { id: req.user.id },
+    select: safeUserSelect,
   });
-  
-  if (!user) return res.status(404).json({ message: "User not found" });
 
-  const { passwordHash, twoFactorSecret, verificationToken, resetToken, ...safeUser } = user;
-  
-  res.json({ user: safeUser });
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  res.json({ user });
 });
 
 authRouter.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), async (req: any, res: any) => {
@@ -284,7 +364,13 @@ authRouter.post('/ping', authMiddleware, async (req: any, res: any) => {
 authRouter.post('/request-password-reset', async (req, res) => {
   const { email } = req.body;
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        firstName: true,
+      },
+    });
     if (!user) return res.status(400).json({ message: "User not found" });
 
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -319,7 +405,10 @@ authRouter.post('/request-password-reset', async (req, res) => {
 authRouter.post('/reset-password', async (req, res) => {
   const { token, newPassword } = req.body;
   try {
-    const user = await prisma.user.findFirst({ where: { resetToken: token } });
+    const user = await prisma.user.findFirst({
+      where: { resetToken: token },
+      select: { id: true },
+    });
     if (!user) return res.status(400).json({ message: "Неверный или устаревший токен" });
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -392,7 +481,13 @@ authRouter.get('/support-tickets', authMiddleware, async (req: any, res) => {
 
 authRouter.post('/2fa/generate', authMiddleware, async (req: any, res: any) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const secret = speakeasy.generateSecret({ name: `JobBoard (${user.email})` });
@@ -413,7 +508,13 @@ authRouter.post('/2fa/generate', authMiddleware, async (req: any, res: any) => {
 authRouter.post('/2fa/enable', authMiddleware, async (req: any, res: any) => {
   const { code } = req.body;
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        twoFactorSecret: true,
+      },
+    });
     if (!user || !user.twoFactorSecret) return res.status(400).json({ message: "2FA not initialized" });
 
     const verified = speakeasy.totp.verify({
