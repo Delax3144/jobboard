@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { useJobDetails } from "../hooks/useJobDetails";
 import ApplyModal from "../components/jobs/ApplyModal";
+import DOMPurify from "dompurify";
 
 const Icons = {
   ArrowLeft: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>,
@@ -18,6 +19,28 @@ export default function JobDetails() {
 
   if (isLoading) return <div style={{ color: '#fff', textAlign: 'center', paddingTop: '100vh', background: '#050505', height: '100vh' }}>Loading job details...</div>;
   if (!job) return <div style={{ color: '#fff', textAlign: 'center', paddingTop: '100px', background: '#050505', height: '100vh' }}><h1>Job not found</h1><Link to="/jobs" style={{ color: '#10b981' }}>← Back to Search</Link></div>;
+
+  const sanitizedDescription = DOMPurify.sanitize(job.description ?? "", {
+    ALLOWED_TAGS: [
+      "p",
+      "br",
+      "strong",
+      "b",
+      "em",
+      "i",
+      "u",
+      "s",
+      "blockquote",
+      "ul",
+      "ol",
+      "li",
+      "h1",
+      "h2",
+      "h3",
+      "a",
+    ],
+    ALLOWED_ATTR: ["href", "target", "rel"],
+  });
 
   return (
     <div style={{ background: '#050505', width: '100vw', position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', minHeight: 'calc(100vh - 80px)', overflowX: 'clip', paddingBottom: '100px' }}>
@@ -108,7 +131,7 @@ export default function JobDetails() {
 
             <div>
               <h3 style={{ fontSize: '14px', color: '#666', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '15px' }}>Job Description</h3>
-              <div className="job-description" dangerouslySetInnerHTML={{ __html: job.description }} />
+              <div className="job-description" dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
             </div>
           </div>
 

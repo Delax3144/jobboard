@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authMiddleware } from "../middleware/auth";
 import { uploadJob } from "../lib/upload";
+import { sanitizeRichText } from "../lib/sanitizeHtml";
 import { Request } from "express";
 
 export const jobsRouter = Router();
@@ -32,17 +33,22 @@ jobsRouter.post("/", authMiddleware, uploadJob.single("logo"), async (req: any, 
   if (req.user.role !== "employer") return res.status(403).json({ message: "Employers only" });
   const { title, companyName, location, salaryFrom, salaryTo, description, tags, level, status } = req.body;
   const companyLogo = req.file ? req.file.path : null;
+  const sanitizedDescription = sanitizeRichText(description ?? "");
 
   try {
     const job = await prisma.job.create({
       data: {
-        title, companyName, companyLogo, location, description,
+        title,
+        companyName,
+        companyLogo,
+        location,
+        description: sanitizedDescription,
         level: level || "Junior",
         salaryFrom: Number(salaryFrom) || 0,
         salaryTo: Number(salaryTo) || 0,
-        tags: tags || "", 
+        tags: tags || "",
         ownerId: req.user.id,
-        status: status || "published"
+        status: status || "published",
       }
     });
     res.status(201).json(job);
@@ -55,6 +61,10 @@ jobsRouter.post("/", authMiddleware, uploadJob.single("logo"), async (req: any, 
 jobsRouter.patch("/:id", authMiddleware, uploadJob.single("logo"), async (req: any, res) => {
   const { id } = req.params;
   const { title, companyName, location, salaryFrom, salaryTo, description, tags, level, status } = req.body;
+  const sanitizedDescription =
+  typeof description === "string"
+    ? sanitizeRichText(description)
+    : undefined;
 
   try {
     const existingJob = await prisma.job.findUnique({ where: { id } });
@@ -67,10 +77,16 @@ jobsRouter.patch("/:id", authMiddleware, uploadJob.single("logo"), async (req: a
     const updatedJob = await prisma.job.update({
       where: { id },
       data: {
-        title, companyName, location, level, description, tags, status,
+        title,
+        companyName,
+        location,
+        level,
+        description: sanitizedDescription,
+        tags,
+        status,
         salaryFrom: salaryFrom ? Number(salaryFrom) : undefined,
         salaryTo: salaryTo ? Number(salaryTo) : undefined,
-        ...(companyLogo && { companyLogo })
+        ...(companyLogo && { companyLogo }),
       }
     });
     res.json(updatedJob);
