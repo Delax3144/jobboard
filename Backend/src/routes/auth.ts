@@ -4,7 +4,11 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../prisma";
 import { authMiddleware } from "../middleware/auth";
 import { uploadAvatar, uploadCV } from "../lib/upload";
-import { safeUserSelect } from "../selects/user";
+import {
+  publicProfileSelect,
+  safeUserSelect,
+} from "../selects/user";
+import { userIdSchema } from "../validation/users";
 import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
 import nodemailer from "nodemailer";
@@ -550,21 +554,36 @@ authRouter.post('/2fa/disable', authMiddleware, async (req: any, res: any) => {
   }
 });
 
-authRouter.get('/users/:id', async (req, res) => {
+authRouter.get("/users/:id", async (req, res) => {
+  const parsedId = userIdSchema.safeParse(req.params.id);
+
+  if (!parsedId.success) {
+    return res.status(400).json({
+      message: "Invalid user id",
+    });
+  }
+
   try {
-    const { id } = req.params;
     const user = await prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true, firstName: true, lastName: true, username: true, email: true, phone: true, avatarUrl: true, status: true, role: true,
-        isPublic: true, showEmail: true, bio: true, skills: true,
-        location: true, experience: true, resumeUrl: true
-      }
+      where: { id: parsedId.data },
+      select: publicProfileSelect,
     });
 
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
-  } catch (error) {
+    if (!user || !user.isPublic) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const {
+      isPublic,
+      email,
+      ...publicUser
+    } = user;
+
+    res.json({
+      ...publicUser,
+      email: user.showEmail ? email : null,
+    });
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });

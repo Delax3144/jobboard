@@ -34,3 +34,20 @@ export const applicationCandidateSelect = {
   avatarUrl: true,
   lastActive: true,
 } satisfies Prisma.UserSelect;
+
+export const publicProfileSelect = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  username: true,
+  avatarUrl: true,
+  status: true,
+  role: true,
+  isPublic: true,
+  showEmail: true,
+  email: true,
+  bio: true,
+  skills: true,
+  location: true,
+  experience: true,
+} satisfies Prisma.UserSelect;
