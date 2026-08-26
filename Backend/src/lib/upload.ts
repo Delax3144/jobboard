@@ -1,50 +1,90 @@
-import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import multer from 'multer';
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import multer from "multer";
 
-// 1. Подключаемся к облаку (данные возьмутся из .env)
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ==========================================
-// 2. Настройки для АВАТАРОК
-// ==========================================
+const IMAGE_UPLOAD_LIMIT = 3 * 1024 * 1024;
+const CV_UPLOAD_LIMIT = 5 * 1024 * 1024;
+
+const IMAGE_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
+const CV_MIME_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]);
+
+const createMimeTypeFilter =
+  (allowedTypes: Set<string>) =>
+  (
+    _req: Express.Request,
+    file: Express.Multer.File,
+    callback: multer.FileFilterCallback
+  ) => {
+    if (!allowedTypes.has(file.mimetype)) {
+      return callback(new Error("Unsupported file type"));
+    }
+
+    callback(null, true);
+  };
+
+// Avatar uploads
 const avatarStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: async (_req, _file) => ({
-    folder: 'jobboard/avatars', // Папка в Cloudinary
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    folder: "jobboard/avatars",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
   }),
 });
-export const uploadAvatar = multer({ storage: avatarStorage });
 
-// ==========================================
-// 3. Настройки для ВАКАНСИЙ (Логотипы)
-// ==========================================
+export const uploadAvatar = multer({
+  storage: avatarStorage,
+  limits: {
+    fileSize: IMAGE_UPLOAD_LIMIT,
+  },
+  fileFilter: createMimeTypeFilter(IMAGE_MIME_TYPES),
+});
+
+// Job logo uploads
 const jobStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: async (_req, _file) => ({
-    folder: 'jobboard/jobs',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    folder: "jobboard/jobs",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
   }),
 });
-export const uploadJob = multer({ storage: jobStorage });
 
-// Backend/src/lib/upload.ts
+export const uploadJob = multer({
+  storage: jobStorage,
+  limits: {
+    fileSize: IMAGE_UPLOAD_LIMIT,
+  },
+  fileFilter: createMimeTypeFilter(IMAGE_MIME_TYPES),
+});
 
+// CV uploads
 const cvStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: async (_req, _file) => ({
-    folder: 'jobboard/cvs',
-    resource_type: 'auto', 
-    allowed_formats: ['pdf', 'doc', 'docx'],
+    folder: "jobboard/cvs",
+    resource_type: "auto",
+    allowed_formats: ["pdf", "doc", "docx"],
   }),
 });
 
-export const uploadCV = multer({ 
+export const uploadCV = multer({
   storage: cvStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, 
+  limits: {
+    fileSize: CV_UPLOAD_LIMIT,
+  },
+  fileFilter: createMimeTypeFilter(CV_MIME_TYPES),
 });

@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { authenticateSocket } from "./socket/authenticateSocket";
+import { uploadErrorHandler } from "./middleware/uploadErrorHandler";
 // 1. СНАЧАЛА ЗАГРУЖАЕМ ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ!
 dotenv.config();
 
@@ -52,6 +53,8 @@ app.use("/auth", authRouter);
 app.use("/jobs", jobsRouter);
 app.use("/applications", applicationsRouter);
 app.use("/bookmarks", bookmarksRouter);
+
+app.use(uploadErrorHandler);
 
 const port = Number(process.env.PORT || 4000);
 httpServer.listen(port, () => {

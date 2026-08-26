@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
-import { authMiddleware } from "../middleware/auth";
+import { authMiddleware, requireRole } from "../middleware/auth";
 import { uploadCV } from "../lib/upload";
 import { applicationCandidateSelect } from "../selects/user";
 import nodemailer from "nodemailer";
@@ -24,7 +24,12 @@ const transporter = nodemailer.createTransport({
 });
 
 // 1. ОТПРАВИТЬ ОТКЛИК
-applicationsRouter.post("/", authMiddleware, uploadCV.single("cv"), async (req: any, res) => {
+applicationsRouter.post(
+  "/",
+  authMiddleware,
+  requireRole("candidate"),
+  uploadCV.single("cv"),
+  async (req: any, res) => {
   const parsed = createApplicationSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -36,10 +41,6 @@ applicationsRouter.post("/", authMiddleware, uploadCV.single("cv"), async (req: 
 
   const { jobId, coverLetter } = parsed.data;
   const cvUrl = req.file ? req.file.path : null;
-
-  if (req.user.role !== "candidate") {
-    return res.status(403).json({ message: "Access denied" });
-  }
 
   try {
     // Сначала находим вакансию, чтобы знать, кто её владелец (работодатель)

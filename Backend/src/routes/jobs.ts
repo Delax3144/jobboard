@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
-import { authMiddleware } from "../middleware/auth";
+import { authMiddleware, requireRole } from "../middleware/auth";
 import { uploadJob } from "../lib/upload";
 import { sanitizeRichText } from "../lib/sanitizeHtml";
 import {
@@ -67,10 +67,12 @@ jobsRouter.get("/:id", optionalAuthMiddleware, async (req, res) => {
 });
 
 // 3. Создание
-jobsRouter.post("/", authMiddleware, uploadJob.single("logo"), async (req: any, res) => {
-  if (req.user.role !== "employer") {
-    return res.status(403).json({ message: "Employers only" });
-  }
+jobsRouter.post(
+  "/",
+  authMiddleware,
+  requireRole("employer"),
+  uploadJob.single("logo"),
+  async (req: any, res) => {
 
   const parsed = createJobSchema.safeParse(req.body);
 
@@ -119,7 +121,12 @@ jobsRouter.post("/", authMiddleware, uploadJob.single("logo"), async (req: any, 
 });
 
 // 4. РЕДАКТИРОВАНИЕ 
-jobsRouter.patch("/:id", authMiddleware, uploadJob.single("logo"), async (req: any, res) => {
+jobsRouter.patch(
+  "/:id",
+  authMiddleware,
+  requireRole("employer"),
+  uploadJob.single("logo"),
+  async (req: any, res) => {
   const { id } = req.params;
 
   const parsedId = jobIdSchema.safeParse(id);
