@@ -36,7 +36,7 @@ export function useEmployer() {
     setIsLoading(true);
     try {
       const [jobsRes, appsRes] = await Promise.all([
-        api.get(`/jobs?ownerId=${user.id}`),
+        api.get("/jobs/mine"),
         api.get('/applications/owner') 
       ]);
       setJobs(jobsRes.data.jobs);

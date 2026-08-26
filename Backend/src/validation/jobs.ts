@@ -79,5 +79,3 @@ export const updateJobSchema = jobFieldsSchema
       path: ["salaryTo"],
     }
   );
-
-export const ownerIdSchema = z.string().uuid("Invalid owner id");

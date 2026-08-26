@@ -7,32 +7,13 @@ import {
   createJobSchema,
   jobIdSchema,
   updateJobSchema,
-  ownerIdSchema
 } from "../validation/jobs";
+import { optionalAuthMiddleware } from "../middleware/optionalAuth";
 
 export const jobsRouter = Router();
 
-// 1. Получение всех или по владельцу
-jobsRouter.get("/", async (req, res) => {
-  const { ownerId } = req.query;
-
-  if (ownerId !== undefined) {
-    const parsedOwnerId = ownerIdSchema.safeParse(ownerId);
-
-    if (!parsedOwnerId.success) {
-      return res.status(400).json({
-        message: "Invalid owner id",
-      });
-    }
-
-    const jobs = await prisma.job.findMany({
-      where: { ownerId: parsedOwnerId.data },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return res.json({ jobs });
-  }
-
+// 1. Получение опубликованных вакансий
+jobsRouter.get("/", async (_req, res) => {
   const jobs = await prisma.job.findMany({
     where: { status: "published" },
     orderBy: { createdAt: "desc" },
@@ -41,8 +22,21 @@ jobsRouter.get("/", async (req, res) => {
   res.json({ jobs });
 });
 
+jobsRouter.get("/mine", authMiddleware, async (req: any, res) => {
+  if (req.user.role !== "employer") {
+    return res.status(403).json({ message: "Employers only" });
+  }
+
+  const jobs = await prisma.job.findMany({
+    where: { ownerId: req.user.id },
+    orderBy: { createdAt: "desc" },
+  });
+
+  res.json({ jobs });
+});
+
 // 2. Получение одной
-jobsRouter.get("/:id", async (req, res) => {
+jobsRouter.get("/:id", optionalAuthMiddleware, async (req, res) => {
   const parsedId = jobIdSchema.safeParse(req.params.id);
 
   if (!parsedId.success) {
@@ -57,6 +51,12 @@ jobsRouter.get("/:id", async (req, res) => {
     });
 
     if (!job) {
+      return res.status(404).json({ message: "Вакансия не найдена" });
+    }
+
+    const isOwner = req.user?.id === job.ownerId;
+
+    if (job.status !== "published" && !isOwner) {
       return res.status(404).json({ message: "Вакансия не найдена" });
     }
 
