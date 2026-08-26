@@ -1,7 +1,11 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { prisma } from "../prisma";
+import {
+  signAccessToken,
+  signTwoFactorChallenge,
+  verifyTwoFactorChallenge,
+} from "../lib/authTokens";
 import { authMiddleware } from "../middleware/auth";
 import { uploadAvatar, uploadCV } from "../lib/upload";
 import {
@@ -36,12 +40,6 @@ transporter.verify((error, success) => {
     console.log("✅ Nodemailer успешно подключен! Сервер готов отправлять письма.");
   }
 });
-
-function signToken(user: { id: string; role: string }) {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET not set");
-  return jwt.sign({ id: user.id, role: user.role }, secret, { expiresIn: "7d" });
-}
 
 authRouter.post("/register", async (req, res) => {
   const { email, password, role, username, firstName, lastName, phone } = req.body;
@@ -147,12 +145,16 @@ authRouter.post("/login", async (req, res) => {
   if (!user.isVerified) {
     return res.status(403).json({ message: "Please verify your email first. Check your inbox!" });
   }
-
   if (user.isTwoFactorEnabled) {
-    return res.json({ requires2FA: true, userId: user.id });
+    const challengeToken = signTwoFactorChallenge(user.id);
+
+    return res.json({
+      requires2FA: true,
+      challengeToken,
+    });
   }
 
-  const token = signToken(user);
+  const token = signAccessToken(user);
 
   const {
     passwordHash,
@@ -167,8 +169,28 @@ authRouter.post("/login", async (req, res) => {
   });
 
 authRouter.post("/verify-2fa-login", async (req, res) => {
-  const { userId, code } = req.body;
-  
+  const { challengeToken, code } = req.body;
+
+  if (
+    typeof challengeToken !== "string" ||
+    typeof code !== "string"
+  ) {
+    return res.status(400).json({
+      message: "Invalid request",
+    });
+  }
+
+  let userId: string;
+
+  try {
+    const challenge = verifyTwoFactorChallenge(challengeToken);
+    userId = challenge.userId;
+  } catch {
+    return res.status(401).json({
+      message: "Invalid or expired 2FA challenge",
+    });
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -177,30 +199,47 @@ authRouter.post("/verify-2fa-login", async (req, res) => {
         twoFactorSecret: true,
       },
     });
-    if (!user || !user.twoFactorSecret) return res.status(400).json({ message: "Invalid request" });
+
+    if (
+      !user ||
+      !user.isTwoFactorEnabled ||
+      !user.twoFactorSecret
+    ) {
+      return res.status(401).json({
+        message: "Invalid 2FA request",
+      });
+    }
 
     const verified = speakeasy.totp.verify({
       secret: user.twoFactorSecret,
-      encoding: 'base32',
+      encoding: "base32",
       token: code,
-      window: 1 
+      window: 1,
     });
 
-    if (!verified) return res.status(401).json({ message: "Invalid 2FA code" });
+    if (!verified) {
+      return res.status(401).json({
+        message: "Invalid 2FA code",
+      });
+    }
 
-    const token = signToken(user);
+    const token = signAccessToken(user);
 
     const {
       twoFactorSecret,
       ...safeUser
     } = user;
 
-    res.json({
+    return res.json({
       user: safeUser,
       token,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    console.error("2FA login verification failed:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 });
 
@@ -239,7 +278,7 @@ authRouter.post("/google", async (req, res) => {
       });
     }
 
-    const token = signToken(user);
+    const token = signAccessToken(user);
     res.json({
       user,
       token,
@@ -295,7 +334,7 @@ authRouter.post("/github", async (req, res) => {
       });
     }
 
-    const token = signToken(user);
+    const token = signAccessToken(user);
     res.json({ user, token });
   } catch (err) {
     res.status(500).json({ message: "Ошибка авторизации через GitHub" });

@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import type { AuthUser } from "./auth";
+import { verifyAccessToken } from "../lib/authTokens";
 
 export function optionalAuthMiddleware(
   req: Request,
@@ -13,17 +12,10 @@ export function optionalAuthMiddleware(
     return next();
   }
 
-  const secret = process.env.JWT_SECRET;
-
-  if (!secret) {
-    return next();
-  }
-
   const token = header.slice("Bearer ".length);
 
   try {
-    const payload = jwt.verify(token, secret) as AuthUser;
-    req.user = payload;
+    req.user = verifyAccessToken(token);
   } catch {
     // Invalid optional token is treated as unauthenticated.
   }

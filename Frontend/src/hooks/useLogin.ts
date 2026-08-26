@@ -1,8 +1,22 @@
 // src/hooks/useLogin.ts
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+import type { CredentialResponse } from "@react-oauth/google";
 import { useAuth } from "../context/AuthContext";
 import api from "../lib/api";
+
+type ApiErrorResponse = {
+  message?: string;
+};
+
+function getApiErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError<ApiErrorResponse>(error)) {
+    return error.response?.data?.message ?? fallback;
+  }
+
+  return fallback;
+}
 
 export function useLogin() {
   const [email, setEmail] = useState("");
@@ -10,7 +24,7 @@ export function useLogin() {
   const [rememberMe, setRememberMe] = useState(false); 
   
   const [requires2FA, setRequires2FA] = useState(false);
-  const [userIdFor2FA, setUserIdFor2FA] = useState("");
+  const [twoFactorChallenge, setTwoFactorChallenge] = useState("");
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -36,15 +50,15 @@ export function useLogin() {
       const res = await api.post("/auth/login", { email, password });
       
       if (res.data.requires2FA) {
-        setUserIdFor2FA(res.data.userId);
-        setRequires2FA(true); 
+        setTwoFactorChallenge(res.data.challengeToken);
+        setRequires2FA(true);
       } else {
         localStorage.setItem("token", res.data.token);
         if (rememberMe) localStorage.setItem('remembered_email', email);
         window.location.href = "/"; 
       }
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Invalid credentials");
+    } catch (error) {
+      alert(getApiErrorMessage(error, "Invalid credentials"));
     }
   };
 
@@ -54,22 +68,36 @@ export function useLogin() {
     
     setIsVerifying(true);
     try {
-      const res = await api.post("/auth/verify-2fa-login", { userId: userIdFor2FA, code: twoFactorCode });
+      const res = await api.post("/auth/verify-2fa-login", {
+        challengeToken: twoFactorChallenge,
+        code: twoFactorCode,
+      });
       localStorage.setItem("token", res.data.token);
       if (rememberMe) localStorage.setItem('remembered_email', email);
       window.location.href = "/"; 
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Invalid 2FA code");
+    } catch (error) {
+      alert(getApiErrorMessage(error, "Invalid 2FA code"));
     } finally {
       setIsVerifying(false);
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleSuccess = async (
+    credentialResponse: CredentialResponse
+  ) => {
+    const credential = credentialResponse.credential;
+
+    if (!credential) {
+      alert("Google login failed");
+      return;
+    }
+
     try {
-      await googleLogin(credentialResponse.credential);
+      await googleLogin(credential);
       navigate("/");
-    } catch (err) { alert("Google login failed"); }
+    } catch {
+      alert("Google login failed");
+    }
   };
 
   const handleGithubClick = () => {

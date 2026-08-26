@@ -1,7 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import {
+  verifyAccessToken,
+  type AccessTokenUser,
+} from "../lib/authTokens";
 
-export type AuthUser = { id: string; role: "employer" | "candidate" };
+export type AuthUser = AccessTokenUser;
 
 declare global {
   namespace Express {
@@ -11,29 +14,37 @@ declare global {
   }
 }
 
-export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+export function authMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   const header = req.headers.authorization;
+
   if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Missing Authorization header" });
+    return res.status(401).json({
+      message: "Missing Authorization header",
+    });
   }
 
   const token = header.slice("Bearer ".length);
-  const secret = process.env.JWT_SECRET;
-  if (!secret) return res.status(500).json({ message: "JWT_SECRET not set" });
 
   try {
-    const payload = jwt.verify(token, secret) as AuthUser;
-    req.user = payload;
+    req.user = verifyAccessToken(token);
     next();
   } catch {
-    return res.status(401).json({ message: "Invalid token" });
+    return res.status(401).json({
+      message: "Invalid token",
+    });
   }
 }
 
 export function requireRole(role: AuthUser["role"]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (req.user?.role !== role) {
-      return res.status(403).json({ message: "Access denied" });
+      return res.status(403).json({
+        message: "Access denied",
+      });
     }
 
     next();

@@ -1,6 +1,5 @@
-import jwt from "jsonwebtoken";
 import type { Socket } from "socket.io";
-import type { AuthUser } from "../middleware/auth";
+import { verifyAccessToken } from "../lib/authTokens";
 
 export function authenticateSocket(
   socket: Socket,
@@ -8,31 +7,12 @@ export function authenticateSocket(
 ) {
   const token = socket.handshake.auth?.token;
 
-  if (!token) {
+  if (typeof token !== "string" || !token) {
     return next(new Error("Authentication required"));
   }
 
-  const secret = process.env.JWT_SECRET;
-
-  if (!secret) {
-    return next(new Error("Server configuration error"));
-  }
-
   try {
-    const payload = jwt.verify(token, secret);
-
-    if (
-      typeof payload === "string" ||
-      typeof payload.id !== "string" ||
-      (payload.role !== "candidate" && payload.role !== "employer")
-    ) {
-      return next(new Error("Invalid token"));
-    }
-
-    const user: AuthUser = {
-      id: payload.id,
-      role: payload.role,
-    };
+    const user = verifyAccessToken(token);
 
     socket.data.user = user;
 
