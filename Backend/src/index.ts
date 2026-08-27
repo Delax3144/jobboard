@@ -16,6 +16,8 @@ import { jobsRouter } from "./routes/jobs";
 import { applicationsRouter } from "./routes/applications";
 import { bookmarksRouter } from "./routes/bookmarks";
 
+import helmet from "helmet";
+
 import {
   corsOptions,
   socketCorsOptions,
@@ -50,6 +52,15 @@ io.on("connection", (socket) => {
 });
 
 app.use(cors(corsOptions));
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: "cross-origin",
+    },
+  })
+);
+
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
