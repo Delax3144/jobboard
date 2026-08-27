@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { authMiddleware } from "../middleware/auth";
+import { jobIdSchema } from "../validation/jobs";
 
 export const bookmarksRouter = Router();
 
@@ -8,52 +9,104 @@ export const bookmarksRouter = Router();
 bookmarksRouter.get("/", authMiddleware, async (req: any, res) => {
   try {
     const saved = await prisma.savedJob.findMany({
-      where: { userId: req.user.id },
-      include: { 
-        job: true // Подтягиваем все данные о вакансии
+      where: {
+        userId: req.user.id,
+        job: {
+          status: "published",
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      include: {
+        job: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
-    
-    // Возвращаем просто массив вакансий для удобства фронтенда
-    const formattedJobs = saved.map((s: any) => ({
-      ...s.job,
-      savedAt: s.createdAt // Можем оставить дату сохранения
+
+    const formattedJobs = saved.map(({ job, createdAt }) => ({
+      ...job,
+      savedAt: createdAt,
     }));
 
-    res.json(formattedJobs);
-  } catch (err) {
-    res.status(500).json({ message: "Ошибка получения избранного" });
+    return res.json(formattedJobs);
+  } catch (error) {
+    console.error("Failed to fetch bookmarks:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch bookmarks",
+    });
   }
 });
 
 // 2. Переключить статус избранного (Поставить / Убрать лайк)
 bookmarksRouter.post("/:jobId", authMiddleware, async (req: any, res) => {
+  const parsedJobId = jobIdSchema.safeParse(req.params.jobId);
+
+  if (!parsedJobId.success) {
+    return res.status(400).json({
+      message: "Invalid job id",
+    });
+  }
+
   try {
-    const { jobId } = req.params;
+    const jobId = parsedJobId.data;
     const userId = req.user.id;
 
-    // Ищем, есть ли уже такая запись в базе
     const existing = await prisma.savedJob.findUnique({
       where: {
-        userId_jobId: { userId, jobId }
-      }
+        userId_jobId: {
+          userId,
+          jobId,
+        },
+      },
+      select: {
+        id: true,
+      },
     });
 
     if (existing) {
-      // Если уже сохранена — удаляем (убираем сердечко)
       await prisma.savedJob.delete({
-        where: { id: existing.id }
+        where: {
+          id: existing.id,
+        },
       });
-      return res.json({ saved: false });
-    } else {
-      // Если нет — добавляем (ставим сердечко)
-      await prisma.savedJob.create({
-        data: { userId, jobId }
+
+      return res.json({
+        saved: false,
       });
-      return res.json({ saved: true });
     }
-  } catch (err) {
-    res.status(500).json({ message: "Ошибка при обновлении избранного" });
+
+    const job = await prisma.job.findFirst({
+      where: {
+        id: jobId,
+        status: "published",
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found",
+      });
+    }
+
+    await prisma.savedJob.create({
+      data: {
+        userId,
+        jobId,
+      },
+    });
+
+    return res.json({
+      saved: true,
+    });
+  } catch (error) {
+    console.error("Bookmark toggle failed:", error);
+
+    return res.status(500).json({
+      message: "Failed to update bookmark",
+    });
   }
 });
