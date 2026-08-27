@@ -17,6 +17,11 @@ import { applicationsRouter } from "./routes/applications";
 import { bookmarksRouter } from "./routes/bookmarks";
 
 const app = express();
+
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
