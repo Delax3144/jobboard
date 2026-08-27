@@ -1,6 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import { prisma } from "../prisma";
+import { randomBytes } from "node:crypto";
 import {
   signAccessToken,
   signTwoFactorChallenge,
@@ -366,17 +367,33 @@ authRouter.post("/google", async (req, res) => {
   try {
     const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: process.env.GOOGLE_CLIENT_ID });
     const payload = ticket.getPayload();
-    if (!payload || !payload.email) return res.status(400).json({ message: "Некорректный токен Google" });
+    if (
+      !payload ||
+      !payload.email ||
+      payload.email_verified !== true
+    ) {
+      return res.status(400).json({
+        message: "Google email is not verified",
+      });
+    }
 
-    const { email, given_name, family_name, picture } = payload;
+    const {
+      given_name,
+      family_name,
+      picture,
+    } = payload;
+
+    const email = payload.email.toLowerCase();
+    
     let user = await prisma.user.findUnique({
       where: { email },
       select: safeUserSelect,
     });
 
     if (!user) {
-      const randomPassword = Math.random().toString(36).slice(-10) + 'A1!';
+      const randomPassword = randomBytes(32).toString("hex");
       const passwordHash = await bcrypt.hash(randomPassword, 10);
+
       const baseUsername = email.split('@')[0];
       const username = `${baseUsername}_${Math.floor(Math.random() * 10000)}`;
 
@@ -393,6 +410,15 @@ authRouter.post("/google", async (req, res) => {
           isVerified: true,
         },
         select: safeUserSelect,
+      });
+    }
+
+    if (user.isTwoFactorEnabled) {
+      const challengeToken = signTwoFactorChallenge(user.id);
+
+      return res.json({
+        requires2FA: true,
+        challengeToken,
       });
     }
 
@@ -431,8 +457,26 @@ authRouter.post("/github", async (req, res) => {
     const githubUser = userResponse.data;
 
     const emailResponse = await axios.get('https://api.github.com/user/emails', { headers: { Authorization: `Bearer ${accessToken}` } });
-    const primaryEmailObj = emailResponse.data.find((e: any) => e.primary) || emailResponse.data[0];
-    const email = primaryEmailObj?.email;
+    type GitHubEmail = {
+      email: string;
+      primary: boolean;
+      verified: boolean;
+      visibility: string | null;
+    };
+
+    const githubEmails = emailResponse.data as GitHubEmail[];
+
+    const verifiedEmail =
+      githubEmails.find((item) => item.primary && item.verified) ??
+      githubEmails.find((item) => item.verified);
+
+    if (!verifiedEmail?.email) {
+      return res.status(400).json({
+        message: "No verified email found in GitHub account",
+      });
+    }
+
+    const email = verifiedEmail.email.toLowerCase();
 
     if (!email) return res.status(400).json({ message: "Не удалось получить email из GitHub" });
 
@@ -442,8 +486,9 @@ authRouter.post("/github", async (req, res) => {
     });
 
     if (!user) {
-      const randomPassword = Math.random().toString(36).slice(-10) + 'A1!';
+      const randomPassword = randomBytes(32).toString("hex");
       const passwordHash = await bcrypt.hash(randomPassword, 10);
+
       const baseUsername = githubUser.login || email.split('@')[0];
       const username = `${baseUsername}_${Math.floor(Math.random() * 1000)}`;
 
@@ -460,6 +505,15 @@ authRouter.post("/github", async (req, res) => {
           isVerified: true
         },
         select: safeUserSelect,
+      });
+    }
+
+    if (user.isTwoFactorEnabled) {
+      const challengeToken = signTwoFactorChallenge(user.id);
+
+      return res.json({
+        requires2FA: true,
+        challengeToken,
       });
     }
 

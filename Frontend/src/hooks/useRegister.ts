@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import type { CredentialResponse } from "@react-oauth/google";
 
 export function useRegister() {
   const [formData, setFormData] = useState({
@@ -49,12 +50,32 @@ export function useRegister() {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleSuccess = async (
+    credentialResponse: CredentialResponse
+  ) => {
+    const credential = credentialResponse.credential;
+
+    if (!credential) {
+      setError("Google Registration failed.");
+      return;
+    }
+
     try {
-      await googleLogin(credentialResponse.credential, role);
+      const result = await googleLogin(credential, role);
+
+      if (result.requires2FA) {
+        navigate("/login", {
+          state: {
+            requires2FA: true,
+            challengeToken: result.challengeToken,
+          },
+        });
+        return;
+      }
+
       navigate("/");
-    } catch (err) { 
-      setError("Google Registration failed."); 
+    } catch {
+      setError("Google Registration failed.");
     }
   };
 

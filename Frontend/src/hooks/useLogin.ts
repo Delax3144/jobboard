@@ -10,6 +10,11 @@ type ApiErrorResponse = {
   message?: string;
 };
 
+type LoginLocationState = {
+  requires2FA?: boolean;
+  challengeToken?: string;
+};
+
 function getApiErrorMessage(error: unknown, fallback: string) {
   if (axios.isAxiosError<ApiErrorResponse>(error)) {
     return error.response?.data?.message ?? fallback;
@@ -33,14 +38,43 @@ export function useLogin() {
   const location = useLocation();
 
   useEffect(() => {
+    const state = location.state as LoginLocationState | null;
+
+    if (!state?.requires2FA || !state.challengeToken) {
+      return;
+    }
+
+    setTwoFactorChallenge(state.challengeToken);
+    setRequires2FA(true);
+
+    navigate(location.pathname, {
+      replace: true,
+      state: null,
+    });
+  }, [location.pathname, location.state, navigate]);
+
+  useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const code = urlParams.get("code");
     if (code) {
       window.history.replaceState({}, document.title, "/login");
       const savedRole = localStorage.getItem("github_role") || "candidate";
       githubLogin(code, savedRole)
-        .then(() => { localStorage.removeItem("github_role"); navigate("/"); })
-        .catch(() => console.log("Вторая попытка входа отменена"));
+        .then((result) => {
+          localStorage.removeItem("github_role");
+
+          if (result.requires2FA) {
+            setTwoFactorChallenge(result.challengeToken);
+            setRequires2FA(true);
+            return;
+          }
+
+          navigate("/");
+        })
+        .catch(() => {
+          localStorage.removeItem("github_role");
+          console.log("GitHub login failed");
+        });
     }
   }, [location.search, githubLogin, navigate]);
 
@@ -93,10 +127,17 @@ export function useLogin() {
     }
 
     try {
-      await googleLogin(credential);
+      const result = await googleLogin(credential);
+
+      if (result.requires2FA) {
+        setTwoFactorChallenge(result.challengeToken);
+        setRequires2FA(true);
+        return;
+      }
+
       navigate("/");
-    } catch {
-      alert("Google login failed");
+    } catch (error) {
+      alert(getApiErrorMessage(error, "Google login failed"));
     }
   };
 
