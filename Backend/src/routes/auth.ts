@@ -44,6 +44,7 @@ import {
   passwordResetConfirmRateLimit,
   registerRateLimit,
   contactRateLimit,
+  twoFactorSettingsRateLimit,
 } from "../middleware/rateLimits";
 import { escapeHtml } from "../lib/escapeHtml";
 
@@ -869,160 +870,168 @@ authRouter.post("/2fa/generate", authMiddleware, async (req, res) => {
   }
 });
 
-authRouter.post("/2fa/enable", authMiddleware, async (req, res) => {
-  const parsedBody = twoFactorCodeSchema.safeParse(req.body);
+authRouter.post(
+  "/2fa/enable",
+  authMiddleware,
+  twoFactorSettingsRateLimit,
+    async (req, res) => {
+      const parsedBody = twoFactorCodeSchema.safeParse(req.body);
 
-  if (!parsedBody.success) {
-    return res.status(400).json({
-      message: parsedBody.error.issues[0]?.message ?? "Invalid request",
+      if (!parsedBody.success) {
+        return res.status(400).json({
+          message: parsedBody.error.issues[0]?.message ?? "Invalid request",
+        });
+      }
+
+      if (!req.user) {
+        return res.status(401).json({
+          message: "Unauthorized",
+        });
+      }
+
+      const { code } = parsedBody.data;
+
+      try {
+        const user = await prisma.user.findUnique({
+          where: {
+            id: req.user.id,
+          },
+          select: {
+            id: true,
+            isTwoFactorEnabled: true,
+            twoFactorSecret: true,
+          },
+        });
+
+        if (!user) {
+          return res.status(404).json({
+            message: "User not found",
+          });
+        }
+
+        if (user.isTwoFactorEnabled) {
+          return res.status(409).json({
+            message: "2FA is already enabled",
+          });
+        }
+
+        if (!user.twoFactorSecret) {
+          return res.status(400).json({
+            message: "2FA not initialized",
+          });
+        }
+
+        const verified = speakeasy.totp.verify({
+          secret: user.twoFactorSecret,
+          encoding: "base32",
+          token: code,
+          window: 1,
+        });
+
+        if (!verified) {
+          return res.status(400).json({
+            message: "Invalid authentication code",
+          });
+        }
+
+        await prisma.user.update({
+          where: {
+            id: user.id,
+          },
+          data: {
+            isTwoFactorEnabled: true,
+          },
+        });
+
+        return res.json({
+          message: "2FA successfully enabled!",
+        });
+      } catch (error) {
+        console.error("2FA enable failed:", error);
+
+        return res.status(500).json({
+          message: "Server error",
+        });
+      }
     });
-  }
 
-  if (!req.user) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
+authRouter.post(
+  "/2fa/disable",
+  authMiddleware,
+  twoFactorSettingsRateLimit,
+  async (req, res) => {
+    const parsedBody = twoFactorCodeSchema.safeParse(req.body);
 
-  const { code } = parsedBody.data;
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: req.user.id,
-      },
-      select: {
-        id: true,
-        isTwoFactorEnabled: true,
-        twoFactorSecret: true,
-      },
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    if (user.isTwoFactorEnabled) {
-      return res.status(409).json({
-        message: "2FA is already enabled",
-      });
-    }
-
-    if (!user.twoFactorSecret) {
+    if (!parsedBody.success) {
       return res.status(400).json({
-        message: "2FA not initialized",
+        message: parsedBody.error.issues[0]?.message ?? "Invalid request",
       });
     }
 
-    const verified = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
-      encoding: "base32",
-      token: code,
-      window: 1,
-    });
-
-    if (!verified) {
-      return res.status(400).json({
-        message: "Invalid authentication code",
-      });
-    }
-
-    await prisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        isTwoFactorEnabled: true,
-      },
-    });
-
-    return res.json({
-      message: "2FA successfully enabled!",
-    });
-  } catch (error) {
-    console.error("2FA enable failed:", error);
-
-    return res.status(500).json({
-      message: "Server error",
-    });
-  }
-});
-
-authRouter.post("/2fa/disable", authMiddleware, async (req, res) => {
-  const parsedBody = twoFactorCodeSchema.safeParse(req.body);
-
-  if (!parsedBody.success) {
-    return res.status(400).json({
-      message: parsedBody.error.issues[0]?.message ?? "Invalid request",
-    });
-  }
-
-  if (!req.user) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
-
-  const { code } = parsedBody.data;
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: req.user.id,
-      },
-      select: {
-        id: true,
-        isTwoFactorEnabled: true,
-        twoFactorSecret: true,
-      },
-    });
-
-    if (
-      !user ||
-      !user.isTwoFactorEnabled ||
-      !user.twoFactorSecret
-    ) {
-      return res.status(400).json({
-        message: "2FA is not enabled",
-      });
-    }
-
-    const verified = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
-      encoding: "base32",
-      token: code,
-      window: 1,
-    });
-
-    if (!verified) {
+    if (!req.user) {
       return res.status(401).json({
-        message: "Invalid authentication code",
+        message: "Unauthorized",
       });
     }
 
-    await prisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        isTwoFactorEnabled: false,
-        twoFactorSecret: null,
-      },
-    });
+    const { code } = parsedBody.data;
 
-    return res.json({
-      message: "2FA disabled",
-    });
-  } catch (error) {
-    console.error("2FA disable failed:", error);
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: req.user.id,
+        },
+        select: {
+          id: true,
+          isTwoFactorEnabled: true,
+          twoFactorSecret: true,
+        },
+      });
 
-    return res.status(500).json({
-      message: "Server error",
-    });
-  }
-});
+      if (
+        !user ||
+        !user.isTwoFactorEnabled ||
+        !user.twoFactorSecret
+      ) {
+        return res.status(400).json({
+          message: "2FA is not enabled",
+        });
+      }
+
+      const verified = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: "base32",
+        token: code,
+        window: 1,
+      });
+
+      if (!verified) {
+        return res.status(401).json({
+          message: "Invalid authentication code",
+        });
+      }
+
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          isTwoFactorEnabled: false,
+          twoFactorSecret: null,
+        },
+      });
+
+      return res.json({
+        message: "2FA disabled",
+      });
+    } catch (error) {
+      console.error("2FA disable failed:", error);
+
+      return res.status(500).json({
+        message: "Server error",
+      });
+    }
+  });
 
 authRouter.get("/users/:id", async (req, res) => {
   const parsedId = userIdSchema.safeParse(req.params.id);

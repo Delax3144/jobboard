@@ -22,6 +22,20 @@ export const twoFactorRateLimit = rateLimit({
   },
 });
 
+export const twoFactorSettingsRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 5,
+
+  keyGenerator: (req) => req.user?.id ?? "unauthenticated",
+
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    message: "Too many 2FA attempts. Please try again later.",
+  },
+});
+
 export const passwordResetRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 3,
