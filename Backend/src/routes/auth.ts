@@ -25,6 +25,7 @@ import {
   requestPasswordResetSchema,
   resetPasswordSchema,
 } from "../validation/auth";
+import { updateProfileSchema } from "../validation/profile";
 import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
 import nodemailer from "nodemailer";
@@ -408,31 +409,39 @@ authRouter.post("/github", async (req, res) => {
   }
 });
 
-authRouter.put("/profile", authMiddleware, async (req: any, res) => {
-  const { firstName, lastName, phone, status, bio, skills, isPublic, showEmail, soundEnabled, toastsEnabled, experience, location, notificationVolume } = req.body; 
+authRouter.put("/profile", authMiddleware, async (req, res) => {
+  const parsedBody = updateProfileSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    return res.status(400).json({
+      message: parsedBody.error.issues[0]?.message ?? "Invalid request",
+    });
+  }
+
+  if (!req.user) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
+
   try {
     const updatedUser = await prisma.user.update({
-      where: { id: req.user.id },
-      data: {
-        firstName,
-        lastName,
-        phone,
-        status,
-        bio,
-        skills,
-        isPublic,
-        showEmail,
-        soundEnabled,
-        toastsEnabled,
-        experience,
-        location,
-        notificationVolume,
+      where: {
+        id: req.user.id,
       },
+      data: parsedBody.data,
       select: safeUserSelect,
     });
-    res.json({ user: updatedUser });
-  } catch (err) {
-    res.status(500).json({ message: "Update failed" });
+
+    return res.json({
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Profile update failed:", error);
+
+    return res.status(500).json({
+      message: "Update failed",
+    });
   }
 });
 
