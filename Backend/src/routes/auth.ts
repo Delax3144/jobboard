@@ -7,6 +7,7 @@ import {
   verifyTwoFactorChallenge,
 } from "../lib/authTokens";
 import { authMiddleware } from "../middleware/auth";
+import { optionalAuthMiddleware } from "../middleware/optionalAuth";
 import { uploadAvatar, uploadCV } from "../lib/upload";
 import {
   publicProfileSelect,
@@ -572,8 +573,9 @@ authRouter.post(
 authRouter.post(
   "/contact",
   contactRateLimit,
-  async (req: any, res) => {
-    const { name, email, subject, message, userId } = req.body;
+  optionalAuthMiddleware,
+  async (req, res) => {
+    const { name, email, subject, message } = req.body;
 
     if (!name || !email || !message) {
       return res.status(400).json({ message: "Please fill all required fields." });
@@ -586,7 +588,7 @@ authRouter.post(
           email,
           subject,
           message,
-          userId: userId || null
+          userId: req.user?.id ?? null
         }
       });
 
