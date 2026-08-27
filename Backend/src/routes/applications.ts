@@ -44,8 +44,22 @@ applicationsRouter.post(
 
   try {
     // Сначала находим вакансию, чтобы знать, кто её владелец (работодатель)
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
-    if (!job) return res.status(404).json({ message: "Job not found" });
+    const job = await prisma.job.findFirst({
+      where: {
+        id: jobId,
+        status: "published",
+      },
+      select: {
+        ownerId: true,
+        title: true,
+      },
+    });
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found",
+      });
+    }
 
     const application = await prisma.application.create({
       data: {
