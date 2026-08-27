@@ -12,7 +12,15 @@ import {
   publicProfileSelect,
   safeUserSelect,
 } from "../selects/user";
+import {
+  createPasswordResetToken,
+  hashPasswordResetToken,
+} from "../lib/passwordResetTokens";
 import { userIdSchema } from "../validation/users";
+import {
+  requestPasswordResetSchema,
+  resetPasswordSchema,
+} from "../validation/auth";
 import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
 import nodemailer from "nodemailer";
@@ -404,8 +412,20 @@ authRouter.post('/ping', authMiddleware, async (req: any, res: any) => {
   } catch (err) { res.status(500).send(); }
 });
 
-authRouter.post('/request-password-reset', async (req, res) => {
-  const { email } = req.body;
+authRouter.post("/request-password-reset", async (req, res) => {
+  const parsedBody = requestPasswordResetSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    return res.status(400).json({
+      message: parsedBody.error.issues[0]?.message ?? "Invalid request",
+    });
+  }
+
+  const { email } = parsedBody.data;
+
+  const responseMessage =
+    "If an account with that email exists, a reset link has been sent.";
+
   try {
     const user = await prisma.user.findUnique({
       where: { email },
@@ -414,17 +434,30 @@ authRouter.post('/request-password-reset', async (req, res) => {
         firstName: true,
       },
     });
-    if (!user) return res.status(400).json({ message: "User not found" });
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    await prisma.user.update({ where: { id: user.id }, data: { resetToken } });
+    if (!user) {
+      return res.json({ message: responseMessage });
+    }
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    
-    // === 1. СНАЧАЛА ОТДАЕМ ОТВЕТ ФРОНТЕНДУ ===
-    res.json({ message: "Письмо со ссылкой отправлено!" });
+    const {
+      token,
+      tokenHash,
+      expiresAt,
+    } = createPasswordResetToken();
 
-    // === 2. ПОТОМ ОТПРАВЛЯЕМ ПИСЬМО В ФОНЕ ===
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetTokenHash: tokenHash,
+        resetTokenExpiresAt: expiresAt,
+      },
+    });
+
+    const resetLink =
+      `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+    res.json({ message: responseMessage });
+
     transporter.sendMail({
       from: `"JobBoard Security" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -435,34 +468,87 @@ authRouter.post('/request-password-reset', async (req, res) => {
           <p>Hi ${user.firstName},</p>
           <p>We received a request to change your password. Click the button below to set a new one.</p>
           <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #10b981; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 15px;">Reset Password</a>
-          <p style="margin-top: 20px; font-size: 12px; color: #666;">If you didn't request this, just ignore this email.</p>
+          <p style="margin-top: 20px; font-size: 12px; color: #666;">This link expires in 30 minutes.</p>
+          <p style="font-size: 12px; color: #666;">If you didn't request this, just ignore this email.</p>
         </div>
-      `
-    }).catch(err => console.error("Ошибка отправки письма (Сброс пароля):", err));
+      `,
+    }).catch((error) =>
+      console.error("Password reset email failed:", error)
+    );
+  } catch (error) {
+    console.error("Password reset request failed:", error);
 
-  } catch (err) {
-    res.status(500).json({ message: "Ошибка сервера" });
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 });
 
-authRouter.post('/reset-password', async (req, res) => {
-  const { token, newPassword } = req.body;
-  try {
-    const user = await prisma.user.findFirst({
-      where: { resetToken: token },
-      select: { id: true },
+authRouter.post("/reset-password", async (req, res) => {
+  const parsedBody = resetPasswordSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    return res.status(400).json({
+      message: parsedBody.error.issues[0]?.message ?? "Invalid request",
     });
-    if (!user) return res.status(400).json({ message: "Неверный или устаревший токен" });
+  }
+
+  const { token, newPassword } = parsedBody.data;
+
+  try {
+    const tokenHash = hashPasswordResetToken(token);
+    const now = new Date();
+
+    const user = await prisma.user.findFirst({
+      where: {
+        resetTokenHash: tokenHash,
+        resetTokenExpiresAt: {
+          gt: now,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid or expired reset token",
+      });
+    }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash, resetToken: null } 
+
+    const result = await prisma.user.updateMany({
+      where: {
+        id: user.id,
+        resetTokenHash: tokenHash,
+        resetTokenExpiresAt: {
+          gt: now,
+        },
+      },
+      data: {
+        passwordHash,
+        resetTokenHash: null,
+        resetTokenExpiresAt: null,
+      },
     });
 
-    res.json({ message: "Пароль успешно изменен!" });
-  } catch (err) {
-    res.status(500).json({ message: "Ошибка сервера" });
+    if (result.count === 0) {
+      return res.status(400).json({
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    return res.json({
+      message: "Password successfully changed!",
+    });
+  } catch (error) {
+    console.error("Password reset failed:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 });
 

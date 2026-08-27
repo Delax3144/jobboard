@@ -9,13 +9,13 @@ datasource db {
 
 model SupportTicket {
   id        String   @id @default(uuid())
-  userId    String?  // Опционально, если пишет неавторизованный
+  userId    String?  
   user      User?    @relation(fields: [userId], references: [id])
   name      String
   email     String
   subject   String?
   message   String
-  status    String   @default("Open") // Open, In Progress, Resolved
+  status    String   @default("Open") 
   createdAt DateTime @default(now())
 }
 
@@ -30,16 +30,17 @@ model User {
   avatarUrl       String?
   lastActive      DateTime @default(now())
   role            String
-  status          String?  @default("Open to work") // <-- ДОБАВЬ ВОТ ЭТУ СТРОЧКУ
+  status          String?  @default("Open to work") 
   createdAt       DateTime @default(now())
   bio             String?
-  skills          String? // Можно хранить как строку через запятую или JSON
-  experience      Json?   // Для сложного списка работ лучше использовать JSON или отдельную модель
+  skills          String? 
+  experience      Json?   
   supportTickets  SupportTicket[]
 
-  isVerified        Boolean  @default(false) // Подтверждена ли почта
-  verificationToken String?  // Секретный токен из ссылки
-  resetToken        String?
+  isVerified        Boolean  @default(false)
+  verificationToken   String?
+  resetTokenHash      String?
+  resetTokenExpiresAt DateTime?
 
   isTwoFactorEnabled Boolean @default(false)
   twoFactorSecret    String?
@@ -47,10 +48,8 @@ model User {
   jobs         Job[]    @relation("UserJobs")
   applications Application[] @relation("UserApplications")
   
-  // ДОБАВИЛИ: Связь с сохраненными вакансиями
   savedJobs    SavedJob[] 
 
-  // === НОВЫЕ ПОЛЯ НАСТРОЕК (ПРИВАТНОСТЬ И УВЕДОМЛЕНИЯ) ===
   isPublic        Boolean @default(true)
   showEmail       Boolean @default(false)
   soundEnabled    Boolean @default(true)
@@ -80,11 +79,9 @@ model Job {
   
   applications Application[]
   
-  // ДОБАВИЛИ: Связь с пользователями, которые сохранили вакансию
   savedBy      SavedJob[] 
 }
 
-// НОВАЯ ТАБЛИЦА: Избранные вакансии
 model SavedJob {
   id        String   @id @default(uuid())
   
@@ -96,7 +93,6 @@ model SavedJob {
   
   createdAt DateTime @default(now())
 
-  // Защита от дублей: один юзер может сохранить конкретную вакансию только один раз
   @@unique([userId, jobId]) 
 }
 
