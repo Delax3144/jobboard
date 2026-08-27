@@ -282,18 +282,184 @@ export default function Profile() {
 
       {/* === МОДАЛЬНОЕ ОКНО 2FA === */}
       {p.security.show2FAModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '15px' }}>
-          <div className="prof-2fa-modal-inner" style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '24px', padding: '40px', maxWidth: '400px', width: '100%', textAlign: 'center', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
-            <h3 style={{ margin: '0 0 15px', color: '#fff', fontSize: '24px', fontWeight: 800 }}>Setup Google Authenticator</h3>
-            <p style={{ color: '#888', fontSize: '14px', lineHeight: '1.6', marginBottom: '25px' }}>Scan the QR code below with your Authenticator app, then enter the 6-digit code.</p>
-            <div style={{ background: '#fff', padding: '15px', borderRadius: '16px', display: 'inline-block', marginBottom: '25px' }}>
-              {p.security.qrCode ? <img src={p.security.qrCode} alt="2FA QR Code" style={{ width: '180px', height: '180px', display: 'block' }} /> : <div style={{ width: '180px', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>Loading...</div>}
-            </div>
-            <input type="text" placeholder="000000" maxLength={6} value={p.security.twoFactorCode} onChange={(e) => p.security.setTwoFactorCode(e.target.value.replace(/\D/g, ''))} style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '16px', borderRadius: '12px', textAlign: 'center', fontSize: '24px', letterSpacing: '8px', fontWeight: 800, marginBottom: '20px', outline: 'none' }} />
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => p.security.setShow2FAModal(false)} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: '#111', color: '#888', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Cancel</button>
-              <button onClick={p.security.handleVerify2FA} disabled={p.security.isVerifying2FA || p.security.twoFactorCode.length !== 6} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: '#10b981', color: '#000', border: 'none', cursor: p.security.twoFactorCode.length === 6 ? 'pointer' : 'not-allowed', fontWeight: 800, opacity: p.security.twoFactorCode.length === 6 ? 1 : 0.5 }}>
-                {p.security.isVerifying2FA ? "Verifying..." : "Verify & Enable"}
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.8)",
+            backdropFilter: "blur(5px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "15px",
+          }}
+        >
+          <div
+            className="prof-2fa-modal-inner"
+            style={{
+              background: "#0a0a0a",
+              border: "1px solid #222",
+              borderRadius: "24px",
+              padding: "40px",
+              maxWidth: "400px",
+              width: "100%",
+              textAlign: "center",
+              boxShadow: "0 25px 50px rgba(0,0,0,0.5)",
+            }}
+          >
+            <h3
+              style={{
+                margin: "0 0 15px",
+                color: "#fff",
+                fontSize: "24px",
+                fontWeight: 800,
+              }}
+            >
+              {p.security.twoFactorModalMode === "enable"
+                ? "Setup Google Authenticator"
+                : "Disable Two-Factor Authentication"}
+            </h3>
+
+            <p
+              style={{
+                color: "#888",
+                fontSize: "14px",
+                lineHeight: "1.6",
+                marginBottom: "25px",
+              }}
+            >
+              {p.security.twoFactorModalMode === "enable"
+                ? "Scan the QR code below with your Authenticator app, then enter the 6-digit code."
+                : "Enter the current 6-digit code from your Authenticator app to disable 2FA."}
+            </p>
+
+            {p.security.twoFactorModalMode === "enable" && (
+              <div
+                style={{
+                  background: "#fff",
+                  padding: "15px",
+                  borderRadius: "16px",
+                  display: "inline-block",
+                  marginBottom: "25px",
+                }}
+              >
+                {p.security.qrCode ? (
+                  <img
+                    src={p.security.qrCode}
+                    alt="2FA QR Code"
+                    style={{
+                      width: "180px",
+                      height: "180px",
+                      display: "block",
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: "180px",
+                      height: "180px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#000",
+                    }}
+                  >
+                    Loading...
+                  </div>
+                )}
+              </div>
+            )}
+
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="000000"
+              maxLength={6}
+              value={p.security.twoFactorCode}
+              onChange={(e) =>
+                p.security.setTwoFactorCode(
+                  e.target.value.replace(/\D/g, "")
+                )
+              }
+              style={{
+                width: "100%",
+                background: "#000",
+                border: "1px solid #333",
+                color: "#fff",
+                padding: "16px",
+                borderRadius: "12px",
+                textAlign: "center",
+                fontSize: "24px",
+                letterSpacing: "8px",
+                fontWeight: 800,
+                marginBottom: "20px",
+                outline: "none",
+              }}
+            />
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+              }}
+            >
+              <button
+                onClick={() => {
+                  p.security.setShow2FAModal(false);
+                  p.security.setTwoFactorCode("");
+                }}
+                style={{
+                  flex: 1,
+                  padding: "14px",
+                  borderRadius: "12px",
+                  background: "#111",
+                  color: "#888",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={p.security.handleVerify2FA}
+                disabled={
+                  p.security.isVerifying2FA ||
+                  p.security.twoFactorCode.length !== 6
+                }
+                style={{
+                  flex: 1,
+                  padding: "14px",
+                  borderRadius: "12px",
+                  background:
+                    p.security.twoFactorModalMode === "disable"
+                      ? "#ef4444"
+                      : "#10b981",
+                  color:
+                    p.security.twoFactorModalMode === "disable"
+                      ? "#fff"
+                      : "#000",
+                  border: "none",
+                  cursor:
+                    p.security.twoFactorCode.length === 6
+                      ? "pointer"
+                      : "not-allowed",
+                  fontWeight: 800,
+                  opacity:
+                    p.security.twoFactorCode.length === 6 ? 1 : 0.5,
+                }}
+              >
+                {p.security.isVerifying2FA
+                  ? "Verifying..."
+                  : p.security.twoFactorModalMode === "disable"
+                    ? "Verify & Disable"
+                    : "Verify & Enable"}
               </button>
             </div>
           </div>

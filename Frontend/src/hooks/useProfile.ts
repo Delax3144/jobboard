@@ -1,9 +1,11 @@
 // src/hooks/useProfile.ts
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../lib/api";
 
 export type TabType = "general" | "professional" | "privacy" | "notifications" | "security";
+
+type TwoFactorModalMode = "enable" | "disable";
 
 export const COUNTRY_CODES = [
   { code: "+48", label: "+48 (PL)" },
@@ -70,6 +72,8 @@ export function useProfile() {
   const [isVerifying2FA, setIsVerifying2FA] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetMsg, setResetMsg] = useState("");
+  const [twoFactorModalMode, setTwoFactorModalMode] =
+  useState<TwoFactorModalMode>("enable");
 
   // Cropper States
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -152,32 +156,74 @@ export function useProfile() {
   };
 
   const handleToggle2FA = async () => {
+    setTwoFactorCode("");
+
     if (twoFactor) {
-      if (window.confirm("Are you sure you want to disable 2FA?")) {
-        try {
-          await api.post('/auth/2fa/disable');
-          setTwoFactor(false); setUser({ ...user, isTwoFactorEnabled: false } as any);
-          setMessage("2FA disabled successfully"); setTimeout(() => setMessage(""), 3000);
-        } catch (err) { alert("Failed to disable 2FA"); }
-      }
-    } else {
-      try {
-        const res = await api.post('/auth/2fa/generate');
-        setQrCode(res.data.qrCodeUrl); setShow2FAModal(true);
-      } catch (err) { alert("Failed to generate 2FA"); }
+      setTwoFactorModalMode("disable");
+      setQrCode("");
+      setShow2FAModal(true);
+      return;
+    }
+
+    try {
+      const res = await api.post("/auth/2fa/generate");
+
+      setQrCode(res.data.qrCodeUrl);
+      setTwoFactorModalMode("enable");
+      setShow2FAModal(true);
+    } catch {
+      alert("Failed to generate 2FA");
     }
   };
 
   const handleVerify2FA = async () => {
-    if (twoFactorCode.length !== 6) return alert("Code must be 6 digits");
+    if (twoFactorCode.length !== 6) {
+      return alert("Code must be 6 digits");
+    }
+
     setIsVerifying2FA(true);
+
     try {
-      await api.post('/auth/2fa/enable', { code: twoFactorCode });
-      setTwoFactor(true); setUser({ ...user, isTwoFactorEnabled: true } as any);
-      setShow2FAModal(false); setTwoFactorCode("");
-      setMessage("2FA enabled successfully! 🛡️"); setTimeout(() => setMessage(""), 3000);
-    } catch (err) { alert("Invalid code."); } 
-    finally { setIsVerifying2FA(false); }
+      if (twoFactorModalMode === "disable") {
+        await api.post("/auth/2fa/disable", {
+          code: twoFactorCode,
+        });
+
+        setTwoFactor(false);
+        setUser({
+          ...user,
+          isTwoFactorEnabled: false,
+        } as any);
+
+        setMessage("2FA disabled successfully");
+      } else {
+        await api.post("/auth/2fa/enable", {
+          code: twoFactorCode,
+        });
+
+        setTwoFactor(true);
+        setUser({
+          ...user,
+          isTwoFactorEnabled: true,
+        } as any);
+
+        setMessage("2FA enabled successfully! 🛡️");
+      }
+
+      setShow2FAModal(false);
+      setTwoFactorCode("");
+      setQrCode("");
+
+      setTimeout(() => setMessage(""), 3000);
+    } catch {
+      alert(
+        twoFactorModalMode === "disable"
+          ? "Invalid authentication code."
+          : "Invalid code."
+      );
+    } finally {
+      setIsVerifying2FA(false);
+    }
   };
 
   return {
@@ -185,7 +231,7 @@ export function useProfile() {
     activeTab, setActiveTab, isEditing, setIsEditing, isSaving, message, setMessage,
     form: { firstName, setFirstName, lastName, setLastName, countryCode, setCountryCode, phoneNumber, handlePhoneChange, status, setStatus, location, setLocation, bio, setBio, skills, setSkills, experience, resumeUrl, addExperience, updateExperience, removeExperience },
     settings: { isPublic, setIsPublic, showEmail, setShowEmail, soundEnabled, setSoundEnabled, toastsEnabled, setToastsEnabled, notificationVolume, setNotificationVolume, handleSaveSettings },
-    security: { twoFactor, show2FAModal, setShow2FAModal, qrCode, twoFactorCode, setTwoFactorCode, isVerifying2FA, handleToggle2FA, handleVerify2FA, isResetting, resetMsg, handlePasswordResetRequest },
+    security: { twoFactor, show2FAModal, setShow2FAModal, qrCode, twoFactorCode, setTwoFactorCode, isVerifying2FA, handleToggle2FA, handleVerify2FA, twoFactorModalMode, isResetting, resetMsg, handlePasswordResetRequest },
     refs: { fileInputRef, resumeInputRef },
     handlers: { handleCancel, handleSave, handleResumeUpload, handleFileChange },
     cropper: { imageSrc, setImageSrc, openCropper, setOpenCropper }
