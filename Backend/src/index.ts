@@ -16,6 +16,11 @@ import { jobsRouter } from "./routes/jobs";
 import { applicationsRouter } from "./routes/applications";
 import { bookmarksRouter } from "./routes/bookmarks";
 
+import {
+  corsOptions,
+  socketCorsOptions,
+} from "./config/cors";
+
 const app = express();
 
 if (process.env.NODE_ENV === "production") {
@@ -25,11 +30,7 @@ if (process.env.NODE_ENV === "production") {
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
-  cors: {
-    origin: true,
-    credentials: true,
-    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"]
-  }
+  cors: socketCorsOptions,
 });
 
 io.use(authenticateSocket);
@@ -48,7 +49,7 @@ io.on("connection", (socket) => {
   });
 });
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
