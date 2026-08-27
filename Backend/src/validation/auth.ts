@@ -83,3 +83,9 @@ export const resetPasswordSchema = z.object({
 
   newPassword: passwordSchema,
 });
+
+export const twoFactorCodeSchema = z.object({
+  code: z
+    .string()
+    .regex(/^\d{6}$/, "Authentication code must contain exactly 6 digits"),
+});
