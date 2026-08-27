@@ -38,7 +38,8 @@ model User {
   supportTickets  SupportTicket[]
 
   isVerified        Boolean  @default(false)
-  verificationToken   String?
+  verificationTokenHash      String?
+  verificationTokenExpiresAt DateTime?
   resetTokenHash      String?
   resetTokenExpiresAt DateTime?
 

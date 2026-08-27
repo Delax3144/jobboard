@@ -26,10 +26,13 @@ import {
   resetPasswordSchema,
 } from "../validation/auth";
 import { updateProfileSchema } from "../validation/profile";
+import {
+  createEmailVerificationToken,
+  hashEmailVerificationToken,
+} from "../lib/emailVerificationTokens";
 import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
 import nodemailer from "nodemailer";
-import crypto from "crypto";
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 import {
@@ -99,7 +102,11 @@ authRouter.post("/register", registerRateLimit, async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const verificationToken = crypto.randomBytes(32).toString('hex'); 
+  const {
+    token: verificationToken,
+    tokenHash: verificationTokenHash,
+    expiresAt: verificationTokenExpiresAt,
+  } = createEmailVerificationToken();
 
   try {
     await prisma.user.create({
@@ -111,7 +118,8 @@ authRouter.post("/register", registerRateLimit, async (req, res) => {
         firstName,
         lastName,
         phone,
-        verificationToken,
+        verificationTokenHash,
+        verificationTokenExpiresAt,
       },
       select: { id: true },
     });
@@ -141,23 +149,72 @@ authRouter.post("/register", registerRateLimit, async (req, res) => {
   }
 });
 
-authRouter.post('/verify-email', async (req, res) => {
+authRouter.post("/verify-email", async (req, res) => {
   const { token } = req.body;
+
+  if (
+    typeof token !== "string" ||
+    !/^[a-f0-9]{64}$/i.test(token)
+  ) {
+    return res.status(400).json({
+      message: "Invalid or expired verification token",
+    });
+  }
+
   try {
+    const verificationTokenHash =
+      hashEmailVerificationToken(token);
+
+    const now = new Date();
+
     const user = await prisma.user.findFirst({
-      where: { verificationToken: token },
-      select: { id: true },
+      where: {
+        verificationTokenHash,
+        verificationTokenExpiresAt: {
+          gt: now,
+        },
+      },
+      select: {
+        id: true,
+      },
     });
-    if (!user) return res.status(400).json({ message: "Неверный или устаревший токен" });
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { isVerified: true, verificationToken: null } 
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid or expired verification token",
+      });
+    }
+
+    const result = await prisma.user.updateMany({
+      where: {
+        id: user.id,
+        verificationTokenHash,
+        verificationTokenExpiresAt: {
+          gt: now,
+        },
+      },
+      data: {
+        isVerified: true,
+        verificationTokenHash: null,
+        verificationTokenExpiresAt: null,
+      },
     });
 
-    res.json({ message: "Почта успешно подтверждена" });
-  } catch (err) {
-    res.status(500).json({ message: "Ошибка сервера" });
+    if (result.count === 0) {
+      return res.status(400).json({
+        message: "Invalid or expired verification token",
+      });
+    }
+
+    return res.json({
+      message: "Email successfully verified",
+    });
+  } catch (error) {
+    console.error("Email verification failed:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 });
 
