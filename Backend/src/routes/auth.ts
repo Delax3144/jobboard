@@ -44,6 +44,7 @@ import {
   registerRateLimit,
   contactRateLimit,
 } from "../middleware/rateLimits";
+import { escapeHtml } from "../lib/escapeHtml";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -130,6 +131,8 @@ authRouter.post("/register", registerRateLimit, async (req, res) => {
     // === 1. СНАЧАЛА ОТДАЕМ ОТВЕТ ФРОНТЕНДУ ===
     res.status(201).json({ message: "Успешная регистрация. Проверьте почту!" });
 
+    const safeFirstName = escapeHtml(firstName);
+
     // === 2. ПОТОМ ОТПРАВЛЯЕМ ПИСЬМО В ФОНЕ (fire-and-forget) ===
     transporter.sendMail({
       from: `"JobBoard Team" <${process.env.EMAIL_USER}>`,
@@ -138,7 +141,7 @@ authRouter.post("/register", registerRateLimit, async (req, res) => {
       html: `
         <div style="font-family: Arial; padding: 20px; background: #0a0a0a; color: #fff; border-radius: 10px;">
           <h2 style="color: #10b981;">Welcome to JobBoard!</h2>
-          <p>Hi ${firstName},</p>
+          <p>Hi ${safeFirstName},</p>
           <p>Please click the button below to verify your email address and activate your account.</p>
           <a href="${verifyLink}" style="display: inline-block; padding: 12px 24px; background: #10b981; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 15px;">Verify Email</a>
         </div>
@@ -587,6 +590,8 @@ authRouter.post(
 
       res.json({ message: responseMessage });
 
+      const safeFirstName = escapeHtml(user.firstName);
+
       transporter.sendMail({
         from: `"JobBoard Security" <${process.env.EMAIL_USER}>`,
         to: email,
@@ -594,7 +599,7 @@ authRouter.post(
         html: `
           <div style="font-family: Arial; padding: 20px; background: #0a0a0a; color: #fff; border-radius: 10px;">
             <h2 style="color: #10b981;">Change Your Password</h2>
-            <p>Hi ${user.firstName},</p>
+            <p>Hi ${safeFirstName},</p>
             <p>We received a request to change your password. Click the button below to set a new one.</p>
             <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #10b981; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 15px;">Reset Password</a>
             <p style="margin-top: 20px; font-size: 12px; color: #666;">This link expires in 30 minutes.</p>
@@ -695,6 +700,11 @@ authRouter.post(
       return res.status(400).json({ message: "Please fill all required fields." });
     }
 
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeSubject = escapeHtml(subject || "Support Request");
+    const safeMessage = escapeHtml(message);
+
     try {
       const ticket = await prisma.supportTicket.create({
         data: {
@@ -714,15 +724,15 @@ authRouter.post(
         from: `"JobBoard Support" <${process.env.EMAIL_USER}>`, 
         replyTo: email,
         to: process.env.EMAIL_USER,
-        subject: `[Ticket #${ticket.id.slice(0,8)}] ${subject || 'Support Request'}`,
+        subject: `[Ticket #${ticket.id.slice(0, 8)}] ${safeSubject}`,
         html: `
           <div style="font-family: Arial; padding: 20px; background: #f4f4f4;">
             <h2>New Support Ticket</h2>
             <p><strong>Ticket ID:</strong> ${ticket.id}</p>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Name:</strong> ${safeName}</p>
+            <p><strong>Email:</strong> ${safeEmail}</p>
             <hr/>
-            <p>${message}</p>
+            <p>${safeMessage}</p>
           </div>
         `
       }).catch(err => console.error("Ошибка отправки письма (Контакты):", err));
