@@ -19,6 +19,9 @@ import {
 } from "../lib/passwordResetTokens";
 import { userIdSchema } from "../validation/users";
 import {
+  registerSchema,
+  loginSchema,
+  oauthRoleSchema,
   requestPasswordResetSchema,
   resetPasswordSchema,
 } from "../validation/auth";
@@ -59,10 +62,23 @@ transporter.verify((error, success) => {
 });
 
 authRouter.post("/register", registerRateLimit, async (req, res) => {
-  const { email, password, role, username, firstName, lastName, phone } = req.body;
-  if (!email || !password || !role || !username || !firstName || !lastName) {
-    return res.status(400).json({ message: "All required fields must be filled" });
+  const parsedBody = registerSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    return res.status(400).json({
+      message: parsedBody.error.issues[0]?.message ?? "Invalid request",
+    });
   }
+
+  const {
+    email,
+    password,
+    role,
+    username,
+    firstName,
+    lastName,
+    phone,
+  } = parsedBody.data;
   const existingEmail = await prisma.user.findUnique({
     where: { email },
     select: { id: true },
@@ -145,8 +161,17 @@ authRouter.post('/verify-email', async (req, res) => {
 });
 
 authRouter.post("/login", loginRateLimit, async (req, res) => {
-  const { email, password } = req.body;
-    const user = await prisma.user.findUnique({
+  const parsedBody = loginSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    return res.status(400).json({
+      message: parsedBody.error.issues[0]?.message ?? "Invalid request",
+    });
+  }
+
+  const { email, password } = parsedBody.data;
+
+  const user = await prisma.user.findUnique({
     where: { email },
     select: {
       ...safeUserSelect,
@@ -264,7 +289,18 @@ authRouter.post(
 });
 
 authRouter.post("/google", async (req, res) => {
-  const { credential, role } = req.body;
+  const parsedRole = oauthRoleSchema.safeParse({
+    role: req.body.role,
+  });
+
+  if (!parsedRole.success) {
+    return res.status(400).json({
+      message: "Invalid role",
+    });
+  }
+
+  const { credential } = req.body;
+  const role = parsedRole.data.role ?? "candidate";
   try {
     const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: process.env.GOOGLE_CLIENT_ID });
     const payload = ticket.getPayload();
@@ -286,7 +322,7 @@ authRouter.post("/google", async (req, res) => {
         data: { 
           email,
           passwordHash,
-          role: role || "candidate",
+          role,
           username,
           firstName: given_name || "User",
           lastName: family_name || "",
@@ -309,7 +345,18 @@ authRouter.post("/google", async (req, res) => {
 });
 
 authRouter.post("/github", async (req, res) => {
-  const { code, role } = req.body;
+  const parsedRole = oauthRoleSchema.safeParse({
+    role: req.body.role,
+  });
+
+  if (!parsedRole.success) {
+    return res.status(400).json({
+      message: "Invalid role",
+    });
+  }
+
+  const { code } = req.body;
+  const role = parsedRole.data.role ?? "candidate";
   try {
     const tokenResponse = await axios.post('https://github.com/login/oauth/access_token', {
       client_id: process.env.GITHUB_CLIENT_ID, client_secret: process.env.GITHUB_CLIENT_SECRET, code,
@@ -342,7 +389,7 @@ authRouter.post("/github", async (req, res) => {
         data: { 
           email,
           passwordHash,
-          role: role || 'candidate',
+          role,
           username, 
           firstName: githubUser.name?.split(' ')[0] || githubUser.login,
           lastName: githubUser.name?.split(' ').slice(1).join(' ') || '', 
