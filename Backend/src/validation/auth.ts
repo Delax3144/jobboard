@@ -89,3 +89,14 @@ export const twoFactorCodeSchema = z.object({
     .string()
     .regex(/^\d{6}$/, "Authentication code must contain exactly 6 digits"),
 });
+
+export const resendVerificationSchema = z
+  .object({
+    email: z
+      .string()
+      .trim()
+      .email("Invalid email address")
+      .max(254, "Email is too long")
+      .transform((email) => email.toLowerCase()),
+  })
+  .strict();

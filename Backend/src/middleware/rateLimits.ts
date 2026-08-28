@@ -46,6 +46,16 @@ export const passwordResetRateLimit = rateLimit({
   },
 });
 
+export const verificationResendRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    message: "Too many verification requests. Please try again later.",
+  },
+});
+
 export const registerRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 5,
