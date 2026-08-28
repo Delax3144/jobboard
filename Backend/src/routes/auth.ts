@@ -28,6 +28,7 @@ import {
   twoFactorCodeSchema
 } from "../validation/auth";
 import { updateProfileSchema } from "../validation/profile";
+import { contactSchema } from "../validation/support";
 import {
   createEmailVerificationToken,
   hashEmailVerificationToken,
@@ -749,11 +750,15 @@ authRouter.post(
   contactRateLimit,
   optionalAuthMiddleware,
   async (req, res) => {
-    const { name, email, subject, message } = req.body;
+    const parsedBody = contactSchema.safeParse(req.body);
 
-    if (!name || !email || !message) {
-      return res.status(400).json({ message: "Please fill all required fields." });
+    if (!parsedBody.success) {
+      return res.status(400).json({
+        message: parsedBody.error.issues[0]?.message ?? "Invalid contact form data",
+      });
     }
+
+    const { name, email, subject, message } = parsedBody.data;
 
     const safeName = escapeHtml(name);
     const safeEmail = escapeHtml(email);
