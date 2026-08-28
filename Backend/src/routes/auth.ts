@@ -35,7 +35,7 @@ import {
 } from "../lib/emailVerificationTokens";
 import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
-import nodemailer from "nodemailer";
+import { mailTransporter } from "../config/mailer";
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 import {
@@ -48,27 +48,11 @@ import {
   twoFactorSettingsRateLimit,
 } from "../middleware/rateLimits";
 import { escapeHtml } from "../lib/escapeHtml";
+import { sanitizeEmailHeader } from "../lib/sanitizeEmailHeader";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const authRouter = Router();
-
-// Настройка почтальона
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ ОШИБКА NODEMAILER (Связь с Google не установлена):", error.message);
-  } else {
-    console.log("✅ Nodemailer успешно подключен! Сервер готов отправлять письма.");
-  }
-});
 
 authRouter.post("/register", registerRateLimit, async (req, res) => {
   const parsedBody = registerSchema.safeParse(req.body);
@@ -137,7 +121,7 @@ authRouter.post("/register", registerRateLimit, async (req, res) => {
     const safeFirstName = escapeHtml(firstName);
 
     // === 2. ПОТОМ ОТПРАВЛЯЕМ ПИСЬМО В ФОНЕ (fire-and-forget) ===
-    transporter.sendMail({
+    mailTransporter.sendMail({
       from: `"JobBoard Team" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Confirm your email on JobBoard",
@@ -648,7 +632,7 @@ authRouter.post(
 
       const safeFirstName = escapeHtml(user.firstName);
 
-      transporter.sendMail({
+      mailTransporter.sendMail({
         from: `"JobBoard Security" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: "Password Reset Request",
@@ -762,7 +746,9 @@ authRouter.post(
 
     const safeName = escapeHtml(name);
     const safeEmail = escapeHtml(email);
-    const safeSubject = escapeHtml(subject || "Support Request");
+    const safeSubject = sanitizeEmailHeader(
+      subject || "Support Request"
+    );
     const safeMessage = escapeHtml(message);
 
     try {
@@ -780,7 +766,7 @@ authRouter.post(
       res.json({ message: "Message sent and ticket created!", ticket });
 
       // === 2. ПОТОМ ОТПРАВЛЯЕМ ПИСЬМО В ФОНЕ ===
-      transporter.sendMail({
+      mailTransporter.sendMail({
         from: `"JobBoard Support" <${process.env.EMAIL_USER}>`, 
         replyTo: email,
         to: process.env.EMAIL_USER,

@@ -3,25 +3,17 @@ import { prisma } from "../prisma";
 import { authMiddleware, requireRole } from "../middleware/auth";
 import { uploadCV } from "../lib/upload";
 import { applicationCandidateSelect } from "../selects/user";
-import nodemailer from "nodemailer";
+import { mailTransporter } from "../config/mailer";
 import {
   applicationIdSchema,
   createApplicationSchema,
   jobIdSchema,
   sendMessageSchema
 } from "../validation/applications";
+import { escapeHtml } from "../lib/escapeHtml";
+import { sanitizeEmailHeader } from "../lib/sanitizeEmailHeader";
 
 export const applicationsRouter = Router();
-
-// === НАСТРОЙКА NODEMAILER ===
-// В идеале вынести это в .env, но для тестов оставим здесь
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
 
 // 1. ОТПРАВИТЬ ОТКЛИК
 applicationsRouter.post(
@@ -186,29 +178,32 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
       },
     });
 
+    const safeJobTitle = escapeHtml(updated.job.title);
+    const safeCompanyName = escapeHtml(updated.job.companyName);
+
     // Формируем письмо в зависимости от статуса
     let subject = "";
     let htmlText = "";
 
     if (status === 'invited') {
-      subject = `🎉 Вас пригласили на вакансию: ${updated.job.title}!`;
+      subject = `🎉 Вас пригласили на вакансию: ${safeJobTitle}!`;
       htmlText = `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #10b981;">Хорошие новости!</h2>
           <p>Здравствуйте!</p>
-          <p>Работодатель рассмотрел ваш отклик на вакансию <b>"${updated.job.title}"</b> в компании <b>${updated.job.companyName}</b> и приглашает вас к общению.</p>
+          <p>Работодатель рассмотрел ваш отклик на вакансию <b>"${safeJobTitle}"</b> в компании <b>${safeCompanyName}</b> и приглашает вас к общению.</p>
           <p>Войдите в личный кабинет на JobBoard, чтобы прочитать сообщение и начать чат.</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
           <p style="font-size: 12px; color: #888;">Это автоматическое письмо, пожалуйста, не отвечайте на него.</p>
         </div>
       `;
     } else if (status === 'rejected') {
-      subject = `Ответ по вакансии: ${updated.job.title}`;
+      subject = `Ответ по вакансии: ${safeJobTitle}`;
       htmlText = `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2>Статус вашего отклика обновлен</h2>
           <p>Здравствуйте.</p>
-          <p>Спасибо за интерес к вакансии <b>"${updated.job.title}"</b> в компании <b>${updated.job.companyName}</b>.</p>
+          <p>Спасибо за интерес к вакансии <b>"${safeJobTitle}"</b> в компании <b>${safeCompanyName}</b>.</p>
           <p>К сожалению, на данный момент работодатель принял решение продолжить общение с другими кандидатами. Мы желаем вам успехов в дальнейших поисках!</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
           <p style="font-size: 12px; color: #888;">С уважением,<br/>Команда JobBoard</p>
@@ -216,14 +211,16 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
       `;
     }
 
+    const safeSubject = sanitizeEmailHeader(subject);
+
     // Если статус сменился на тот, что требует письма, отправляем!
     if (status === 'invited' || status === 'rejected') {
       try {
-        await transporter.sendMail({
-          from: '"JobBoard Platform" <ТВОЙ_GMAIL@gmail.com>', // Замени на свою почту
-          to: updated.candidate.email, // Отправляем на почту кандидата из базы
-          subject: subject,
-          html: htmlText
+        await mailTransporter.sendMail({
+          from: `"JobBoard Platform" <${process.env.EMAIL_USER}>`,
+          to: updated.candidate.email,
+          subject: safeSubject,
+          html: htmlText,
         });
         console.log(`Письмо отправлено кандидату: ${updated.candidate.email}`);
       } catch (mailError) {
