@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { authMiddleware, requireRole } from "../middleware/auth";
-import { uploadCV } from "../lib/upload";
+import {
+  removeCloudinaryUpload,
+  uploadCV,
+} from "../lib/upload";
 import { applicationCandidateSelect } from "../selects/user";
 import { mailTransporter } from "../config/mailer";
 import {
@@ -12,6 +15,7 @@ import {
 } from "../validation/applications";
 import { escapeHtml } from "../lib/escapeHtml";
 import { sanitizeEmailHeader } from "../lib/sanitizeEmailHeader";
+import { applicationUploadRateLimit } from "../middleware/rateLimits";
 
 export const applicationsRouter = Router();
 
@@ -20,66 +24,84 @@ applicationsRouter.post(
   "/",
   authMiddleware,
   requireRole("candidate"),
+  applicationUploadRateLimit,
   uploadCV.single("cv"),
   async (req: any, res) => {
-  const parsed = createApplicationSchema.safeParse(req.body);
+    const parsed = createApplicationSchema.safeParse(req.body);
 
-  if (!parsed.success) {
-    return res.status(400).json({
-      message: "Invalid application data",
-      errors: parsed.error.flatten().fieldErrors,
-    });
-  }
+    if (!parsed.success) {
+      await removeCloudinaryUpload(req.file);
 
-  const { jobId, coverLetter } = parsed.data;
-  const cvUrl = req.file ? req.file.path : null;
-
-  try {
-    // Сначала находим вакансию, чтобы знать, кто её владелец (работодатель)
-    const job = await prisma.job.findFirst({
-      where: {
-        id: jobId,
-        status: "published",
-      },
-      select: {
-        ownerId: true,
-        title: true,
-      },
-    });
-
-    if (!job) {
-      return res.status(404).json({
-        message: "Job not found",
+      return res.status(400).json({
+        message: "Invalid application data",
+        errors: parsed.error.flatten().fieldErrors,
       });
     }
 
-    const application = await prisma.application.create({
-      data: {
-        jobId,
-        coverLetter,
-        cvUrl, 
-        candidateId: req.user.id,
-        status: "new"
+    const { jobId, coverLetter } = parsed.data;
+    const cvUrl = req.file ? req.file.path : null;
+
+    let applicationCreated = false;
+
+    try {
+      const job = await prisma.job.findFirst({
+        where: {
+          id: jobId,
+          status: "published",
+        },
+        select: {
+          ownerId: true,
+          title: true,
+        },
+      });
+
+      if (!job) {
+        await removeCloudinaryUpload(req.file);
+
+        return res.status(404).json({
+          message: "Job not found",
+        });
       }
-    });
 
-    // === СОКЕТ: Уведомляем работодателя ===
-    const io = req.app.get("io");
-    if (io) {
-      io.to(job.ownerId).emit("new_notification", {
-        type: "new_application",
-        message: `Новый отклик на вакансию ${job.title}`
+      const application = await prisma.application.create({
+        data: {
+          jobId,
+          coverLetter,
+          cvUrl,
+          candidateId: req.user.id,
+          status: "new",
+        },
+      });
+
+      applicationCreated = true;
+
+      const io = req.app.get("io");
+
+      if (io) {
+        io.to(job.ownerId).emit("new_notification", {
+          type: "new_application",
+          message: `Новый отклик на вакансию ${job.title}`,
+        });
+      }
+
+      return res.status(201).json(application);
+    } catch (error: any) {
+      if (!applicationCreated) {
+        await removeCloudinaryUpload(req.file);
+      }
+
+      if (error.code === "P2002") {
+        return res.status(400).json({
+          message: "Вы уже отправили отклик на эту вакансию",
+        });
+      }
+
+      return res.status(500).json({
+        message: "Ошибка при отправке отклика",
       });
     }
-
-    res.status(201).json(application);
-  } catch (error: any) {
-    if (error.code === 'P2002') {
-      return res.status(400).json({ message: "Вы уже отправили отклик на эту вакансию" });
-    }
-    res.status(500).json({ message: "Ошибка при отправке отклика" });
   }
-});
+);
 
 // 2. ПОЛУЧИТЬ ОТКЛИКИ ДЛЯ ВАКАНСИИ
 applicationsRouter.get("/job/:jobId", authMiddleware, async (req: any, res) => {

@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { authMiddleware, requireRole } from "../middleware/auth";
-import { uploadJob } from "../lib/upload";
+import {
+  removeCloudinaryUpload,
+  uploadJob,
+} from "../lib/upload";
 import { sanitizeRichText } from "../lib/sanitizeHtml";
 import {
   createJobSchema,
@@ -9,6 +12,7 @@ import {
   updateJobSchema,
 } from "../validation/jobs";
 import { optionalAuthMiddleware } from "../middleware/optionalAuth";
+import { jobUploadRateLimit } from "../middleware/rateLimits";
 
 export const jobsRouter = Router();
 
@@ -71,12 +75,15 @@ jobsRouter.post(
   "/",
   authMiddleware,
   requireRole("employer"),
+  jobUploadRateLimit,
   uploadJob.single("logo"),
   async (req: any, res) => {
 
   const parsed = createJobSchema.safeParse(req.body);
 
   if (!parsed.success) {
+    await removeCloudinaryUpload(req.file);
+
     return res.status(400).json({
       message: "Invalid job data",
       errors: parsed.error.flatten().fieldErrors,
@@ -98,6 +105,8 @@ jobsRouter.post(
   const companyLogo = req.file ? req.file.path : null;
   const sanitizedDescription = sanitizeRichText(description);
 
+  let jobCreated = false;
+
   try {
     const job = await prisma.job.create({
       data: {
@@ -114,9 +123,18 @@ jobsRouter.post(
         status,
       }
     });
+    jobCreated = true;
     res.status(201).json(job);
   } catch (error) {
-    res.status(500).json({ message: "Ошибка при создании" });
+    if (!jobCreated) {
+      await removeCloudinaryUpload(req.file);
+    }
+
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Failed to create job",
+    });
   }
 });
 
@@ -125,89 +143,123 @@ jobsRouter.patch(
   "/:id",
   authMiddleware,
   requireRole("employer"),
+  jobUploadRateLimit,
   uploadJob.single("logo"),
   async (req: any, res) => {
-  const { id } = req.params;
+    const parsedId = jobIdSchema.safeParse(req.params.id);
 
-  const parsedId = jobIdSchema.safeParse(id);
+    if (!parsedId.success) {
+      await removeCloudinaryUpload(req.file);
 
-  if (!parsedId.success) {
-    return res.status(400).json({
-      message: "Invalid job id",
-    });
-  }
-
-  const parsed = updateJobSchema.safeParse(req.body);
-
-  if (!parsed.success) {
-    return res.status(400).json({
-      message: "Invalid job data",
-      errors: parsed.error.flatten().fieldErrors,
-    });
-  }
-
-  const jobId = parsedId.data;
-
-  const {
-    title,
-    companyName,
-    location,
-    salaryFrom,
-    salaryTo,
-    description,
-    tags,
-    level,
-    status,
-  } = parsed.data;
-  const sanitizedDescription =
-  description !== undefined
-    ? sanitizeRichText(description)
-    : undefined;
-
-  try {
-    const existingJob = await prisma.job.findUnique({ where: { id: jobId } });
-    if (!existingJob || existingJob.ownerId !== req.user.id) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    const nextSalaryFrom = salaryFrom ?? existingJob.salaryFrom;
-    const nextSalaryTo = salaryTo ?? existingJob.salaryTo;
-
-    if (
-      nextSalaryFrom !== null &&
-      nextSalaryTo !== null &&
-      nextSalaryFrom > nextSalaryTo
-    ) {
       return res.status(400).json({
-        message: "Invalid job data",
-        errors: {
-          salaryTo: ["Minimum salary cannot exceed maximum salary"],
-        },
+        message: "Invalid job id",
       });
     }
 
-    const companyLogo = req.file ? req.file.path : undefined;
+    const parsed = updateJobSchema.safeParse(req.body);
 
-    const updatedJob = await prisma.job.update({
-      where: { id: jobId },
-      data: {
-        title,
-        companyName,
-        location,
-        level,
-        description: sanitizedDescription,
-        tags,
-        status,
-        salaryFrom,
-        salaryTo,
-        ...(companyLogo && { companyLogo }),
+    if (!parsed.success) {
+      await removeCloudinaryUpload(req.file);
+
+      return res.status(400).json({
+        message: "Invalid job data",
+        errors: parsed.error.flatten().fieldErrors,
+      });
+    }
+
+    const jobId = parsedId.data;
+
+    const {
+      title,
+      companyName,
+      location,
+      salaryFrom,
+      salaryTo,
+      description,
+      tags,
+      level,
+      status,
+    } = parsed.data;
+
+    const sanitizedDescription =
+      description !== undefined
+        ? sanitizeRichText(description)
+        : undefined;
+
+    let jobUpdated = false;
+
+    try {
+      const existingJob = await prisma.job.findUnique({
+        where: { id: jobId },
+      });
+
+      if (!existingJob || existingJob.ownerId !== req.user.id) {
+        await removeCloudinaryUpload(req.file);
+
+        return res.status(403).json({
+          message: "Access denied",
+        });
       }
-    });
-    res.json(updatedJob);
-  } catch (error) {
-    res.status(500).json({ message: "Ошибка при обновлении" });
+
+      const nextSalaryFrom =
+        salaryFrom ?? existingJob.salaryFrom;
+
+      const nextSalaryTo =
+        salaryTo ?? existingJob.salaryTo;
+
+      if (
+        nextSalaryFrom !== null &&
+        nextSalaryTo !== null &&
+        nextSalaryFrom > nextSalaryTo
+      ) {
+        await removeCloudinaryUpload(req.file);
+
+        return res.status(400).json({
+          message: "Invalid job data",
+          errors: {
+            salaryTo: [
+              "Minimum salary cannot exceed maximum salary",
+            ],
+          },
+        });
+      }
+
+      const companyLogo = req.file
+        ? req.file.path
+        : undefined;
+
+      const updatedJob = await prisma.job.update({
+        where: { id: jobId },
+        data: {
+          title,
+          companyName,
+          location,
+          level,
+          description: sanitizedDescription,
+          tags,
+          status,
+          salaryFrom,
+          salaryTo,
+          ...(companyLogo && { companyLogo }),
+        },
+      });
+
+      jobUpdated = true;
+
+      return res.json(updatedJob);
+    } catch (error) {
+      if (!jobUpdated) {
+        await removeCloudinaryUpload(req.file);
+      }
+
+      console.error("Job update failed:", error);
+
+      return res.status(500).json({
+        message: "Ошибка при обновлении",
+      });
+    }
   }
-});
+);
 
 // 5. Удаление
 jobsRouter.delete("/:id", authMiddleware, async (req: any, res) => {

@@ -86,3 +86,36 @@ export const contactRateLimit = rateLimit({
     message: "Too many support requests. Please try again later.",
   },
 });
+
+export const profileUploadRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id ?? "unauthenticated",
+  message: {
+    message: "Too many profile uploads. Please try again later.",
+  },
+});
+
+export const applicationUploadRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id ?? "unauthenticated",
+  message: {
+    message: "Too many application uploads. Please try again later.",
+  },
+});
+
+export const jobUploadRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id ?? "unauthenticated",
+  message: {
+    message: "Too many job uploads. Please try again later.",
+  },
+});

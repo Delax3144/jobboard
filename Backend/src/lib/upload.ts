@@ -88,3 +88,27 @@ export const uploadCV = multer({
   },
   fileFilter: createMimeTypeFilter(CV_MIME_TYPES),
 });
+
+export async function removeCloudinaryUpload(
+  file: Express.Multer.File | undefined
+) {
+  if (!file?.filename) {
+    return;
+  }
+
+  try {
+    const imageResult = await cloudinary.uploader.destroy(file.filename, {
+      resource_type: "image",
+      invalidate: true,
+    });
+
+    if (imageResult.result === "not found") {
+      await cloudinary.uploader.destroy(file.filename, {
+        resource_type: "raw",
+        invalidate: true,
+      });
+    }
+  } catch (error) {
+    console.error("Failed to remove Cloudinary upload:", error);
+  }
+}

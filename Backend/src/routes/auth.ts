@@ -9,7 +9,11 @@ import {
 } from "../lib/authTokens";
 import { authMiddleware } from "../middleware/auth";
 import { optionalAuthMiddleware } from "../middleware/optionalAuth";
-import { uploadAvatar, uploadCV } from "../lib/upload";
+import {
+  removeCloudinaryUpload,
+  uploadAvatar,
+  uploadCV,
+} from "../lib/upload";
 import {
   publicProfileSelect,
   safeUserSelect,
@@ -47,7 +51,8 @@ import {
   registerRateLimit,
   contactRateLimit,
   twoFactorSettingsRateLimit,
-  verificationResendRateLimit 
+  verificationResendRateLimit,
+  profileUploadRateLimit
 } from "../middleware/rateLimits";
 import { escapeHtml } from "../lib/escapeHtml";
 import { sanitizeEmailHeader } from "../lib/sanitizeEmailHeader";
@@ -658,20 +663,54 @@ authRouter.get("/me", authMiddleware, async (req: any, res) => {
   res.json({ user });
 });
 
-authRouter.post('/avatar', authMiddleware, uploadAvatar.single('avatar'), async (req: any, res: any) => {
-  try {
-    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
-    const avatarUrl = req.file.path; 
-    const user = await prisma.user.update({
-      where: { id: req.user.id },
-      data: { avatarUrl },
-      select: { id: true, email: true, role: true, username: true, firstName: true, lastName: true, avatarUrl: true, isTwoFactorEnabled: true }
-    });
-    res.json({ user });
-  } catch (err) {
-    res.status(500).json({ message: "Upload failed" });
+authRouter.post(
+  "/avatar",
+  authMiddleware,
+  profileUploadRateLimit,
+  uploadAvatar.single("avatar"),
+  async (req: any, res: any) => {
+    let avatarSaved = false;
+
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          message: "No file uploaded",
+        });
+      }
+
+      const avatarUrl = req.file.path;
+
+      const user = await prisma.user.update({
+        where: { id: req.user.id },
+        data: { avatarUrl },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+          isTwoFactorEnabled: true,
+        },
+      });
+
+      avatarSaved = true;
+
+      return res.json({ user });
+    } catch (error) {
+      if (!avatarSaved) {
+        await removeCloudinaryUpload(req.file);
+      }
+
+      console.error("Avatar upload failed:", error);
+
+      return res.status(500).json({
+        message: "Upload failed",
+      });
+    }
   }
-});
+);
 
 authRouter.post('/ping', authMiddleware, async (req: any, res: any) => {
   try {
@@ -1157,17 +1196,45 @@ authRouter.get("/users/:id", async (req, res) => {
   }
 });
 
-authRouter.post('/resume', authMiddleware, uploadCV.single('resume'), async (req: any, res: any) => {
-  try {
-    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
-    const resumeUrl = req.file.path; 
-    const user = await prisma.user.update({
-      where: { id: req.user.id },
-      data: { resumeUrl },
-      select: { id: true, resumeUrl: true }
-    });
-    res.json({ user });
-  } catch (err) {
-    res.status(500).json({ message: "Resume upload failed" });
+authRouter.post(
+  "/resume",
+  authMiddleware,
+  profileUploadRateLimit,
+  uploadCV.single("resume"),
+  async (req: any, res: any) => {
+    let resumeSaved = false;
+
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          message: "No file uploaded",
+        });
+      }
+
+      const resumeUrl = req.file.path;
+
+      const user = await prisma.user.update({
+        where: { id: req.user.id },
+        data: { resumeUrl },
+        select: {
+          id: true,
+          resumeUrl: true,
+        },
+      });
+
+      resumeSaved = true;
+
+      return res.json({ user });
+    } catch (error) {
+      if (!resumeSaved) {
+        await removeCloudinaryUpload(req.file);
+      }
+
+      console.error("Resume upload failed:", error);
+
+      return res.status(500).json({
+        message: "Resume upload failed",
+      });
+    }
   }
-});
+);
