@@ -230,10 +230,6 @@ jobsRouter.delete("/:id", authMiddleware, async (req: any, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    await prisma.application.deleteMany({
-      where: { jobId },
-    });
-
     await prisma.job.delete({
       where: { id: jobId },
     });
