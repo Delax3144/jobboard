@@ -122,7 +122,7 @@ applicationsRouter.get("/job/:jobId", authMiddleware, async (req: any, res) => {
 
     const job = await prisma.job.findUnique({
       where: { id: jobId },
-    });;
+    });
     
     if (!job || job.ownerId !== req.user.id) {
       return res.status(403).json({ message: "Access denied" });
@@ -203,32 +203,54 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
     const safeJobTitle = escapeHtml(updated.job.title);
     const safeCompanyName = escapeHtml(updated.job.companyName);
 
-    // Формируем письмо в зависимости от статуса
     let subject = "";
     let htmlText = "";
 
-    if (status === 'invited') {
-      subject = `🎉 Вас пригласили на вакансию: ${safeJobTitle}!`;
+    if (status === "invited") {
+      subject = `🎉 Вас пригласили на вакансию: ${updated.job.title}!`;
+
       htmlText = `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #10b981;">Хорошие новости!</h2>
           <p>Здравствуйте!</p>
-          <p>Работодатель рассмотрел ваш отклик на вакансию <b>"${safeJobTitle}"</b> в компании <b>${safeCompanyName}</b> и приглашает вас к общению.</p>
-          <p>Войдите в личный кабинет на JobBoard, чтобы прочитать сообщение и начать чат.</p>
+          <p>
+            Работодатель рассмотрел ваш отклик на вакансию
+            <b>"${safeJobTitle}"</b>
+            в компании
+            <b>${safeCompanyName}</b>
+            и приглашает вас к общению.
+          </p>
+          <p>
+            Войдите в личный кабинет на JobBoard, чтобы прочитать сообщение и начать чат.
+          </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #888;">Это автоматическое письмо, пожалуйста, не отвечайте на него.</p>
+          <p style="font-size: 12px; color: #888;">
+            Это автоматическое письмо, пожалуйста, не отвечайте на него.
+          </p>
         </div>
       `;
-    } else if (status === 'rejected') {
-      subject = `Ответ по вакансии: ${safeJobTitle}`;
+    } else if (status === "rejected") {
+      subject = `Ответ по вакансии: ${updated.job.title}`;
+
       htmlText = `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2>Статус вашего отклика обновлен</h2>
           <p>Здравствуйте.</p>
-          <p>Спасибо за интерес к вакансии <b>"${safeJobTitle}"</b> в компании <b>${safeCompanyName}</b>.</p>
-          <p>К сожалению, на данный момент работодатель принял решение продолжить общение с другими кандидатами. Мы желаем вам успехов в дальнейших поисках!</p>
+          <p>
+            Спасибо за интерес к вакансии
+            <b>"${safeJobTitle}"</b>
+            в компании
+            <b>${safeCompanyName}</b>.
+          </p>
+          <p>
+            К сожалению, на данный момент работодатель принял решение продолжить
+            общение с другими кандидатами. Мы желаем вам успехов в дальнейших поисках!
+          </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #888;">С уважением,<br/>Команда JobBoard</p>
+          <p style="font-size: 12px; color: #888;">
+            С уважением,<br />
+            Команда JobBoard
+          </p>
         </div>
       `;
     }
