@@ -8,6 +8,7 @@ import { oauthRoleSchema } from "../validation/auth";
 import { safeUserSelect } from "../selects/user";
 import { signTwoFactorChallenge } from "../lib/authTokens";
 import { signAccessToken } from "../lib/authTokens";
+import { generateUniqueUsername } from "../lib/generateUniqueUsername";
 
 export const githubRouter = Router();
 
@@ -68,8 +69,8 @@ githubRouter.post("/github", async (req, res) => {
       const randomPassword = randomBytes(32).toString("hex");
       const passwordHash = await bcrypt.hash(randomPassword, 10);
 
-      const baseUsername = githubUser.login || email.split('@')[0];
-      const username = `${baseUsername}_${Math.floor(Math.random() * 1000)}`;
+    const baseUsername = githubUser.login || email.split("@")[0];
+    const username = await generateUniqueUsername(baseUsername);
 
       user = await prisma.user.create({
         data: { 

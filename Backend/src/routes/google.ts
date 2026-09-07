@@ -8,6 +8,7 @@ import { oauthRoleSchema } from "../validation/auth";
 import { safeUserSelect } from "../selects/user";
 import { signTwoFactorChallenge } from "../lib/authTokens";
 import { signAccessToken } from "../lib/authTokens";
+import { generateUniqueUsername } from "../lib/generateUniqueUsername";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -56,8 +57,8 @@ googleRouter.post("/google", async (req, res) => {
       const randomPassword = randomBytes(32).toString("hex");
       const passwordHash = await bcrypt.hash(randomPassword, 10);
 
-      const baseUsername = email.split('@')[0];
-      const username = `${baseUsername}_${Math.floor(Math.random() * 10000)}`;
+      const baseUsername = email.split("@")[0];
+      const username = await generateUniqueUsername(baseUsername);
 
       user = await prisma.user.create({
         data: { 
