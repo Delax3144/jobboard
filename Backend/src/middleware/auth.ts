@@ -50,3 +50,13 @@ export function requireRole(role: AuthUser["role"]) {
     next();
   };
 }
+
+export function getAuthenticatedUser(req: Request): AuthUser {
+  if (!req.user) {
+    throw new Error(
+      "Authenticated user is missing after authMiddleware"
+    );
+  }
+
+  return req.user;
+}

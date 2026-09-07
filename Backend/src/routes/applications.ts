@@ -1,6 +1,11 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
-import { authMiddleware, requireRole } from "../middleware/auth";
+import { Prisma } from "@prisma/client";
+import {
+  authMiddleware,
+  getAuthenticatedUser,
+  requireRole,
+} from "../middleware/auth";
 import {
   removeCloudinaryUpload,
   uploadCV,
@@ -26,7 +31,8 @@ applicationsRouter.post(
   requireRole("candidate"),
   applicationUploadRateLimit,
   uploadCV.single("cv"),
-  async (req: any, res) => {
+  async (req, res) => {
+    const user = getAuthenticatedUser(req);
     const parsed = createApplicationSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -68,7 +74,7 @@ applicationsRouter.post(
           jobId,
           coverLetter,
           cvUrl,
-          candidateId: req.user.id,
+          candidateId: user.id,
           status: "new",
         },
       });
@@ -85,16 +91,19 @@ applicationsRouter.post(
       }
 
       return res.status(201).json(application);
-    } catch (error: any) {
+    } catch (error) {
       if (!applicationCreated) {
         await removeCloudinaryUpload(req.file);
       }
 
-      if (error.code === "P2002") {
-        return res.status(400).json({
-          message: "Вы уже отправили отклик на эту вакансию",
-        });
-      }
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+          return res.status(400).json({
+            message: "Вы уже отправили отклик на эту вакансию",
+          });
+        }
 
       return res.status(500).json({
         message: "Ошибка при отправке отклика",
@@ -104,47 +113,52 @@ applicationsRouter.post(
 );
 
 // 2. ПОЛУЧИТЬ ОТКЛИКИ ДЛЯ ВАКАНСИИ
-applicationsRouter.get("/job/:jobId", authMiddleware, async (req: any, res) => {
-  if (req.user.role !== "employer") {
-    return res.status(403).json({ message: "Access denied" });
-  }
-
-  try {
-    const parsedJobId = jobIdSchema.safeParse(req.params.jobId);
-
-    if (!parsedJobId.success) {
-      return res.status(400).json({
-        message: "Invalid job id",
-      });
-    }
-
-    const jobId = parsedJobId.data;
-
-    const job = await prisma.job.findUnique({
-      where: { id: jobId },
-    });
-    
-    if (!job || job.ownerId !== req.user.id) {
+applicationsRouter.get(
+  "/job/:jobId",
+  authMiddleware,
+  async (req, res) => {
+    const user = getAuthenticatedUser(req);
+    if (user.role !== "employer") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const apps = await prisma.application.findMany({
-      where: { jobId },
-      include: {
-        candidate: {
-          select: applicationCandidateSelect,
+    try {
+      const parsedJobId = jobIdSchema.safeParse(req.params.jobId);
+
+      if (!parsedJobId.success) {
+        return res.status(400).json({
+          message: "Invalid job id",
+        });
+      }
+
+      const jobId = parsedJobId.data;
+
+      const job = await prisma.job.findUnique({
+        where: { id: jobId },
+      });
+      
+      if (!job || job.ownerId !== user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const apps = await prisma.application.findMany({
+        where: { jobId },
+        include: {
+          candidate: {
+            select: applicationCandidateSelect,
+          },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-    res.json(apps);
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
+        orderBy: { createdAt: "desc" },
+      });
+      res.json(apps);
+    } catch (err) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
 
 // 3. ОБНОВИТЬ СТАТУС (И ОТПРАВИТЬ EMAIL)
-applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
+applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
+  const user = getAuthenticatedUser(req);
   const { status } = req.body; // status: 'invited' или 'rejected'
 
   const parsedId = applicationIdSchema.safeParse(req.params.id);
@@ -163,7 +177,7 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
     return res.status(400).json({ message: "Invalid application status" });
   }
 
-  if (req.user.role !== "employer") {
+  if (user.role !== "employer") {
     return res.status(403).json({ message: "Access denied" });
   }
   
@@ -184,7 +198,7 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    if (application.job.ownerId !== req.user.id) {
+    if (application.job.ownerId !== user.id) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -266,7 +280,6 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
           subject: safeSubject,
           html: htmlText,
         });
-        console.log(`Письмо отправлено кандидату: ${updated.candidate.email}`);
       } catch (mailError) {
         console.error("Ошибка при отправке письма:", mailError);
         // Мы не прерываем выполнение (не кидаем ошибку 500), 
@@ -292,13 +305,14 @@ applicationsRouter.patch("/:id", authMiddleware, async (req: any, res) => {
 });
 
 // 4. ПОЛУЧИТЬ МОИ ОТКЛИКИ ДЛЯ КАНДИДАТА
-applicationsRouter.get("/my", authMiddleware, async (req: any, res) => {
-  if (req.user.role !== "candidate") {
+applicationsRouter.get("/my", authMiddleware, async (req, res) => {
+  const user = getAuthenticatedUser(req);
+  if (user.role !== "candidate") {
     return res.status(403).json({ message: "Access denied" });
   }
 
   const apps = await prisma.application.findMany({
-    where: { candidateId: req.user.id },
+    where: { candidateId: user.id },
     include: { 
       job: { include: { owner: { select: { lastActive: true } } } }, // Достаем онлайн работодателя
       messages: { orderBy: { createdAt: "desc" }, take: 1 } 
@@ -315,14 +329,15 @@ applicationsRouter.get("/my", authMiddleware, async (req: any, res) => {
 });
 
 // 5. ПОЛУЧИТЬ ОТКЛИКИ ДЛЯ РАБОТОДАТЕЛЯ
-applicationsRouter.get("/owner", authMiddleware, async (req: any, res) => {
-  if (req.user.role !== "employer") {
+applicationsRouter.get("/owner", authMiddleware, async (req, res) => {
+  const user = getAuthenticatedUser(req);
+  if (user.role !== "employer") {
     return res.status(403).json({ message: "Access denied" });
   }
 
   try {
     const apps = await prisma.application.findMany({
-      where: { job: { ownerId: req.user.id } },
+      where: { job: { ownerId: user.id } },
       include: {
         job: true,
         candidate: { select: { id: true, email: true, avatarUrl: true, firstName: true, lastName: true, lastActive: true } } 
@@ -336,7 +351,8 @@ applicationsRouter.get("/owner", authMiddleware, async (req: any, res) => {
 });
 
 // 6. ПОЛУЧИТЬ ОДИН ОТКЛИК ПО ID (ИСПРАВЛЕНО)
-applicationsRouter.get("/:id", authMiddleware, async (req: any, res) => {
+applicationsRouter.get("/:id", authMiddleware, async (req, res) => {
+  const user = getAuthenticatedUser(req);
   try {
     const parsedId = applicationIdSchema.safeParse(req.params.id);
 
@@ -365,8 +381,8 @@ applicationsRouter.get("/:id", authMiddleware, async (req: any, res) => {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    const isCandidate = existingApp.candidateId === req.user.id;
-    const isOwner = existingApp.job.ownerId === req.user.id;
+    const isCandidate = existingApp.candidateId === user.id;
+    const isOwner = existingApp.job.ownerId === user.id;
 
     if (!isCandidate && !isOwner) {
       return res.status(403).json({ message: "Access denied" });
@@ -404,98 +420,102 @@ applicationsRouter.get("/:id", authMiddleware, async (req: any, res) => {
 });
 
 // 7. ОТПРАВИТЬ СООБЩЕНИЕ В ЧАТ
-applicationsRouter.post("/:id/messages", authMiddleware, async (req: any, res) => {
-  const parsedId = applicationIdSchema.safeParse(req.params.id);
+applicationsRouter.post(
+  "/:id/messages",
+  authMiddleware,
+  async (req, res) => {
+    const user = getAuthenticatedUser(req);
+    const parsedId = applicationIdSchema.safeParse(req.params.id);
 
-  if (!parsedId.success) {
-    return res.status(400).json({
-      message: "Invalid application id",
-    });
-  }
-
-  const parsedBody = sendMessageSchema.safeParse(req.body);
-
-  if (!parsedBody.success) {
-    return res.status(400).json({
-      message: "Invalid message data",
-      errors: parsedBody.error.flatten().fieldErrors,
-    });
-  }
-
-  const id = parsedId.data;
-  const { text } = parsedBody.data;
-
-  try {
-    // Достаем отклик вместе с вакансией, чтобы знать ID работодателя
-    const app = await prisma.application.findUnique({
-      where: { id },
-      select: {
-        candidateId: true,
-        status: true,
-        job: {
-          select: {
-            ownerId: true,
-          },
-        },
-        messages: {
-          select: {
-            id: true,
-          },
-          take: 1,
-        },
-      },
-    });
-
-    if (!app) return res.status(404).json({ message: "Отклик не найден" });
-
-    const isCandidate = app.candidateId === req.user.id;
-    const isOwner = app.job.ownerId === req.user.id;
-
-    if (!isCandidate && !isOwner) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    if (
-      isCandidate &&
-      app.messages.length === 0 &&
-      app.status === "new"
-    ) {
-      return res.status(403).json({
-        message: "Подождите, пока работодатель напишет первым или изменит статус",
+    if (!parsedId.success) {
+      return res.status(400).json({
+        message: "Invalid application id",
       });
     }
 
-    const message = await prisma.message.create({
-      data: {
-        applicationId: id,
-        senderId: req.user.id,
-        text
+    const parsedBody = sendMessageSchema.safeParse(req.body);
+
+    if (!parsedBody.success) {
+      return res.status(400).json({
+        message: "Invalid message data",
+        errors: parsedBody.error.flatten().fieldErrors,
+      });
+    }
+
+    const id = parsedId.data;
+    const { text } = parsedBody.data;
+
+    try {
+      // Достаем отклик вместе с вакансией, чтобы знать ID работодателя
+      const app = await prisma.application.findUnique({
+        where: { id },
+        select: {
+          candidateId: true,
+          status: true,
+          job: {
+            select: {
+              ownerId: true,
+            },
+          },
+          messages: {
+            select: {
+              id: true,
+            },
+            take: 1,
+          },
+        },
+      });
+
+      if (!app) return res.status(404).json({ message: "Отклик не найден" });
+
+      const isCandidate = app.candidateId === user.id;
+      const isOwner = app.job.ownerId === user.id;
+
+      if (!isCandidate && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
       }
-    });
 
-    // === СОКЕТ: Отправляем сообщение второму участнику ===
-    const io = req.app.get("io");
-    if (io) {
-      // Определяем, кому слать уведомление
-      const recipientId = isOwner
-        ? app.candidateId
-        : app.job.ownerId;
-      
-      // Отправляем само сообщение (чтобы обновить чат)
-      io.to(recipientId).emit("new_message", {
-        applicationId: id,
-        message
+      if (
+        isCandidate &&
+        app.messages.length === 0 &&
+        app.status === "new"
+      ) {
+        return res.status(403).json({
+          message: "Подождите, пока работодатель напишет первым или изменит статус",
+        });
+      }
+
+      const message = await prisma.message.create({
+        data: {
+          applicationId: id,
+          senderId: user.id,
+          text
+        }
       });
-      
-      // Отправляем сигнал для "колокольчика" и звука
-      io.to(recipientId).emit("new_notification", {
-        type: "new_message",
-        applicationId: id
-      });
+
+      // === СОКЕТ: Отправляем сообщение второму участнику ===
+      const io = req.app.get("io");
+      if (io) {
+        // Определяем, кому слать уведомление
+        const recipientId = isOwner
+          ? app.candidateId
+          : app.job.ownerId;
+        
+        // Отправляем само сообщение (чтобы обновить чат)
+        io.to(recipientId).emit("new_message", {
+          applicationId: id,
+          message
+        });
+        
+        // Отправляем сигнал для "колокольчика" и звука
+        io.to(recipientId).emit("new_notification", {
+          type: "new_message",
+          applicationId: id
+        });
+      }
+
+      res.status(201).json(message);
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка отправки сообщения" });
     }
-
-    res.status(201).json(message);
-  } catch (error) {
-    res.status(500).json({ message: "Ошибка отправки сообщения" });
-  }
-});
+  });

@@ -1,16 +1,20 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
-import { authMiddleware } from "../middleware/auth";
+import {
+  authMiddleware,
+  getAuthenticatedUser,
+} from "../middleware/auth";
 import { jobIdSchema } from "../validation/jobs";
 
 export const bookmarksRouter = Router();
 
 // 1. Получить все сохраненные вакансии кандидата
-bookmarksRouter.get("/", authMiddleware, async (req: any, res) => {
+bookmarksRouter.get("/", authMiddleware, async (req, res) => {
+  const user = getAuthenticatedUser(req);
   try {
     const saved = await prisma.savedJob.findMany({
       where: {
-        userId: req.user.id,
+        userId: user.id,
         job: {
           status: "published",
         },
@@ -39,7 +43,8 @@ bookmarksRouter.get("/", authMiddleware, async (req: any, res) => {
 });
 
 // 2. Переключить статус избранного (Поставить / Убрать лайк)
-bookmarksRouter.post("/:jobId", authMiddleware, async (req: any, res) => {
+bookmarksRouter.post("/:jobId", authMiddleware, async (req, res) => {
+  const user = getAuthenticatedUser(req);
   const parsedJobId = jobIdSchema.safeParse(req.params.jobId);
 
   if (!parsedJobId.success) {
@@ -50,7 +55,7 @@ bookmarksRouter.post("/:jobId", authMiddleware, async (req: any, res) => {
 
   try {
     const jobId = parsedJobId.data;
-    const userId = req.user.id;
+    const userId = user.id;
 
     const existing = await prisma.savedJob.findUnique({
       where: {

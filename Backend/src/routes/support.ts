@@ -2,7 +2,10 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { mailTransporter } from "../config/mailer";
 
-import { authMiddleware } from "../middleware/auth";
+import {
+  authMiddleware,
+  getAuthenticatedUser,
+} from "../middleware/auth";
 import { contactRateLimit } from "../middleware/rateLimits";
 import { optionalAuthMiddleware } from "../middleware/optionalAuth";
 import { contactSchema } from "../validation/support";
@@ -11,17 +14,32 @@ import { sanitizeEmailHeader } from "../lib/sanitizeEmailHeader";
 
 export const supportRouter = Router();
 
-supportRouter.get('/support-tickets', authMiddleware, async (req: any, res) => {
-  try {
-    const tickets = await prisma.supportTicket.findMany({
-      where: { userId: req.user.id },
-      orderBy: { createdAt: 'desc' }
-    });
-    res.json(tickets);
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching tickets" });
+supportRouter.get(
+  "/support-tickets",
+  authMiddleware,
+  async (req, res) => {
+    const user = getAuthenticatedUser(req);
+
+    try {
+      const tickets = await prisma.supportTicket.findMany({
+        where: {
+          userId: user.id,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      return res.json(tickets);
+    } catch (error) {
+      console.error("Failed to fetch support tickets:", error);
+
+      return res.status(500).json({
+        message: "Error fetching tickets",
+      });
+    }
   }
-});
+);
 
 supportRouter.post(
   "/contact",

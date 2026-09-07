@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 
-import { authMiddleware } from "../middleware/auth";
+import {
+  authMiddleware,
+  getAuthenticatedUser,
+} from "../middleware/auth";
 import { profileUploadRateLimit } from "../middleware/rateLimits";
 
 import {
@@ -21,20 +24,22 @@ import { userIdSchema } from "../validation/users";
 export const profileRouter = Router();
 
 // Get current authenticated user
-profileRouter.get("/me", authMiddleware, async (req: any, res) => {
+profileRouter.get("/me", authMiddleware, async (req, res) => {
+  const user = getAuthenticatedUser(req);
+
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
+    const currentUser = await prisma.user.findUnique({
+      where: { id: user.id },
       select: safeUserSelect,
     });
 
-    if (!user) {
+    if (!currentUser) {
       return res.status(404).json({
         message: "User not found",
       });
     }
 
-    return res.json({ user });
+    return res.json({ user: currentUser });
   } catch (error) {
     console.error("Failed to fetch current user:", error);
 
@@ -89,7 +94,8 @@ profileRouter.post(
   authMiddleware,
   profileUploadRateLimit,
   uploadAvatar.single("avatar"),
-  async (req: any, res: any) => {
+  async (req, res) => {
+    const user = getAuthenticatedUser(req);
     let avatarSaved = false;
 
     try {
@@ -101,13 +107,9 @@ profileRouter.post(
 
       const avatarUrl = req.file.path;
 
-      const user = await prisma.user.update({
-        where: {
-          id: req.user.id,
-        },
-        data: {
-          avatarUrl,
-        },
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatarUrl },
         select: {
           id: true,
           email: true,
@@ -122,7 +124,7 @@ profileRouter.post(
 
       avatarSaved = true;
 
-      return res.json({ user });
+      return res.json({ user: updatedUser });
     } catch (error) {
       if (!avatarSaved) {
         await removeCloudinaryUpload(req.file);
@@ -143,7 +145,8 @@ profileRouter.post(
   authMiddleware,
   profileUploadRateLimit,
   uploadCV.single("resume"),
-  async (req: any, res: any) => {
+  async (req, res) => {
+    const user = getAuthenticatedUser(req);
     let resumeSaved = false;
 
     try {
@@ -155,13 +158,9 @@ profileRouter.post(
 
       const resumeUrl = req.file.path;
 
-      const user = await prisma.user.update({
-        where: {
-          id: req.user.id,
-        },
-        data: {
-          resumeUrl,
-        },
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { resumeUrl },
         select: {
           id: true,
           resumeUrl: true,
@@ -170,7 +169,7 @@ profileRouter.post(
 
       resumeSaved = true;
 
-      return res.json({ user });
+      return res.json({ user: updatedUser });
     } catch (error) {
       if (!resumeSaved) {
         await removeCloudinaryUpload(req.file);
@@ -189,12 +188,12 @@ profileRouter.post(
 profileRouter.post(
   "/ping",
   authMiddleware,
-  async (req: any, res) => {
+  async (req, res) => {
+    const user = getAuthenticatedUser(req);
+
     try {
       await prisma.user.update({
-        where: {
-          id: req.user.id,
-        },
+        where: { id: user.id },
         data: {
           lastActive: new Date(),
         },
