@@ -1,5 +1,4 @@
 import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
 
 cloudinary.config({
@@ -37,14 +36,76 @@ const createMimeTypeFilter =
     callback(null, true);
   };
 
-// Avatar uploads
-const avatarStorage = new CloudinaryStorage({
-  cloudinary,
-  params: async (_req, _file) => ({
-    folder: "jobboard/avatars",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-  }),
+type CloudinaryResourceType = "image" | "auto";
+
+async function destroyCloudinaryResource(publicId: string) {
+  const imageResult = await cloudinary.uploader.destroy(publicId, {
+    resource_type: "image",
+    invalidate: true,
+  });
+
+  if (imageResult.result === "not found") {
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: "raw",
+      invalidate: true,
+    });
+  }
+}
+
+const createCloudinaryStorage = (
+  folder: string,
+  resourceType: CloudinaryResourceType
+): multer.StorageEngine => ({
+  _handleFile(_req, file, callback) {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: resourceType,
+      },
+      (error, result) => {
+        if (error) {
+          return callback(error);
+        }
+
+        if (!result) {
+          return callback(
+            new Error("Cloudinary upload returned no result")
+          );
+        }
+
+        callback(null, {
+          path: result.secure_url,
+          filename: result.public_id,
+          size: result.bytes,
+        });
+      }
+    );
+
+    file.stream.pipe(uploadStream);
+  },
+
+  _removeFile(_req, file, callback) {
+    if (!file.filename) {
+      callback(null);
+      return;
+    }
+
+    destroyCloudinaryResource(file.filename)
+      .then(() => callback(null))
+      .catch((error) => {
+        callback(
+          error instanceof Error
+            ? error
+            : new Error("Failed to remove Cloudinary upload")
+        );
+      });
+  },
 });
+
+const avatarStorage = createCloudinaryStorage(
+  "jobboard/avatars",
+  "image"
+);
 
 export const uploadAvatar = multer({
   storage: avatarStorage,
@@ -54,14 +115,10 @@ export const uploadAvatar = multer({
   fileFilter: createMimeTypeFilter(IMAGE_MIME_TYPES),
 });
 
-// Job logo uploads
-const jobStorage = new CloudinaryStorage({
-  cloudinary,
-  params: async (_req, _file) => ({
-    folder: "jobboard/jobs",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-  }),
-});
+const jobStorage = createCloudinaryStorage(
+  "jobboard/jobs",
+  "image"
+);
 
 export const uploadJob = multer({
   storage: jobStorage,
@@ -71,15 +128,10 @@ export const uploadJob = multer({
   fileFilter: createMimeTypeFilter(IMAGE_MIME_TYPES),
 });
 
-// CV uploads
-const cvStorage = new CloudinaryStorage({
-  cloudinary,
-  params: async (_req, _file) => ({
-    folder: "jobboard/cvs",
-    resource_type: "auto",
-    allowed_formats: ["pdf", "doc", "docx"],
-  }),
-});
+const cvStorage = createCloudinaryStorage(
+  "jobboard/cvs",
+  "auto"
+);
 
 export const uploadCV = multer({
   storage: cvStorage,
@@ -97,18 +149,11 @@ export async function removeCloudinaryUpload(
   }
 
   try {
-    const imageResult = await cloudinary.uploader.destroy(file.filename, {
-      resource_type: "image",
-      invalidate: true,
-    });
-
-    if (imageResult.result === "not found") {
-      await cloudinary.uploader.destroy(file.filename, {
-        resource_type: "raw",
-        invalidate: true,
-      });
-    }
+    await destroyCloudinaryResource(file.filename);
   } catch (error) {
-    console.error("Failed to remove Cloudinary upload:", error);
+    console.error(
+      "Failed to remove Cloudinary upload:",
+      error
+    );
   }
 }
