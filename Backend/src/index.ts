@@ -1,22 +1,28 @@
-import dotenv from "dotenv";
-import { authenticateSocket } from "./socket/authenticateSocket";
-import { uploadErrorHandler } from "./middleware/uploadErrorHandler";
-// 1. СНАЧАЛА ЗАГРУЖАЕМ ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ!
-dotenv.config();
+import "dotenv/config";
 
 import express from "express";
 import cors from "cors";
 import path from "path";
+import helmet from "helmet";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
-// 2. И ТОЛЬКО ТЕПЕРЬ ИМПОРТИРУЕМ РОУТЫ (чтобы они видели process.env)
-import { authRouter } from "./routes/auth";
+import { authenticateSocket } from "./socket/authenticateSocket";
+import { uploadErrorHandler } from "./middleware/uploadErrorHandler";
+
+import { registerRouter } from "./routes/register";
+import { loginRouter } from "./routes/login";
+import { twoFactorRouter } from "./routes/twoFactor";
+import { githubRouter } from "./routes/github";
+import { googleRouter } from "./routes/google";
+import { profileRouter } from "./routes/profile";
+import { passwordResetRouter } from "./routes/passwordReset";
+import { supportRouter } from "./routes/support";
+import { emailVerificationRouter } from "./routes/emailVerification";
+
 import { jobsRouter } from "./routes/jobs";
 import { applicationsRouter } from "./routes/applications";
 import { bookmarksRouter } from "./routes/bookmarks";
-
-import helmet from "helmet";
 
 import {
   corsOptions,
@@ -62,11 +68,26 @@ app.use(
 );
 
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-app.get("/health", (_req, res) => res.json({ ok: true }));
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../uploads"))
+);
 
-app.use("/auth", authRouter);
+app.get("/health", (_req, res) => {
+  res.json({ ok: true });
+});
+
+app.use("/auth", registerRouter);
+app.use("/auth", loginRouter);
+app.use("/auth", twoFactorRouter);
+app.use("/auth", githubRouter);
+app.use("/auth", googleRouter);
+app.use("/auth", profileRouter);
+app.use("/auth", passwordResetRouter);
+app.use("/auth", supportRouter);
+app.use("/auth", emailVerificationRouter);
+
 app.use("/jobs", jobsRouter);
 app.use("/applications", applicationsRouter);
 app.use("/bookmarks", bookmarksRouter);
@@ -74,6 +95,9 @@ app.use("/bookmarks", bookmarksRouter);
 app.use(uploadErrorHandler);
 
 const port = Number(process.env.PORT || 4000);
+
 httpServer.listen(port, () => {
-  console.log(`API and WebSockets running on http://localhost:${port}`);
+  console.log(
+    `API and WebSockets running on http://localhost:${port}`
+  );
 });
