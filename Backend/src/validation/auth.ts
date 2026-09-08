@@ -64,9 +64,34 @@ export const loginSchema = z.object({
   password: loginPasswordSchema,
 });
 
-export const oauthRoleSchema = z.object({
-  role: roleSchema.optional(),
-});
+const oauthRoleSchema = z.enum([
+  "candidate",
+  "employer",
+]);
+
+export const googleOAuthSchema = z
+  .object({
+    credential: z
+      .string()
+      .trim()
+      .min(1, "Google credential is required")
+      .max(4096, "Invalid Google credential"),
+
+    role: oauthRoleSchema.optional(),
+  })
+  .strict();
+
+export const githubOAuthSchema = z
+  .object({
+    code: z
+      .string()
+      .trim()
+      .min(1, "GitHub code is required")
+      .max(512, "Invalid GitHub code"),
+
+    role: oauthRoleSchema.optional(),
+  })
+  .strict();
 
 export const requestPasswordResetSchema = z.object({
   email: z

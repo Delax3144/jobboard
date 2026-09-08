@@ -1,105 +1,208 @@
 import { Router } from "express";
-import { prisma } from "../prisma";
 import { randomBytes } from "node:crypto";
-import bcrypt from "bcrypt";
+import { prisma } from "../prisma";
 import axios from "axios";
+import bcrypt from "bcrypt";
 
-import { oauthRoleSchema } from "../validation/auth";
+import {
+  signAccessToken,
+  signTwoFactorChallenge,
+} from "../lib/authTokens";
 import { safeUserSelect } from "../selects/user";
-import { signTwoFactorChallenge } from "../lib/authTokens";
-import { signAccessToken } from "../lib/authTokens";
 import { generateUniqueUsername } from "../lib/generateUniqueUsername";
+import { claimUnverifiedOAuthUser } from "../lib/claimUnverifiedOAuthUser";
+import { githubOAuthSchema } from "../validation/auth";
+import { oauthRateLimit } from "../middleware/rateLimits";
 
 export const githubRouter = Router();
 
-githubRouter.post("/github", async (req, res) => {
-  const parsedRole = oauthRoleSchema.safeParse({
-    role: req.body.role,
-  });
+type GitHubTokenResponse = {
+  access_token?: string;
+};
 
-  if (!parsedRole.success) {
-    return res.status(400).json({
-      message: "Invalid role",
-    });
-  }
+type GitHubUser = {
+  login: string;
+  name: string | null;
+  avatar_url: string | null;
+};
 
-  const { code } = req.body;
-  const role = parsedRole.data.role ?? "candidate";
-  try {
-    const tokenResponse = await axios.post('https://github.com/login/oauth/access_token', {
-      client_id: process.env.GITHUB_CLIENT_ID, client_secret: process.env.GITHUB_CLIENT_SECRET, code,
-    }, { headers: { Accept: 'application/json' } });
+type GitHubEmail = {
+  email: string;
+  primary: boolean;
+  verified: boolean;
+  visibility: string | null;
+};
 
-    const accessToken = tokenResponse.data.access_token;
-    if (!accessToken) return res.status(400).json({ message: "Неверный код GitHub" });
+githubRouter.post(
+  "/github",
+  oauthRateLimit,
+  async (req, res) => {
+    const parsedBody = githubOAuthSchema.safeParse(req.body);
 
-    const userResponse = await axios.get('https://api.github.com/user', { headers: { Authorization: `Bearer ${accessToken}` } });
-    const githubUser = userResponse.data;
-
-    const emailResponse = await axios.get('https://api.github.com/user/emails', { headers: { Authorization: `Bearer ${accessToken}` } });
-    type GitHubEmail = {
-      email: string;
-      primary: boolean;
-      verified: boolean;
-      visibility: string | null;
-    };
-
-    const githubEmails = emailResponse.data as GitHubEmail[];
-
-    const verifiedEmail =
-      githubEmails.find((item) => item.primary && item.verified) ??
-      githubEmails.find((item) => item.verified);
-
-    if (!verifiedEmail?.email) {
+    if (!parsedBody.success) {
       return res.status(400).json({
-        message: "No verified email found in GitHub account",
+        message:
+          parsedBody.error.issues[0]?.message ??
+          "Invalid OAuth request",
       });
     }
 
-    const email = verifiedEmail.email.toLowerCase();
+    const {
+      code,
+      role = "candidate",
+    } = parsedBody.data;
 
-    if (!email) return res.status(400).json({ message: "Не удалось получить email из GitHub" });
+    try {
+      const tokenResponse =
+        await axios.post<GitHubTokenResponse>(
+          "https://github.com/login/oauth/access_token",
+          {
+            client_id: process.env.GITHUB_CLIENT_ID,
+            client_secret:
+              process.env.GITHUB_CLIENT_SECRET,
+            code,
+          },
+          {
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
 
-    let user = await prisma.user.findUnique({
-      where: { email },
-      select: safeUserSelect,
-    });
+      const accessToken =
+        tokenResponse.data.access_token;
 
-    if (!user) {
-      const randomPassword = randomBytes(32).toString("hex");
-      const passwordHash = await bcrypt.hash(randomPassword, 10);
+      if (!accessToken) {
+        return res.status(400).json({
+          message: "Invalid GitHub code",
+        });
+      }
 
-    const baseUsername = githubUser.login || email.split("@")[0];
-    const username = await generateUniqueUsername(baseUsername);
+      const userResponse =
+        await axios.get<GitHubUser>(
+          "https://api.github.com/user",
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
 
-      user = await prisma.user.create({
-        data: { 
+      const githubUser = userResponse.data;
+
+      const emailResponse =
+        await axios.get<GitHubEmail[]>(
+          "https://api.github.com/user/emails",
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+      const verifiedEmail =
+        emailResponse.data.find(
+          (item) =>
+            item.primary && item.verified
+        ) ??
+        emailResponse.data.find(
+          (item) => item.verified
+        );
+
+      if (!verifiedEmail?.email) {
+        return res.status(400).json({
+          message:
+            "No verified email found in GitHub account",
+        });
+      }
+
+      const email =
+        verifiedEmail.email.toLowerCase();
+
+      const existingUser = await prisma.user.findUnique({
+        where: {
           email,
-          passwordHash,
-          role,
-          username, 
-          firstName: githubUser.name?.split(' ')[0] || githubUser.login,
-          lastName: githubUser.name?.split(' ').slice(1).join(' ') || '', 
-          avatarUrl: githubUser.avatar_url,
-          phone: '',
-          isVerified: true
         },
-        select: safeUserSelect,
+        select: {
+          ...safeUserSelect,
+          isVerified: true,
+        },
       });
-    }
 
-    if (user.isTwoFactorEnabled) {
-      const challengeToken = signTwoFactorChallenge(user.id);
+      let user;
+
+      if (!existingUser) {
+        const randomPassword = randomBytes(32).toString("hex");
+
+        const passwordHash = await bcrypt.hash(
+          randomPassword,
+          10
+        );
+
+        const username = await generateUniqueUsername(
+          githubUser.login || email.split("@")[0]
+        );
+
+        const nameParts =
+          githubUser.name?.trim().split(/\s+/) ?? [];
+
+        const firstName =
+          nameParts[0] || githubUser.login;
+
+        const lastName =
+          nameParts.slice(1).join(" ");
+
+        user = await prisma.user.create({
+          data: {
+            email,
+            passwordHash,
+            role,
+            username,
+            firstName,
+            lastName,
+            avatarUrl: githubUser.avatar_url,
+            phone: "",
+            isVerified: true,
+          },
+          select: safeUserSelect,
+        });
+      } else if (!existingUser.isVerified) {
+        user = await claimUnverifiedOAuthUser(
+          existingUser.id,
+          role
+        );
+      } else {
+        const {
+          isVerified: _isVerified,
+          ...safeExistingUser
+        } = existingUser;
+
+        user = safeExistingUser;
+      }
+
+      if (user.isTwoFactorEnabled) {
+        const challengeToken = signTwoFactorChallenge(
+          user.id
+        );
+
+        return res.json({
+          requires2FA: true,
+          challengeToken,
+        });
+      }
+
+      const token = signAccessToken(user);
 
       return res.json({
-        requires2FA: true,
-        challengeToken,
+        user,
+        token,
+      });
+    } catch (error) {
+      console.error("GitHub OAuth failed:", error);
+
+      return res.status(500).json({
+        message: "GitHub authentication failed",
       });
     }
-
-    const token = signAccessToken(user);
-    res.json({ user, token });
-  } catch (err) {
-    res.status(500).json({ message: "Ошибка авторизации через GitHub" });
   }
-});
+);
