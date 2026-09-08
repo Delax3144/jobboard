@@ -8,6 +8,7 @@ type TokenUser = {
 export type AccessTokenUser = {
   id: string;
   role: "employer" | "candidate";
+  issuedAt: number;
 };
 
 type TwoFactorChallengePayload = JwtPayload & {
@@ -73,7 +74,9 @@ export function verifyAccessToken(token: string): AccessTokenUser {
     typeof payload === "string" ||
     payload.tokenType !== "access" ||
     typeof payload.id !== "string" ||
-    (payload.role !== "employer" && payload.role !== "candidate")
+    typeof payload.iat !== "number" ||
+    (payload.role !== "employer" &&
+      payload.role !== "candidate")
   ) {
     throw new Error("Invalid access token");
   }
@@ -81,5 +84,6 @@ export function verifyAccessToken(token: string): AccessTokenUser {
   return {
     id: payload.id,
     role: payload.role,
+    issuedAt: payload.iat,
   };
 }

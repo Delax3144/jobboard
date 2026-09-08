@@ -115,6 +115,23 @@ export const twoFactorCodeSchema = z.object({
     .regex(/^\d{6}$/, "Authentication code must contain exactly 6 digits"),
 });
 
+export const twoFactorLoginSchema = z
+  .object({
+    challengeToken: z
+      .string()
+      .trim()
+      .min(1, "2FA challenge is required")
+      .max(4096, "Invalid 2FA challenge"),
+
+    code: z
+      .string()
+      .regex(
+        /^\d{6}$/,
+        "2FA code must contain exactly 6 digits"
+      ),
+  })
+  .strict();
+
 export const resendVerificationSchema = z
   .object({
     email: z

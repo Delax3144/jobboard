@@ -3,13 +3,23 @@ import { prisma } from "../prisma";
 import qrcode from "qrcode";
 import speakeasy from "speakeasy";
 
-import { twoFactorRateLimit } from "../middleware/rateLimits";
+import {
+  twoFactorRateLimit,
+  twoFactorSettingsRateLimit,
+  twoFactorSetupRateLimit,
+} from "../middleware/rateLimits";
 import { verifyTwoFactorChallenge } from "../lib/authTokens";
 import { safeUserSelect } from "../selects/user";
 import { signAccessToken } from "../lib/authTokens";
-import { authMiddleware } from "../middleware/auth";
-import { twoFactorSettingsRateLimit } from "../middleware/rateLimits";
-import { twoFactorCodeSchema } from "../validation/auth";
+import {
+  authMiddleware,
+  getAuthenticatedUser,
+  requireRecentAuth,
+} from "../middleware/auth";
+import {
+  twoFactorCodeSchema,
+  twoFactorLoginSchema,
+} from "../validation/auth";
 
 export const twoFactorRouter = Router();
 
@@ -17,31 +27,42 @@ twoFactorRouter.post(
   "/verify-2fa-login",
   twoFactorRateLimit,
   async (req, res) => {
-    const { challengeToken, code } = req.body;
+    const parsedBody = twoFactorLoginSchema.safeParse(
+      req.body
+    );
 
-    if (
-      typeof challengeToken !== "string" ||
-      typeof code !== "string"
-    ) {
+    if (!parsedBody.success) {
       return res.status(400).json({
-        message: "Invalid request",
+        message:
+          parsedBody.error.issues[0]?.message ??
+          "Invalid request",
       });
     }
+
+    const {
+      challengeToken,
+      code,
+    } = parsedBody.data;
 
     let userId: string;
 
     try {
-      const challenge = verifyTwoFactorChallenge(challengeToken);
+      const challenge =
+        verifyTwoFactorChallenge(challengeToken);
+
       userId = challenge.userId;
     } catch {
       return res.status(401).json({
-        message: "Invalid or expired 2FA challenge",
+        message:
+          "Invalid or expired 2FA challenge",
       });
     }
 
     try {
       const user = await prisma.user.findUnique({
-        where: { id: userId },
+        where: {
+          id: userId,
+        },
         select: {
           ...safeUserSelect,
           twoFactorSecret: true,
@@ -74,7 +95,7 @@ twoFactorRouter.post(
       const token = signAccessToken(user);
 
       const {
-        twoFactorSecret,
+        twoFactorSecret: _twoFactorSecret,
         ...safeUser
       } = user;
 
@@ -83,13 +104,17 @@ twoFactorRouter.post(
         token,
       });
     } catch (error) {
-      console.error("2FA login verification failed:", error);
+      console.error(
+        "2FA login verification failed:",
+        error
+      );
 
       return res.status(500).json({
         message: "Server error",
       });
     }
-  });
+  }
+);
 
 twoFactorRouter.post(
   "/2fa/disable",
@@ -254,63 +279,64 @@ twoFactorRouter.post(
       }
     });
 
-twoFactorRouter.post("/2fa/generate", authMiddleware, async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
+twoFactorRouter.post(
+  "/2fa/generate",
+  authMiddleware,
+  requireRecentAuth(),
+  twoFactorSetupRateLimit,
+  async (req, res) => {
+    const authUser = getAuthenticatedUser(req);
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: req.user.id,
-      },
-      select: {
-        id: true,
-        email: true,
-        isTwoFactorEnabled: true,
-      },
-    });
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: authUser.id,
+        },
+        select: {
+          id: true,
+          email: true,
+          isTwoFactorEnabled: true,
+        },
+      });
 
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      if (user.isTwoFactorEnabled) {
+        return res.status(409).json({
+          message: "2FA is already enabled",
+        });
+      }
+
+      const secret = speakeasy.generateSecret({
+        name: `JobBoard (${user.email})`,
+      });
+
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          twoFactorSecret: secret.base32,
+        },
+      });
+
+      const qrCodeUrl = await qrcode.toDataURL(
+        secret.otpauth_url || ""
+      );
+
+      return res.json({
+        qrCodeUrl,
+        secret: secret.base32,
+      });
+    } catch (error) {
+      console.error("2FA generation failed:", error);
+
+      return res.status(500).json({
+        message: "Failed to generate 2FA",
       });
     }
-
-    if (user.isTwoFactorEnabled) {
-      return res.status(409).json({
-        message: "2FA is already enabled",
-      });
-    }
-
-    const secret = speakeasy.generateSecret({
-      name: `JobBoard (${user.email})`,
-    });
-
-    await prisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        twoFactorSecret: secret.base32,
-      },
-    });
-
-    const qrCodeUrl = await qrcode.toDataURL(
-      secret.otpauth_url || ""
-    );
-
-    return res.json({
-      qrCodeUrl,
-      secret: secret.base32,
-    });
-  } catch (error) {
-    console.error("2FA generation failed:", error);
-
-    return res.status(500).json({
-      message: "Failed to generate 2FA",
-    });
-  }
-});
+  });

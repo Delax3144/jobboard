@@ -130,3 +130,18 @@ export const oauthRateLimit = rateLimit({
     message: "Too many OAuth attempts. Please try again later.",
   },
 });
+
+export const twoFactorSetupRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  keyGenerator: (req) =>
+    req.user?.id ?? "unauthenticated",
+
+  message: {
+    message:
+      "Too many 2FA setup requests. Please try again later.",
+  },
+});

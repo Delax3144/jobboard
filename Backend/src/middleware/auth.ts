@@ -39,6 +39,38 @@ export function authMiddleware(
   }
 }
 
+export function requireRecentAuth(
+  maxAgeSeconds = 10 * 60
+) {
+  return (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const authenticationAge =
+      now - req.user.issuedAt;
+
+    if (
+      authenticationAge < 0 ||
+      authenticationAge > maxAgeSeconds
+    ) {
+      return res.status(403).json({
+        message:
+          "Recent authentication required",
+      });
+    }
+
+    next();
+  };
+}
+
 export function requireRole(role: AuthUser["role"]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (req.user?.role !== role) {
