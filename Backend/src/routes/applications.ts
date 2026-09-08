@@ -20,7 +20,10 @@ import {
 } from "../validation/applications";
 import { escapeHtml } from "../lib/escapeHtml";
 import { sanitizeEmailHeader } from "../lib/sanitizeEmailHeader";
-import { applicationUploadRateLimit } from "../middleware/rateLimits";
+import {
+  applicationUploadRateLimit,
+  messageRateLimit,
+} from "../middleware/rateLimits";
 
 export const applicationsRouter = Router();
 
@@ -500,6 +503,7 @@ applicationsRouter.get("/:id", authMiddleware, async (req, res) => {
 applicationsRouter.post(
   "/:id/messages",
   authMiddleware,
+  messageRateLimit,
   async (req, res) => {
     const user = getAuthenticatedUser(req);
     const parsedId = applicationIdSchema.safeParse(req.params.id);

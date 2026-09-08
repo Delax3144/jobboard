@@ -23,6 +23,8 @@ import { jobsRouter } from "./routes/jobs";
 import { applicationsRouter } from "./routes/applications";
 import { bookmarksRouter } from "./routes/bookmarks";
 
+import { errorHandler } from "./middleware/errorHandler";
+
 import {
   corsOptions,
   socketCorsOptions,
@@ -58,13 +60,7 @@ io.on("connection", (socket) => {
 
 app.use(cors(corsOptions));
 
-app.use(
-  helmet({
-    crossOriginResourcePolicy: {
-      policy: "cross-origin",
-    },
-  })
-);
+app.use(helmet());
 
 app.use(express.json());
 
@@ -87,6 +83,14 @@ app.use("/applications", applicationsRouter);
 app.use("/bookmarks", bookmarksRouter);
 
 app.use(uploadErrorHandler);
+
+app.use((_req, res) => {
+  return res.status(404).json({
+    message: "Route not found",
+  });
+});
+
+app.use(errorHandler);
 
 const port = Number(process.env.PORT || 4000);
 

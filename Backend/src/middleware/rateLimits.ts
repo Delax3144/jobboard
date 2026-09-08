@@ -145,3 +145,18 @@ export const twoFactorSetupRateLimit = rateLimit({
       "Too many 2FA setup requests. Please try again later.",
   },
 });
+
+export const messageRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  keyGenerator: (req) =>
+    req.user?.id ?? "unauthenticated",
+
+  message: {
+    message:
+      "Too many messages. Please slow down.",
+  },
+});
