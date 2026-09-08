@@ -22,6 +22,9 @@ const CV_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 
+const IMAGE_FORMATS = ["jpg", "jpeg", "png", "webp"];
+const CV_FORMATS = ["pdf", "doc", "docx"];
+
 const createMimeTypeFilter =
   (allowedTypes: Set<string>) =>
   (
@@ -38,6 +41,12 @@ const createMimeTypeFilter =
 
 type CloudinaryResourceType = "image" | "auto";
 
+type CloudinaryStorageOptions = {
+  folder: string;
+  resourceType: CloudinaryResourceType;
+  allowedFormats: string[];
+};
+
 async function destroyCloudinaryResource(publicId: string) {
   const imageResult = await cloudinary.uploader.destroy(publicId, {
     resource_type: "image",
@@ -52,15 +61,17 @@ async function destroyCloudinaryResource(publicId: string) {
   }
 }
 
-const createCloudinaryStorage = (
-  folder: string,
-  resourceType: CloudinaryResourceType
-): multer.StorageEngine => ({
+const createCloudinaryStorage = ({
+  folder,
+  resourceType,
+  allowedFormats,
+}: CloudinaryStorageOptions): multer.StorageEngine => ({
   _handleFile(_req, file, callback) {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
         resource_type: resourceType,
+        allowed_formats: allowedFormats,
       },
       (error, result) => {
         if (error) {
@@ -102,10 +113,11 @@ const createCloudinaryStorage = (
   },
 });
 
-const avatarStorage = createCloudinaryStorage(
-  "jobboard/avatars",
-  "image"
-);
+const avatarStorage = createCloudinaryStorage({
+  folder: "jobboard/avatars",
+  resourceType: "image",
+  allowedFormats: IMAGE_FORMATS,
+});
 
 export const uploadAvatar = multer({
   storage: avatarStorage,
@@ -115,10 +127,11 @@ export const uploadAvatar = multer({
   fileFilter: createMimeTypeFilter(IMAGE_MIME_TYPES),
 });
 
-const jobStorage = createCloudinaryStorage(
-  "jobboard/jobs",
-  "image"
-);
+const jobStorage = createCloudinaryStorage({
+  folder: "jobboard/jobs",
+  resourceType: "image",
+  allowedFormats: IMAGE_FORMATS,
+});
 
 export const uploadJob = multer({
   storage: jobStorage,
@@ -128,10 +141,11 @@ export const uploadJob = multer({
   fileFilter: createMimeTypeFilter(IMAGE_MIME_TYPES),
 });
 
-const cvStorage = createCloudinaryStorage(
-  "jobboard/cvs",
-  "auto"
-);
+const cvStorage = createCloudinaryStorage({
+  folder: "jobboard/cvs",
+  resourceType: "auto",
+  allowedFormats: CV_FORMATS,
+});
 
 export const uploadCV = multer({
   storage: cvStorage,
@@ -141,19 +155,35 @@ export const uploadCV = multer({
   fileFilter: createMimeTypeFilter(CV_MIME_TYPES),
 });
 
-export async function removeCloudinaryUpload(
-  file: Express.Multer.File | undefined
+export async function removeCloudinaryAsset(
+  publicId: string | null | undefined
 ) {
-  if (!file?.filename) {
+  if (!publicId) {
     return;
   }
 
   try {
-    await destroyCloudinaryResource(file.filename);
+    await destroyCloudinaryResource(publicId);
   } catch (error) {
     console.error(
-      "Failed to remove Cloudinary upload:",
+      `Failed to remove Cloudinary asset "${publicId}":`,
       error
     );
   }
+}
+
+export async function removeCloudinaryAssets(
+  publicIds: Array<string | null | undefined>
+) {
+  await Promise.all(
+    publicIds.map((publicId) =>
+      removeCloudinaryAsset(publicId)
+    )
+  );
+}
+
+export async function removeCloudinaryUpload(
+  file: Express.Multer.File | undefined
+) {
+  await removeCloudinaryAsset(file?.filename);
 }

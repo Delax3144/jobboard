@@ -8,6 +8,7 @@ import {
 import { profileUploadRateLimit } from "../middleware/rateLimits";
 
 import {
+  removeCloudinaryAsset,
   removeCloudinaryUpload,
   uploadAvatar,
   uploadCV,
@@ -96,39 +97,54 @@ profileRouter.post(
   uploadAvatar.single("avatar"),
   async (req, res) => {
     const user = getAuthenticatedUser(req);
-    let avatarSaved = false;
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "No file uploaded",
+      });
+    }
+
+    const avatarUrl = req.file.path;
+    const avatarPublicId = req.file.filename;
 
     try {
-      if (!req.file) {
-        return res.status(400).json({
-          message: "No file uploaded",
-        });
-      }
-
-      const avatarUrl = req.file.path;
-
-      const updatedUser = await prisma.user.update({
-        where: { id: user.id },
-        data: { avatarUrl },
+      const existingUser = await prisma.user.findUnique({
+        where: {
+          id: user.id,
+        },
         select: {
-          id: true,
-          email: true,
-          role: true,
-          username: true,
-          firstName: true,
-          lastName: true,
-          avatarUrl: true,
-          isTwoFactorEnabled: true,
+          avatarPublicId: true,
         },
       });
 
-      avatarSaved = true;
-
-      return res.json({ user: updatedUser });
-    } catch (error) {
-      if (!avatarSaved) {
+      if (!existingUser) {
         await removeCloudinaryUpload(req.file);
+
+        return res.status(404).json({
+          message: "User not found",
+        });
       }
+
+      const updatedUser = await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          avatarUrl,
+          avatarPublicId,
+        },
+        select: safeUserSelect,
+      });
+
+      await removeCloudinaryAsset(
+        existingUser.avatarPublicId
+      );
+
+      return res.json({
+        user: updatedUser,
+      });
+    } catch (error) {
+      await removeCloudinaryUpload(req.file);
 
       console.error("Avatar upload failed:", error);
 
@@ -147,33 +163,57 @@ profileRouter.post(
   uploadCV.single("resume"),
   async (req, res) => {
     const user = getAuthenticatedUser(req);
-    let resumeSaved = false;
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "No file uploaded",
+      });
+    }
+
+    const resumeUrl = req.file.path;
+    const resumePublicId = req.file.filename;
 
     try {
-      if (!req.file) {
-        return res.status(400).json({
-          message: "No file uploaded",
+      const existingUser = await prisma.user.findUnique({
+        where: {
+          id: user.id,
+        },
+        select: {
+          resumePublicId: true,
+        },
+      });
+
+      if (!existingUser) {
+        await removeCloudinaryUpload(req.file);
+
+        return res.status(404).json({
+          message: "User not found",
         });
       }
 
-      const resumeUrl = req.file.path;
-
       const updatedUser = await prisma.user.update({
-        where: { id: user.id },
-        data: { resumeUrl },
+        where: {
+          id: user.id,
+        },
+        data: {
+          resumeUrl,
+          resumePublicId,
+        },
         select: {
           id: true,
           resumeUrl: true,
         },
       });
 
-      resumeSaved = true;
+      await removeCloudinaryAsset(
+        existingUser.resumePublicId
+      );
 
-      return res.json({ user: updatedUser });
+      return res.json({
+        user: updatedUser,
+      });
     } catch (error) {
-      if (!resumeSaved) {
-        await removeCloudinaryUpload(req.file);
-      }
+      await removeCloudinaryUpload(req.file);
 
       console.error("Resume upload failed:", error);
 

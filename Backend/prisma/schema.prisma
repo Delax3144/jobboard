@@ -30,6 +30,7 @@ model User {
   lastName       String
   phone          String?
   avatarUrl      String?
+  avatarPublicId String?
   lastActive     DateTime        @default(now())
   role           String
   status         String?         @default("Open to work")
@@ -59,8 +60,9 @@ model User {
   notificationVolume Int     @default(50)
   toastsEnabled      Boolean @default(true)
 
-  resumeUrl String?
-  location  String?
+  resumeUrl      String?
+  resumePublicId String?
+  location       String?
 }
 
 model Job {
@@ -68,17 +70,18 @@ model Job {
   ownerId String
   owner   User   @relation("UserJobs", fields: [ownerId], references: [id])
 
-  title       String
-  companyName String
-  location    String?
-  level       String   @default("Junior")
-  salaryFrom  Int?
-  salaryTo    Int?
-  description String
-  tags        String   @default("")
-  status      String   @default("published")
-  companyLogo String?
-  createdAt   DateTime @default(now())
+  title               String
+  companyName         String
+  location            String?
+  level               String   @default("Junior")
+  salaryFrom          Int?
+  salaryTo            Int?
+  description         String
+  tags                String   @default("")
+  status              String   @default("published")
+  companyLogo         String?
+  companyLogoPublicId String?
+  createdAt           DateTime @default(now())
 
   applications Application[]
 
@@ -113,6 +116,7 @@ model Application {
 
   coverLetter String?
   cvUrl       String?
+  cvPublicId  String?
   status      String  @default("new")
 
   lastViewedByCandidate DateTime @default(now())

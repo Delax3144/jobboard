@@ -6,7 +6,9 @@ import {
   requireRole,
 } from "../middleware/auth";
 import {
+  removeCloudinaryAsset,
   removeCloudinaryUpload,
+  removeCloudinaryAssets,
   uploadJob,
 } from "../lib/upload";
 import { sanitizeRichText } from "../lib/sanitizeHtml";
@@ -108,7 +110,8 @@ jobsRouter.post(
       status,
     } = parsed.data;
 
-    const companyLogo = req.file ? req.file.path : null;
+    const companyLogo = req.file?.path ?? null;
+    const companyLogoPublicId = req.file?.filename ?? null;
     const sanitizedDescription = sanitizeRichText(description);
 
     let jobCreated = false;
@@ -119,6 +122,7 @@ jobsRouter.post(
           title,
           companyName,
           companyLogo,
+          companyLogoPublicId,
           location,
           description: sanitizedDescription,
           level,
@@ -231,9 +235,8 @@ jobsRouter.patch(
         });
       }
 
-      const companyLogo = req.file
-        ? req.file.path
-        : undefined;
+      const companyLogo = req.file?.path;
+      const companyLogoPublicId = req.file?.filename;
 
       const updatedJob = await prisma.job.update({
         where: { id: jobId },
@@ -247,11 +250,24 @@ jobsRouter.patch(
           status,
           salaryFrom,
           salaryTo,
-          ...(companyLogo && { companyLogo }),
+          ...(req.file && {
+            companyLogo,
+            companyLogoPublicId,
+          }),
         },
       });
 
       jobUpdated = true;
+
+      if (
+        req.file &&
+        existingJob.companyLogoPublicId &&
+        existingJob.companyLogoPublicId !== companyLogoPublicId
+      ) {
+        await removeCloudinaryAsset(
+          existingJob.companyLogoPublicId
+        );
+      }
 
       return res.json(updatedJob);
     } catch (error) {
@@ -271,6 +287,7 @@ jobsRouter.patch(
 // 5. Удаление
 jobsRouter.delete("/:id", authMiddleware, async (req, res) => {
   const user = getAuthenticatedUser(req);
+
   const parsedId = jobIdSchema.safeParse(req.params.id);
 
   if (!parsedId.success) {
@@ -283,20 +300,45 @@ jobsRouter.delete("/:id", authMiddleware, async (req, res) => {
 
   try {
     const job = await prisma.job.findUnique({
-      where: { id: jobId },
+      where: {
+        id: jobId,
+      },
+      select: {
+        ownerId: true,
+        companyLogoPublicId: true,
+        applications: {
+          select: {
+            cvPublicId: true,
+          },
+        },
+      },
     });
 
     if (!job || job.ownerId !== user.id) {
-      return res.status(403).json({ message: "Access denied" });
+      return res.status(403).json({
+        message: "Access denied",
+      });
     }
 
     await prisma.job.delete({
-      where: { id: jobId },
+      where: {
+        id: jobId,
+      },
     });
 
-    res.status(204).send();
+    await removeCloudinaryAssets([
+      job.companyLogoPublicId,
+      ...job.applications.map(
+        (application) => application.cvPublicId
+      ),
+    ]);
+
+    return res.status(204).send();
   } catch (error) {
-    console.error("Delete error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Delete job failed:", error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
   }
 });

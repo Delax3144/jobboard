@@ -45,7 +45,8 @@ applicationsRouter.post(
     }
 
     const { jobId, coverLetter } = parsed.data;
-    const cvUrl = req.file ? req.file.path : null;
+    const cvUrl = req.file?.path ?? null;
+    const cvPublicId = req.file?.filename ?? null;
 
     let applicationCreated = false;
 
@@ -74,6 +75,7 @@ applicationsRouter.post(
           jobId,
           coverLetter,
           cvUrl,
+          cvPublicId,
           candidateId: user.id,
           status: "new",
         },
