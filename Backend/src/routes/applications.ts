@@ -188,6 +188,7 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
       where: { id: applicationId },
       select: {
         id: true,
+        status: true,
         job: {
           select: {
             ownerId: true,
@@ -204,10 +205,18 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
+    const statusChanged =
+      application.status !== status;
+
     // Обновляем статус в базе и достаем инфу для письма
     const updated = await prisma.application.update({
       where: { id: applicationId },
-      data: { status },
+      data: {
+        status,
+        ...(statusChanged && {
+          statusUpdatedAt: new Date(),
+        }),
+      },
       include: {
         candidate: {
           select: applicationCandidateSelect,
@@ -274,7 +283,11 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
     const safeSubject = sanitizeEmailHeader(subject);
 
     // Если статус сменился на тот, что требует письма, отправляем!
-    if (status === 'invited' || status === 'rejected') {
+    if (
+      statusChanged &&
+      (status === "invited" ||
+        status === "rejected")
+    ) {
       try {
         await mailTransporter.sendMail({
           from: `"JobBoard Platform" <${process.env.EMAIL_USER}>`,
@@ -291,13 +304,17 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
 
     // === СОКЕТ: Уведомляем кандидата о смене статуса ===
     const io = req.app.get("io");
-    if (io) {
-      io.to(updated.candidateId).emit("new_notification", {
-        type: "status_update",
-        applicationId: updated.id,
-        jobTitle: updated.job.title,
-        status: updated.status
-      });
+
+    if (io && statusChanged) {
+      io.to(updated.candidateId).emit(
+        "new_notification",
+        {
+          type: "status_update",
+          applicationId: updated.id,
+          jobTitle: updated.job.title,
+          status: updated.status,
+        }
+      );
     }
 
     res.json(updated);
@@ -307,28 +324,86 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
 });
 
 // 4. ПОЛУЧИТЬ МОИ ОТКЛИКИ ДЛЯ КАНДИДАТА
-applicationsRouter.get("/my", authMiddleware, async (req, res) => {
-  const user = getAuthenticatedUser(req);
-  if (user.role !== "candidate") {
-    return res.status(403).json({ message: "Access denied" });
-  }
+applicationsRouter.get(
+  "/my",
+  authMiddleware,
+  async (req, res) => {
+    const user = getAuthenticatedUser(req);
 
-  const apps = await prisma.application.findMany({
-    where: { candidateId: user.id },
-    include: { 
-      job: { include: { owner: { select: { lastActive: true } } } }, // Достаем онлайн работодателя
-      messages: { orderBy: { createdAt: "desc" }, take: 1 } 
+    if (user.role !== "candidate") {
+      return res.status(403).json({
+        message: "Access denied",
+      });
     }
-  });
 
-  const enrichedApps = apps.map(app => {
-    const lastMsgTime = app.messages[0]?.createdAt || app.createdAt;
-    const hasUpdate = lastMsgTime > app.lastViewedByCandidate || app.status !== 'new'; 
-    return { ...app, hasUpdate };
-  });
+    try {
+      const apps =
+        await prisma.application.findMany({
+          where: {
+            candidateId: user.id,
+          },
+          include: {
+            job: {
+              include: {
+                owner: {
+                  select: {
+                    lastActive: true,
+                  },
+                },
+              },
+            },
+            messages: {
+              where: {
+                senderId: {
+                  not: user.id,
+                },
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 1,
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
 
-  res.json(enrichedApps);
-});
+      const enrichedApps = apps.map((app) => {
+        const lastIncomingMessageAt =
+          app.messages[0]?.createdAt ?? null;
+
+        const hasUnreadMessage =
+          lastIncomingMessageAt !== null &&
+          lastIncomingMessageAt >
+            app.lastViewedByCandidate;
+
+        const hasUnreadStatusUpdate =
+          app.statusUpdatedAt !== null &&
+          app.statusUpdatedAt >
+            app.lastViewedByCandidate;
+
+        return {
+          ...app,
+          hasUpdate:
+            hasUnreadMessage ||
+            hasUnreadStatusUpdate,
+        };
+      });
+
+      return res.json(enrichedApps);
+    } catch (error) {
+      console.error(
+        "Failed to load candidate applications:",
+        error
+      );
+
+      return res.status(500).json({
+        message: "Server error",
+      });
+    }
+  }
+);
 
 // 5. ПОЛУЧИТЬ ОТКЛИКИ ДЛЯ РАБОТОДАТЕЛЯ
 applicationsRouter.get("/owner", authMiddleware, async (req, res) => {

@@ -114,10 +114,11 @@ model Application {
   candidateId String
   candidate   User   @relation("UserApplications", fields: [candidateId], references: [id])
 
-  coverLetter String?
-  cvUrl       String?
-  cvPublicId  String?
-  status      String  @default("new")
+  coverLetter     String?
+  cvUrl           String?
+  cvPublicId      String?
+  status          String    @default("new")
+  statusUpdatedAt DateTime?
 
   lastViewedByCandidate DateTime @default(now())
   lastViewedByOwner     DateTime @default(now())
