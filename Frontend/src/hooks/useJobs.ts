@@ -73,10 +73,12 @@ export function useJobs() {
   };
 
   const filteredJobs = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
     return jobs.filter(job => {
-      const matchesSearch = !searchTerm || 
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        job.companyName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = !query ||
+        job.title.toLowerCase().includes(query) ||
+        job.companyName.toLowerCase().includes(query) ||
+        job.tags?.toLowerCase().includes(query);
       
       const matchesLocation = selectedLocations.length === 0 || 
         selectedLocations.some(loc => job.location?.toLowerCase().includes(loc.toLowerCase()));
