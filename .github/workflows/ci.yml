@@ -1,0 +1,41 @@
+name: Quality checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: jobboard
+          POSTGRES_PASSWORD: jobboard
+          POSTGRES_DB: jobboard_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://jobboard:jobboard@localhost:5432/jobboard_test?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            Backend/package-lock.json
+            Frontend/package-lock.json
+      - run: npm --prefix Backend ci
+      - run: npm --prefix Frontend ci
+      - run: npm --prefix Backend run prisma:generate
+      - run: npm --prefix Backend test
+      - run: npx prisma migrate deploy
+        working-directory: Backend
+      - run: npm --prefix Backend run test:integration
+      - run: npm --prefix Frontend run lint
+      - run: npm --prefix Frontend test
+      - run: npm --prefix Frontend run build
