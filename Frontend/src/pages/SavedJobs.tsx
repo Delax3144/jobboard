@@ -1,3 +1,4 @@
+import type { Job } from '../types/job';
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
@@ -15,7 +16,7 @@ const Icons = {
 export default function SavedJobs() {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
   const { user } = useAuth();
-  const [savedJobs, setSavedJobs] = useState<any[]>([]);
+  const [savedJobs, setSavedJobs] = useState<(Job & { savedAt: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchSavedJobs = async () => {

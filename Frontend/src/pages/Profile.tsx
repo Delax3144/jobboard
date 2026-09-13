@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 // src/pages/Profile.tsx
 import { useProfile, COUNTRY_CODES, type TabType } from "../hooks/useProfile";
 import AvatarCropperModal from "../components/profile/AvatarCropperModal";
@@ -24,6 +25,8 @@ const Toggle = ({ active, onClick, disabled }: { active: boolean, onClick: () =>
 
 export default function Profile() {
   const p = useProfile();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   if (!p.user) return <div style={{ color: '#fff', textAlign: 'center', padding: '100px' }}>Loading...</div>;
 
@@ -58,8 +61,8 @@ export default function Profile() {
               <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "linear-gradient(135deg, #10b981, #059669)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "42px", fontWeight: "900", color: "#000", overflow: "hidden", border: "3px solid #1a1a1a", boxShadow: '0 15px 35px -10px rgba(16, 185, 129, 0.4)' }}>
                 {p.user.avatarUrl ? <img src={p.user.avatarUrl?.startsWith('http') ? p.user.avatarUrl : `${p.apiUrl}${p.user.avatarUrl}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : p.user.email[0].toUpperCase()}
               </div>
-              <button onClick={() => p.refs.fileInputRef.current?.click()} type="button" style={{ position: 'absolute', bottom: '0', right: '0', width: '36px', height: '36px', borderRadius: '50%', background: '#111', border: '1px solid #333', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, boxShadow: '0 5px 15px rgba(0,0,0,0.5)' }}><Icons.Camera /></button>
-              <input type="file" accept="image/*" ref={p.refs.fileInputRef} onChange={p.handlers.handleFileChange} style={{ display: "none" }} />
+              <button onClick={() => fileInputRef.current?.click()} type="button" style={{ position: 'absolute', bottom: '0', right: '0', width: '36px', height: '36px', borderRadius: '50%', background: '#111', border: '1px solid #333', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, boxShadow: '0 5px 15px rgba(0,0,0,0.5)' }}><Icons.Camera /></button>
+              <input type="file" accept="image/*" ref={fileInputRef} onChange={p.handlers.handleFileChange} style={{ display: "none" }} />
             </div>
             <h2 style={{ margin: '0 0 5px', fontSize: '22px', color: '#fff', fontWeight: 800, letterSpacing: '-0.5px' }}>{p.user.firstName || 'User'} {p.user.lastName}</h2>
             <p style={{ margin: 0, fontSize: '14px', color: '#666', fontWeight: 500 }}>@{p.user.username || 'username'}</p>
@@ -149,8 +152,8 @@ export default function Profile() {
                     </div>
                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                       {p.form.resumeUrl && <a href={p.form.resumeUrl.startsWith('http') ? p.form.resumeUrl : `${p.apiUrl}/${p.form.resumeUrl}`} target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', fontWeight: 800, textDecoration: 'none', fontSize: '14px', border: '1px solid #10b981', padding: '12px 20px', borderRadius: '12px' }}>View My Resume</a>}
-                      <input type="file" accept=".pdf,.doc,.docx" ref={p.refs.resumeInputRef} onChange={p.handlers.handleResumeUpload} style={{ display: 'none' }} />
-                      <button type="button" onClick={() => p.refs.resumeInputRef.current?.click()} style={{ background: '#10b981', color: '#000', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', fontSize: '14px', whiteSpace: 'nowrap' }}>{p.form.resumeUrl ? "Update Resume" : "Upload Resume"}</button>
+                      <input type="file" accept=".pdf,.doc,.docx" ref={resumeInputRef} onChange={p.handlers.handleResumeUpload} style={{ display: 'none' }} />
+                      <button type="button" onClick={() => resumeInputRef.current?.click()} style={{ background: '#10b981', color: '#000', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', fontSize: '14px', whiteSpace: 'nowrap' }}>{p.form.resumeUrl ? "Update Resume" : "Upload Resume"}</button>
                     </div>
                   </div>
 
@@ -170,7 +173,7 @@ export default function Profile() {
                     </div>
                     {p.form.experience.length === 0 && !p.isEditing && <div style={{ color: '#666', fontStyle: 'italic', fontSize: '14px' }}>No experience added yet.</div>}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                      {p.form.experience.map((exp: any) => (
+                      {p.form.experience.map((exp) => (
                         <div key={exp.id} style={{ background: p.isEditing ? 'rgba(255,255,255,0.02)' : 'transparent', border: p.isEditing ? '1px solid rgba(255,255,255,0.05)' : 'none', padding: p.isEditing ? '20px' : '0', borderRadius: '16px', position: 'relative' }}>
                           {p.isEditing && <button type="button" onClick={() => p.form.removeExperience(exp.id)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer' }}><Icons.Trash /></button>}
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>

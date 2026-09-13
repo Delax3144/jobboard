@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 
 const Icons = {
@@ -13,13 +13,10 @@ export default function Legal() {
   const navigate = useNavigate();
   
   // Определяем активную вкладку на основе URL
-  const [activeTab, setActiveTab] = useState<"privacy" | "terms" | "cookies">("privacy");
+  const activeTab = location.pathname.includes("terms") ? "terms" : location.pathname.includes("cookies") ? "cookies" : "privacy";
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    if (location.pathname.includes("terms")) setActiveTab("terms");
-    else if (location.pathname.includes("cookies")) setActiveTab("cookies");
-    else setActiveTab("privacy");
   }, [location.pathname]);
 
   const TABS = [

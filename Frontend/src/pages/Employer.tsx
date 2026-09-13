@@ -91,9 +91,9 @@ export default function Employer() {
             )}
 
             {/* СПИСОК ВАКАНСИЙ */}
-            {list.currentJobs.map((job: any) => {
-              const jobApps = data.applications.filter((a: any) => a.jobId === job.id);
-              const newAppsCount = jobApps.filter((a: any) => a.status === 'new').length;
+            {list.currentJobs.map((job) => {
+              const jobApps = data.applications.filter((a) => a.jobId === job.id);
+              const newAppsCount = jobApps.filter((a) => a.status === 'new').length;
 
               return (
                 <div key={job.id} className="job-card-glass employer-job-card" style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '30px', transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)', position: 'relative', overflow: 'hidden' }} onMouseOver={(e) => { e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.4)'; e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 20px 40px -10px rgba(0,0,0,0.5)'; }} onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
@@ -129,7 +129,7 @@ export default function Employer() {
                       <span style={{ fontSize: '14px', color: '#888', fontWeight: 500 }}>Total Applicants: <b style={{ color: '#fff' }}>{jobApps.length}</b> {newAppsCount > 0 && <span style={{ color: '#10b981', marginLeft: '10px', background: 'rgba(16,185,129,0.1)', padding: '2px 8px', borderRadius: '10px', fontWeight: 700 }}>{newAppsCount} New</span>}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      {jobApps.slice(0, 5).map((app: any) => (
+                      {jobApps.slice(0, 5).map((app) => (
                           <div key={app.id} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#222', border: '2px solid #111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#aaa', fontWeight: 800, marginLeft: '-12px', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
                               {app.candidate.email[0].toUpperCase()}
                           </div>

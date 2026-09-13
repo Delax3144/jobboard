@@ -1,3 +1,4 @@
+import { apiErrorMessage } from '../lib/apiError';
 import { useState, useRef } from "react";
 import api from "../lib/api";
 
@@ -36,10 +37,10 @@ export default function ApplyForm({ jobId, jobTitle, onSuccess }: ApplyFormProps
         headers: { "Content-Type": "multipart/form-data" },
       });
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setStatus("error");
-      setErrorMsg(err.response?.data?.message || "Failed to submit application. Please try again.");
+      setErrorMsg(apiErrorMessage(err, "Failed to submit application. Please try again."));
     }
   };
 

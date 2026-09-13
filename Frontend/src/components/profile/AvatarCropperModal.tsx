@@ -1,3 +1,5 @@
+import type { Area } from 'react-easy-crop';
+import type { User } from '../../types/user';
 // src/components/profile/AvatarCropperModal.tsx
 import { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
@@ -9,13 +11,13 @@ const Icons = {
   ZoomIn: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>,
 };
 
-export default function AvatarCropperModal({ open, onClose, imageSrc, setUser, setMessage }: any) {
+export default function AvatarCropperModal({ open, onClose, imageSrc, setUser, setMessage }: { open: boolean; onClose: () => void; imageSrc: string | null; setUser: (user: User) => void; setMessage: (message: string) => void }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isAvatarSaving, setIsAvatarSaving] = useState(false);
 
-  const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+  const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
@@ -32,7 +34,7 @@ export default function AvatarCropperModal({ open, onClose, imageSrc, setUser, s
       onClose();
       setMessage("Avatar updated successfully! 📸");
       setTimeout(() => setMessage(""), 3000);
-    } catch (err) { alert("Failed to upload avatar"); } 
+    } catch { alert("Failed to upload avatar"); }
     finally { setIsAvatarSaving(false); }
   };
 
@@ -65,7 +67,7 @@ export default function AvatarCropperModal({ open, onClose, imageSrc, setUser, s
   );
 }
 
-const getCroppedImg = async (imageSrc: string, pixelCrop: any): Promise<Blob | null> => {
+const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob | null> => {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');

@@ -1,3 +1,4 @@
+import type { useJobs } from '../../hooks/useJobs';
 // src/components/jobs/JobsFilters.tsx
 import { FILTER_LOCATIONS, FILTER_LEVELS, MAX_SALARY_LIMIT } from "../../hooks/useJobs";
 
@@ -5,7 +6,7 @@ const Icons = {
   Filter: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>,
 };
 
-export default function JobsFilters({ filters }: { filters: any }) {
+export default function JobsFilters({ filters }: { filters: ReturnType<typeof useJobs>['filters'] }) {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>

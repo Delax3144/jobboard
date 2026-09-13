@@ -28,9 +28,9 @@ export function useJobs() {
         setJobs(data);
 
         if (user && user.role === 'candidate') {
-          const bookmarksRes = await api.get("/bookmarks");
-          const ids = new Set(bookmarksRes.data.map((job: any) => job.id));
-          setSavedJobIds(ids as Set<string>);
+          const bookmarksRes = await api.get<Job[]>("/bookmarks");
+          const ids = new Set(bookmarksRes.data.map((job) => job.id));
+          setSavedJobIds(ids);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -52,7 +52,7 @@ export function useJobs() {
       const res = await api.post(`/bookmarks/${jobId}`);
       setSavedJobIds(prev => {
         const newSet = new Set(prev);
-        res.data.saved ? newSet.add(jobId) : newSet.delete(jobId);
+        if (res.data.saved) newSet.add(jobId); else newSet.delete(jobId);
         return newSet;
       });
     } catch (err) {

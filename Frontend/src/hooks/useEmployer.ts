@@ -1,5 +1,5 @@
 // src/hooks/useEmployer.ts
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import api from "../lib/api";
 import { useAuth } from "../context/useAuth";
 import type { Job, Application, JobStatus } from "../types/job";
@@ -31,9 +31,8 @@ export function useEmployer() {
   const [status, setJobStatus] = useState<JobStatus>("published");
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
-    setIsLoading(true);
     try {
       const [jobsRes, appsRes] = await Promise.all([
         api.get("/jobs/mine"),
@@ -43,9 +42,9 @@ export function useEmployer() {
       setApplications(appsRes.data);
     } catch (err) { console.error(err); }
     finally { setIsLoading(false); }
-  };
+  }, [user]);
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
 
   const dashboardStats = useMemo(() => ({
     active: jobs.filter(j => j.status === "published").length,
@@ -87,7 +86,7 @@ export function useEmployer() {
       else await api.post('/jobs', formData, config);
       resetForm();
       fetchData();
-    } catch (err) { alert("Error saving job"); }
+    } catch { alert("Error saving job"); }
   }
 
   async function handleDelete(id: string) {
@@ -96,7 +95,7 @@ export function useEmployer() {
         await api.delete(`/jobs/${id}`);
         fetchData();
         if (currentJobs.length === 1 && currentPage > 1) setCurrentPage(currentPage - 1);
-      } catch (err) { alert("Delete failed"); }
+      } catch { alert("Delete failed"); }
     }
   }
 

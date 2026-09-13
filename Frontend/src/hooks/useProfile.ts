@@ -1,5 +1,6 @@
+import type { User, Experience } from '../types/user';
 // src/hooks/useProfile.ts
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import api from "../lib/api";
 
@@ -48,24 +49,24 @@ export function useProfile() {
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [countryCode, setCountryCode] = useState(initialPhone.code);
   const [phoneNumber, setPhoneNumber] = useState(initialPhone.number);
-  const [status, setStatus] = useState((user as any)?.status || "Open to work");
-  const [location, setLocation] = useState((user as any)?.location || "");
-  
+  const [status, setStatus] = useState(user?.status || "Open to work");
+  const [location, setLocation] = useState(user?.location || "");
+
   // Professional States
-  const [bio, setBio] = useState((user as any)?.bio || "");
-  const [skills, setSkills] = useState((user as any)?.skills || "");
-  const [experience, setExperience] = useState<any[]>(typeof (user as any)?.experience === 'string' ? JSON.parse((user as any).experience) : ((user as any)?.experience || []));
-  const [resumeUrl, setResumeUrl] = useState((user as any)?.resumeUrl || null);
-  
+  const [bio, setBio] = useState(user?.bio || "");
+  const [skills, setSkills] = useState(user?.skills || "");
+  const [experience, setExperience] = useState<Experience[]>(user?.experience || []);
+  const [resumeUrl, setResumeUrl] = useState<string | null>(user?.resumeUrl || null);
+
   // Settings States
-  const [isPublic, setIsPublic] = useState((user as any)?.isPublic ?? true);
-  const [showEmail, setShowEmail] = useState((user as any)?.showEmail ?? false);
-  const [soundEnabled, setSoundEnabled] = useState((user as any)?.soundEnabled ?? true);
-  const [toastsEnabled, setToastsEnabled] = useState((user as any)?.toastsEnabled ?? true);
-  const [notificationVolume, setNotificationVolume] = useState((user as any)?.notificationVolume ?? 50);
-  
+  const [isPublic, setIsPublic] = useState(user?.isPublic ?? true);
+  const [showEmail, setShowEmail] = useState(user?.showEmail ?? false);
+  const [soundEnabled, setSoundEnabled] = useState(user?.soundEnabled ?? true);
+  const [toastsEnabled, setToastsEnabled] = useState(user?.toastsEnabled ?? true);
+  const [notificationVolume, setNotificationVolume] = useState(user?.notificationVolume ?? 50);
+
   // Security States
-  const [twoFactor, setTwoFactor] = useState((user as any)?.isTwoFactorEnabled || false);
+  const [twoFactor, setTwoFactor] = useState(user?.isTwoFactorEnabled || false);
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [qrCode, setQrCode] = useState("");
   const [twoFactorCode, setTwoFactorCode] = useState("");
@@ -79,8 +80,6 @@ export function useProfile() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [openCropper, setOpenCropper] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneNumber(e.target.value.replace(/\D/g, ''));
@@ -90,9 +89,9 @@ export function useProfile() {
     setFirstName(user?.firstName || ""); setLastName(user?.lastName || "");
     const parsed = parsePhone(user?.phone || "");
     setCountryCode(parsed.code); setPhoneNumber(parsed.number);
-    setStatus((user as any)?.status || "Open to work"); setLocation((user as any)?.location || "");
-    setBio((user as any)?.bio || ""); setSkills((user as any)?.skills || "");
-    setExperience(typeof (user as any)?.experience === 'string' ? JSON.parse((user as any).experience) : ((user as any)?.experience || []));
+    setStatus(user?.status || "Open to work"); setLocation(user?.location || "");
+    setBio(user?.bio || ""); setSkills(user?.skills || "");
+    setExperience(user?.experience || []);
     setIsEditing(false); setMessage("");
   };
 
@@ -107,17 +106,17 @@ export function useProfile() {
       setMessage("Profile updated successfully.");
       setIsEditing(false);
       setTimeout(() => setMessage(""), 3000);
-    } catch (err) { alert("Failed to update profile"); } 
+    } catch { alert("Failed to update profile"); }
     finally { setIsSaving(false); }
   };
 
-  const handleSaveSettings = async (fieldsToUpdate: Record<string, any>) => {
+  const handleSaveSettings = async (fieldsToUpdate: Partial<Pick<User, 'isPublic' | 'showEmail' | 'soundEnabled' | 'toastsEnabled' | 'notificationVolume'>>) => {
     try {
       const res = await api.put("/auth/profile", fieldsToUpdate);
       setUser(res.data.user);
       setMessage("Settings saved successfully! ⚙️");
       setTimeout(() => setMessage(""), 3000);
-    } catch (err) { alert("Failed to save settings."); }
+    } catch { alert("Failed to save settings."); }
   };
 
   const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,22 +127,22 @@ export function useProfile() {
       setMessage("Uploading resume...");
       const res = await api.post("/auth/resume", formData, { headers: { "Content-Type": "multipart/form-data" } });
       setResumeUrl(res.data.user.resumeUrl);
-      setUser({ ...user, resumeUrl: res.data.user.resumeUrl } as any);
+      setUser(current => current ? { ...current, resumeUrl: res.data.user.resumeUrl } : null);
       setMessage("Resume uploaded successfully! 📄");
       setTimeout(() => setMessage(""), 3000);
-    } catch (err) { alert("Failed to upload resume."); setMessage(""); }
+    } catch { alert("Failed to upload resume."); setMessage(""); }
   };
 
   const addExperience = () => setExperience([...experience, { id: Date.now(), title: "", company: "", period: "", description: "" }]);
-  const updateExperience = (id: number, field: string, value: string) => setExperience(experience.map(exp => exp.id === id ? { ...exp, [field]: value } : exp));
-  const removeExperience = (id: number) => setExperience(experience.filter(exp => exp.id !== id));
+  const updateExperience = (id: Experience["id"], field: keyof Omit<Experience, "id">, value: string) => setExperience(experience.map(exp => exp.id === id ? { ...exp, [field]: value } : exp));
+  const removeExperience = (id: Experience["id"]) => setExperience(experience.filter(exp => exp.id !== id));
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const reader = new FileReader();
     reader.addEventListener('load', () => { setImageSrc(reader.result as string); setOpenCropper(true); });
     reader.readAsDataURL(e.target.files[0]);
-    e.target.value = ""; 
+    e.target.value = "";
   };
 
   const handlePasswordResetRequest = async () => {
@@ -151,7 +150,7 @@ export function useProfile() {
     try {
       const res = await api.post("/auth/request-password-reset", { email: user?.email });
       setResetMsg(res.data.message);
-    } catch (err) { setResetMsg("Failed to send request."); } 
+    } catch { setResetMsg("Failed to send request."); }
     finally { setIsResetting(false); }
   };
 
@@ -190,10 +189,7 @@ export function useProfile() {
         });
 
         setTwoFactor(false);
-        setUser({
-          ...user,
-          isTwoFactorEnabled: false,
-        } as any);
+        setUser(current => current ? { ...current, isTwoFactorEnabled: false } : null);
 
         setMessage("2FA disabled successfully");
       } else {
@@ -202,10 +198,7 @@ export function useProfile() {
         });
 
         setTwoFactor(true);
-        setUser({
-          ...user,
-          isTwoFactorEnabled: true,
-        } as any);
+        setUser(current => current ? { ...current, isTwoFactorEnabled: true } : null);
 
         setMessage("2FA enabled successfully! 🛡️");
       }
@@ -232,7 +225,6 @@ export function useProfile() {
     form: { firstName, setFirstName, lastName, setLastName, countryCode, setCountryCode, phoneNumber, handlePhoneChange, status, setStatus, location, setLocation, bio, setBio, skills, setSkills, experience, resumeUrl, addExperience, updateExperience, removeExperience },
     settings: { isPublic, setIsPublic, showEmail, setShowEmail, soundEnabled, setSoundEnabled, toastsEnabled, setToastsEnabled, notificationVolume, setNotificationVolume, handleSaveSettings },
     security: { twoFactor, show2FAModal, setShow2FAModal, qrCode, twoFactorCode, setTwoFactorCode, isVerifying2FA, handleToggle2FA, handleVerify2FA, twoFactorModalMode, isResetting, resetMsg, handlePasswordResetRequest },
-    refs: { fileInputRef, resumeInputRef },
     handlers: { handleCancel, handleSave, handleResumeUpload, handleFileChange },
     cropper: { imageSrc, setImageSrc, openCropper, setOpenCropper }
   };

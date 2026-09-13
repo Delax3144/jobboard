@@ -11,27 +11,29 @@ export function useJobDetails() {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
   const [job, setJob] = useState<Job | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loadedId, setLoadedId] = useState<string>();
+  const isLoading = loadedId !== id;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    setIsLoading(true);
+    let cancelled = false;
     
     api.get(`/jobs/${id}`)
-      .then(res => setJob(res.data))
-      .catch(err => console.error("Ошибка загрузки:", err))
-      .finally(() => setIsLoading(false));
+      .then(res => { if (!cancelled) setJob(res.data); })
+      .catch(err => { if (!cancelled) setJob(null); console.error("Ошибка загрузки:", err); })
+      .finally(() => { if (!cancelled) setLoadedId(id); });
 
     if (user?.role === 'candidate') {
-      api.get("/bookmarks")
+      api.get<Job[]>("/bookmarks")
         .then(res => {
-          setIsBookmarked(res.data.some((b: any) => b.id === id));
+          setIsBookmarked(res.data.some((b) => b.id === id));
         })
         .catch(err => console.error("Ошибка загрузки закладок:", err));
     }
+    return () => { cancelled = true; };
   }, [id, user]);
 
   const toggleBookmark = async () => {

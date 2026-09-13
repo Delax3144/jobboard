@@ -1,3 +1,4 @@
+import type { useEmployer } from '../../hooks/useEmployer';
 // src/components/employer/JobForm.tsx
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -13,7 +14,7 @@ const inputStyle = {
   transition: 'border-color 0.2s', outline: 'none', fontSize: '14px'
 };
 
-export default function JobForm({ form }: { form: any }) {
+export default function JobForm({ form }: { form: ReturnType<typeof useEmployer>['form'] }) {
   return (
     <div id="job-form-section" style={{ position: 'sticky', top: '100px', scrollMarginTop: '100px' }}>
       

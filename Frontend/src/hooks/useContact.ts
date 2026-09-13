@@ -1,3 +1,4 @@
+import { apiErrorMessage } from '../lib/apiError';
 // src/hooks/useContact.ts
 import { useState, useEffect } from "react";
 import api from "../lib/api";
@@ -7,7 +8,7 @@ export function useContact() {
   const { user } = useAuth();
   
   const [view, setView] = useState<"form" | "tickets">("form");
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<{ id: string; subject: string; message: string; status: string; createdAt: string }[]>([]);
 
   const [formData, setFormData] = useState({
     name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : "",
@@ -33,9 +34,9 @@ export function useContact() {
       await api.post("/auth/contact", { ...formData, userId: user?.id });
       setStatus("success");
       setFormData({ ...formData, subject: "", message: "" });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setErrorMsg(err.response?.data?.message || "Something went wrong. Please try again.");
+      setErrorMsg(apiErrorMessage(err, "Something went wrong. Please try again."));
     }
   };
 

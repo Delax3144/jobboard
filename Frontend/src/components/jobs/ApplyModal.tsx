@@ -1,3 +1,4 @@
+import type { Job } from '../../types/job';
 // src/components/jobs/ApplyModal.tsx
 import { createPortal } from "react-dom";
 import ApplyForm from "../ApplyForm";
@@ -7,7 +8,7 @@ const Icons = {
   Close: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
 };
 
-export default function ApplyModal({ isOpen, onClose, isSent, setIsSent, job }: any) {
+export default function ApplyModal({ isOpen, onClose, isSent, setIsSent, job }: { isOpen: boolean; onClose: () => void; isSent: boolean; setIsSent: (value: boolean) => void; job: Job }) {
   if (!isOpen || !document.body) return null;
 
   return createPortal(

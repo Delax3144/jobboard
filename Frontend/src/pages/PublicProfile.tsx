@@ -107,7 +107,7 @@ export default function PublicProfile() {
                   <h3 style={{ margin: '0 0 20px', fontSize: '18px', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}><Icons.Code /> Professional Experience</h3>
                   {profileData.experience.length > 0 ? (
                     <div style={{ borderLeft: '2px solid rgba(16, 185, 129, 0.3)', paddingLeft: '20px', marginLeft: '10px', display: 'flex', flexDirection: 'column', gap: '25px' }}>
-                      {profileData.experience.map((exp: any, i: number) => (
+                      {profileData.experience.map((exp, i) => (
                         <div key={i} style={{ position: 'relative' }}>
                           <div style={{ position: 'absolute', left: '-27px', top: '0', width: '12px', height: '12px', borderRadius: '50%', background: '#10b981', border: '2px solid #050505' }} />
                           <h4 style={{ margin: '0 0 5px', color: '#fff', fontSize: '16px' }}>{exp.title}</h4>
