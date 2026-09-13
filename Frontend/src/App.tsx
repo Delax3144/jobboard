@@ -1,6 +1,6 @@
 // src/App.tsx
 import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -8,26 +8,26 @@ import { Toaster } from 'react-hot-toast';
 
 // Импорт страниц
 import Home from "./pages/Home";
-import Jobs from "./pages/Jobs";
-import JobDetails from "./pages/JobDetails";
-import NotFound from "./pages/NotFound";
-import Applications from "./pages/Applications";
-import Employer from "./pages/Employer";
-import Profile from './pages/Profile'; 
-import RegisterPage from './pages/RegisterPage';
-import LoginPage from './pages/LoginPage';
-import ApplicationDetails from './pages/ApplicationDetails';
-import MessagesPage from './pages/MessagesPage';
-import JobManagement from './pages/JobManagement';
-import SavedJobs from "./pages/SavedJobs";
-import AboutUs from "./pages/AboutUs";
-import VerifyEmail from "./pages/VerifyEmail";
-import ResetPassword from "./pages/ResetPassword";
-import Contact from "./pages/Contact";
-import ForgotPassword from "./pages/ForgotPassword";
-import PublicProfile from './pages/PublicProfile';
-import Legal from './pages/Legal';
-import Blog from './pages/Blog';
+const Jobs = lazy(() => import('./pages/Jobs'));
+const JobDetails = lazy(() => import('./pages/JobDetails'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const Applications = lazy(() => import('./pages/Applications'));
+const Employer = lazy(() => import('./pages/Employer'));
+const Profile = lazy(() => import('./pages/Profile'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const ApplicationDetails = lazy(() => import('./pages/ApplicationDetails'));
+const MessagesPage = lazy(() => import('./pages/MessagesPage'));
+const JobManagement = lazy(() => import('./pages/JobManagement'));
+const SavedJobs = lazy(() => import('./pages/SavedJobs'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Contact = lazy(() => import('./pages/Contact'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const Legal = lazy(() => import('./pages/Legal'));
+const Blog = lazy(() => import('./pages/Blog'));
 
 // Импорт компонентов
 import TopNav from "./components/TopNav";
@@ -46,20 +46,21 @@ const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
 
 function AppRoutes({ mode }: { mode: UserMode }) {
   const location = useLocation();
-  
+
   // Логика определения полноэкранных страниц
   const fullWidthPaths = [
     "/", "/profile", "/blog", "/jobs", "/employer", "/login", "/register",
-    "/privacy", "/terms", "/cookies", "/about", "/contact", "/applications", 
+    "/privacy", "/terms", "/cookies", "/about", "/contact", "/applications",
     "/saved", "/forgot-password", "/reset-password"
   ];
-       
-  const isFullWidth = 
-    fullWidthPaths.includes(location.pathname) || 
+
+  const isFullWidth =
+    fullWidthPaths.includes(location.pathname) ||
     ["/messages", "/applications", "/jobs", "/candidate"].some(prefix => location.pathname.startsWith(prefix));
 
   return (
     <main className={isFullWidth ? "" : "container"}>
+      <Suspense fallback={<div style={{ color: "#fff", padding: "80px", textAlign: "center" }}>Loading...</div>}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/jobs" element={<Jobs />} />
@@ -86,6 +87,7 @@ function AppRoutes({ mode }: { mode: UserMode }) {
         <Route path="/blog" element={<Blog />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </main>
   );
 }
@@ -110,9 +112,9 @@ export default function App() {
           </div>
           <Footer />
           <FloatingChatButton />
-          
-          <Toaster 
-            position="bottom-right" 
+
+          <Toaster
+            position="bottom-right"
             toastOptions={{
               duration: 5000,
               style: {
@@ -123,7 +125,7 @@ export default function App() {
                 borderRadius: '20px',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
               },
-            }} 
+            }}
           />
         </BrowserRouter>
       </AuthProvider>
