@@ -114,6 +114,9 @@ export function useEmployer() {
     setSalaryFrom(String(job.salaryFrom)); setSalaryTo(String(job.salaryTo));
     setLevel(job.level); setTags(job.tags); setDescription(job.description);
     setJobStatus(job.status);
+    setLogoFile(null);
+    const fileInput = document.getElementById('logoInput') as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
     
     setTimeout(() => {
       document.getElementById('job-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
