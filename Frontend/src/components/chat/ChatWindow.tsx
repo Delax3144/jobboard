@@ -1,3 +1,4 @@
+import type { useChat } from '../../hooks/useChat';
 // src/components/chat/ChatWindow.tsx
 import { Link, useNavigate } from "react-router-dom";
 
@@ -9,7 +10,7 @@ const Icons = {
   ArrowLeft: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
 };
 
-export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, user, apiUrl, msg, setMsg, sendMsg, scrollContainerRef, checkIsOnline }: any) {
+export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, user, apiUrl, msg, setMsg, sendMsg, scrollContainerRef, checkIsOnline }: Pick<ReturnType<typeof useChat>, 'currentApp' | 'isCurrentLockedForCandidate' | 'user' | 'apiUrl' | 'msg' | 'setMsg' | 'sendMsg' | 'scrollContainerRef' | 'checkIsOnline'>) {
   const navigate = useNavigate();
 
   if (!currentApp) {
@@ -25,7 +26,7 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
   }
 
   const partnerName = user?.role === 'employer' ? `${currentApp.candidate?.firstName || ''} ${currentApp.candidate?.lastName || ''}`.trim() || currentApp.candidate?.email : currentApp.job.companyName;
-  const partnerLink = user?.role === 'employer' ? `/candidate/${currentApp.candidate.id}` : `/employer/company/${currentApp.job.ownerId}`;
+  const partnerLink = user?.role === 'employer' ? `/candidate/${currentApp.candidate.id}` : `/jobs/${currentApp.job.id}`;
   const partnerAvatar = user?.role === 'employer' ? currentApp.candidate?.avatarUrl : currentApp.job?.companyLogo;
   const isOnline = checkIsOnline(user?.role === 'employer' ? currentApp.candidate?.lastActive : currentApp.job?.owner?.lastActive);
 
@@ -71,7 +72,7 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
             <div style={{ alignSelf: 'center', background: '#111', border: '1px solid #222', padding: '8px 20px', borderRadius: '20px', fontSize: '11px', color: '#666', marginBottom: '30px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
               Application started {new Date(currentApp.createdAt).toLocaleDateString()}
             </div>
-            {currentApp.messages.map((m: any, index: number) => {
+            {currentApp.messages.map((m, index) => {
               const isMine = m.senderId === user?.id;
               const prevMsg = index > 0 ? currentApp.messages[index - 1] : null;
               const nextMsg = index < currentApp.messages.length - 1 ? currentApp.messages[index + 1] : null;

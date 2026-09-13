@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../lib/api";
+import type { Application } from '../types/job';
 import { useAuth } from "../context/useAuth";
 
 export default function FloatingChatButton() {
@@ -11,18 +12,13 @@ export default function FloatingChatButton() {
 
   useEffect(() => {
     if (!user || location.pathname.startsWith("/messages")) {
-      setHasNewMsg(false);
       return;
     }
 
     const checkUpdates = () => {
       const endpoint = user.role === 'employer' ? '/applications/owner' : '/applications/my';
-      api.get(endpoint).then((res) => {
-        const unread = res.data.some((app: any) => {
-          const lastUpdate = app.messages?.[0]?.createdAt || app.createdAt;
-          const lastViewed = user.role === 'employer' ? app.lastViewedByOwner : app.lastViewedByCandidate;
-          return lastUpdate > lastViewed || (user.role === 'candidate' && app.status === 'invited' && lastUpdate > lastViewed);
-        });
+      api.get<Application[]>(endpoint).then((res) => {
+        const unread = res.data.some(app => app.hasUpdate);
         setHasNewMsg(unread);
       }).catch(() => {});
     };

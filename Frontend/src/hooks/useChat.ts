@@ -1,164 +1,101 @@
-// src/hooks/useChat.ts
-import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import api from "../lib/api";
-import { useAuth } from "../context/useAuth";
-import { io } from "socket.io-client";
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import api from '../lib/api';
+import { useAuth } from '../context/useAuth';
+import { io } from 'socket.io-client';
+import type { Application } from '../types/job';
 
 export function useChat() {
-  const { id } = useParams(); 
-  const navigate = useNavigate();
+  const { id } = useParams();
   const { user } = useAuth();
-  
-  const [chats, setChats] = useState<any[]>([]); 
-  const [currentApp, setCurrentApp] = useState<any>(null); 
-  const [msg, setMsg] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [chats, setChats] = useState<Application[]>([]);
+  const [loadedApp, setLoadedApp] = useState<Application | null>(null);
+  const [msg, setMsg] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  
+  const [error, setError] = useState('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<any>(null);
   const activeChatIdRef = useRef(id);
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
+  const sendingRef = useRef(false);
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  const role = user?.role;
+  const userId = user?.id;
+  const currentApp = loadedApp?.id === id ? loadedApp : null;
 
-  const checkIsOnline = (lastActiveDate?: string) => {
-    if (!lastActiveDate) return false;
-    return (Date.now() - new Date(lastActiveDate).getTime()) < 60000; 
-  };
-
-  const scrollToBottom = () => {
-    if (scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
-      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
-    }
-  };
-
-  const fetchChats = async () => {
+  const fetchChats = useCallback(async () => {
+    if (!userId) return;
     try {
-      const endpoint = user?.role === 'employer' ? '/applications/owner' : '/applications/my';
-      const res = await api.get(endpoint);
-      let fetchedData = res.data;
+      const res = await api.get<Application[]>(role === 'employer' ? '/applications/owner' : '/applications/my');
+      setChats(res.data.sort((a, b) =>
+        new Date(b.messages?.[0]?.createdAt || b.createdAt).getTime() -
+        new Date(a.messages?.[0]?.createdAt || a.createdAt).getTime()));
+      setError('');
+    } catch { setError('Could not load conversations. Please try again.'); }
+    finally { setLoading(false); }
+  }, [role, userId]);
 
-      if (user?.role === 'employer') {
-        const grouped = new Map();
-        fetchedData.forEach((app: any) => {
-          const cid = app.candidate.id;
-          if (!grouped.has(cid)) {
-            grouped.set(cid, { ...app, allJobs: [app.job] });
-          } else {
-            const existing = grouped.get(cid);
-            existing.allJobs.push(app.job);
-            const existingDate = new Date(existing.messages?.[0]?.createdAt || existing.updatedAt || existing.createdAt).getTime();
-            const newDate = new Date(app.messages?.[0]?.createdAt || app.updatedAt || app.createdAt).getTime();
-            if (newDate > existingDate) {
-              grouped.set(cid, { ...app, allJobs: existing.allJobs });
-            }
-          }
-        });
-        fetchedData = Array.from(grouped.values());
-      } else {
-        fetchedData = fetchedData.map((app: any) => ({ ...app, allJobs: [app.job] }));
-      }
-
-      fetchedData.sort((a: any, b: any) => {
-        const dateA = new Date(a.messages?.[0]?.createdAt || a.updatedAt || a.createdAt).getTime();
-        const dateB = new Date(b.messages?.[0]?.createdAt || b.updatedAt || b.createdAt).getTime();
-        return dateB - dateA;
-      });
-
-      setChats(fetchedData);
-      setLoading(false);
-
-      if (id) {
-        const chatExists = fetchedData.find((c: any) => c.id === id);
-        if (!chatExists) {
-          const chatWithUser = fetchedData.find((c: any) => c.candidate?.id === id || c.job?.ownerId === id);
-          if (chatWithUser) navigate(`/messages/${chatWithUser.id}`, { replace: true });
-        }
-      }
-    } catch (err) { console.error(err); }
-  };
-
-  const fetchCurrentChat = async () => {
-    if (!id) return;
+  const fetchCurrentChat = useCallback(async (applicationId: string) => {
     try {
-      const res = await api.get(`/applications/${id}`);
-      setAppWithScroll(res.data);
-      window.dispatchEvent(new Event('update_unread')); 
-    } catch (err) { console.error(err); }
-  };
-
-  const setAppWithScroll = (data: any) => {
-    const isNewMessage = currentApp?.messages?.length !== data.messages?.length;
-    setCurrentApp(data);
-    if (isNewMessage) setTimeout(scrollToBottom, 50);
-  };
-
-  useEffect(() => {
-    if (!user) return;
-    const ping = () => api.post('/auth/ping').catch(() => {});
-    ping();
-    const interval = setInterval(ping, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
+      const res = await api.get<Application>(`/applications/${applicationId}`);
+      if (activeChatIdRef.current !== applicationId) return;
+      setLoadedApp(res.data);
+      setChats(items => items.map(app => app.id === applicationId ? { ...app, hasUpdate: false } : app));
+      window.dispatchEvent(new Event('update_unread'));
+    } catch { setError('Could not load this conversation. Please try again.'); }
+  }, []);
 
   useEffect(() => {
     activeChatIdRef.current = id;
-    fetchChats();
-    fetchCurrentChat();
-  }, [id, user]);
+    void fetchChats();
+    if (id) void fetchCurrentChat(id);
+  }, [id, fetchChats, fetchCurrentChat]);
 
   useEffect(() => {
-    if (!user) return;
+    scrollContainerRef.current?.scrollTo?.({ top: scrollContainerRef.current.scrollHeight, behavior: 'smooth' });
+  }, [currentApp?.messages.length, id]);
 
-    const token = localStorage.getItem("token");
+  useEffect(() => {
+    if (!userId) return;
+    const ping = () => { void api.post('/auth/ping').catch(() => {}); };
+    ping();
+    const interval = setInterval(ping, 30000);
+    return () => clearInterval(interval);
+  }, [userId]);
 
-    if (!token) return;
-
-    socketRef.current = io(apiUrl, {
-      auth: { token },
-      withCredentials: true,
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!userId || !token) return;
+    const socket = io(apiUrl, { auth: { token }, withCredentials: true });
+    socket.on('new_message', async (data: { applicationId: string }) => {
+      await fetchChats();
+      if (activeChatIdRef.current === data.applicationId) await fetchCurrentChat(data.applicationId);
     });
-
-    socketRef.current.on("new_message", (data: any) => {
-      fetchChats();
-
-      if (activeChatIdRef.current === data.applicationId) {
-        api
-          .get(`/applications/${data.applicationId}`)
-          .then((res) => setAppWithScroll(res.data));
-      }
+    socket.on('connect', () => {
+      void fetchChats();
+      if (activeChatIdRef.current) void fetchCurrentChat(activeChatIdRef.current);
     });
-
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  }, [user]);
+    return () => { socket.disconnect(); };
+  }, [userId, apiUrl, fetchChats, fetchCurrentChat]);
 
   const sendMsg = async () => {
-    if (!msg.trim() || !id) return;
+    if (!msg.trim() || !id || sendingRef.current) return;
+    sendingRef.current = true;
     try {
       await api.post(`/applications/${id}/messages`, { text: msg });
-      setMsg("");
-      fetchCurrentChat();
-      setTimeout(scrollToBottom, 50);
-    } catch (err) { alert("Error sending message"); }
+      setMsg('');
+      await fetchCurrentChat(id);
+    } catch { setError('Could not send your message. Please try again.'); }
+    finally { sendingRef.current = false; }
   };
 
   const filteredChats = chats.filter(chat => {
-    const name = user?.role === 'employer' ? `${chat.candidate?.firstName} ${chat.candidate?.lastName}` : chat.job?.companyName;
-    const matchesSearch = name?.toLowerCase().includes(searchQuery.toLowerCase()) || chat.job?.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const isCandidate = user?.role === 'candidate';
-    const hasMessages = chat.messages && chat.messages.length > 0;
-    if (isCandidate && chat.status === 'new' && !hasMessages) return false;
-    return matchesSearch;
+    const name = role === 'employer' ? `${chat.candidate?.firstName} ${chat.candidate?.lastName}` : chat.job.companyName;
+    const matches = `${name} ${chat.job.title}`.toLowerCase().includes(searchQuery.toLowerCase());
+    return matches && !(role === 'candidate' && chat.status === 'new' && !chat.messages?.length);
   });
+  const isCurrentLockedForCandidate = role === 'candidate' && currentApp?.status === 'new' && !currentApp.messages.length;
+  const checkIsOnline = (lastActiveDate?: string) => Boolean(lastActiveDate && Date.now() - new Date(lastActiveDate).getTime() < 60000);
 
-  const isCurrentLockedForCandidate = user?.role === 'candidate' && currentApp?.status === 'new' && (!currentApp.messages || currentApp.messages.length === 0);
-
-  return {
-    id, user, apiUrl, loading, msg, setMsg, searchQuery, setSearchQuery,
-    filteredChats, currentApp, isCurrentLockedForCandidate, scrollContainerRef,
-    sendMsg, checkIsOnline
-  };
+  return { id, user, apiUrl, loading, error, msg, setMsg, searchQuery, setSearchQuery,
+    filteredChats, currentApp, isCurrentLockedForCandidate, scrollContainerRef, sendMsg, checkIsOnline };
 }

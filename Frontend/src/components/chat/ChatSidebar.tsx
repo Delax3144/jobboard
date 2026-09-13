@@ -1,3 +1,4 @@
+import type { useChat } from '../../hooks/useChat';
 // src/components/chat/ChatSidebar.tsx
 import { useNavigate } from "react-router-dom";
 
@@ -13,7 +14,7 @@ const formatChatTime = (dateString: string) => {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 };
 
-export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery, activeId, user, checkIsOnline, apiUrl }: any) {
+export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery, activeId, user, checkIsOnline, apiUrl }: Pick<ReturnType<typeof useChat>, 'filteredChats' | 'searchQuery' | 'setSearchQuery' | 'user' | 'checkIsOnline' | 'apiUrl'> & { activeId?: string }) {
   const navigate = useNavigate();
 
   return (
@@ -31,7 +32,7 @@ export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery
       </div>
 
       <div className="premium-scroll" style={{ flex: 1, overflowY: 'auto' }}>
-        {filteredChats.map((chat: any) => {
+        {filteredChats.map((chat) => {
           const isActive = activeId === chat.id;
           const isEmployer = user?.role === 'employer';
           const partnerName = isEmployer ? `${chat.candidate?.firstName || ''} ${chat.candidate?.lastName || ''}`.trim() || chat.candidate?.email : chat.job?.companyName;
@@ -39,8 +40,7 @@ export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery
           const isUserOnline = checkIsOnline(isEmployer ? chat.candidate?.lastActive : chat.job?.owner?.lastActive);
           const lastMsgTimeDate = chat.messages?.[0]?.createdAt || chat.createdAt;
           const timeDisplay = formatChatTime(lastMsgTimeDate);
-          const lastViewed = isEmployer ? chat.lastViewedByOwner : chat.lastViewedByCandidate;
-          const hasUnread = lastMsgTimeDate > lastViewed || (!isEmployer && chat.status === 'invited' && lastMsgTimeDate > lastViewed);
+          const hasUnread = chat.hasUpdate === true;
           const unreadCount = hasUnread ? 1 : 0; 
 
           return (
@@ -59,7 +59,7 @@ export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                   <div style={{ fontSize: '13px', color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {chat.messages?.[0]?.text || (isEmployer && chat.allJobs?.length > 1 ? `Applied to ${chat.allJobs.length} roles` : chat.job.title)}
+                    {chat.job.title}{chat.messages?.[0]?.text ? ` · ${chat.messages[0].text}` : ''}
                   </div>
                   {unreadCount > 0 && <div style={{ background: '#10b981', color: '#000', fontSize: '11px', fontWeight: 900, padding: '2px 6px', borderRadius: '8px', minWidth: '20px', textAlign: 'center' }}>{unreadCount}</div>}
                 </div>

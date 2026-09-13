@@ -1,9 +1,12 @@
+import type { Socket } from 'socket.io-client';
+import type { NotificationEvent } from '../types/events';
 // src/hooks/useTopNav.tsx
 import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from 'react-hot-toast';
 import { io } from "socket.io-client";
 import api from "../lib/api";
+import type { Application } from '../types/job';
 import { useAuth } from "../context/useAuth";
 import { type UserMode } from "../lib/userMode";
 
@@ -30,9 +33,11 @@ export function useTopNav(setMode: (m: UserMode) => void) {
   const { user, logout, isLoading } = useAuth();
   
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [menuPath, setMenuPath] = useState<string | null>(null);
+  const isMobileMenuOpen = menuPath === location.key;
+  const setIsMobileMenuOpen = (open: boolean) => setMenuPath(open ? location.key : null);
   
-  const socketRef = useRef<any>(null);
+  const socketRef = useRef<Socket | null>(null);
   const pathnameRef = useRef(location.pathname);
   
   // === НОВЫЙ ХАК: ТИХАЯ ССЫЛКА НА ЮЗЕРА ===
@@ -42,7 +47,7 @@ export function useTopNav(setMode: (m: UserMode) => void) {
 
   useEffect(() => {
     pathnameRef.current = location.pathname;
-    setIsMobileMenuOpen(false);
+
   }, [location.pathname]);
 
   // Тихо обновляем данные юзера, не вызывая переподключение сокетов
@@ -65,19 +70,8 @@ export function useTopNav(setMode: (m: UserMode) => void) {
       try {
         const currentRole = userRef.current?.role;
         const endpoint = currentRole === 'employer' ? '/applications/owner' : '/applications/my';
-        const res = await api.get(endpoint);
-        let count = 0;
-
-        res.data.forEach((app: any) => {
-          const isEmployer = currentRole === 'employer';
-          const lastUpdate = app.messages?.[0]?.createdAt || app.createdAt;
-          const lastViewed = isEmployer ? app.lastViewedByOwner : app.lastViewedByCandidate;
-          
-          if (lastUpdate > lastViewed || (!isEmployer && app.status === 'invited' && lastUpdate > lastViewed)) {
-            count++;
-          }
-        });
-        setUnreadCount(count);
+        const res = await api.get<Application[]>(endpoint);
+        setUnreadCount(res.data.filter(app => app.hasUpdate).length);
       } catch (err) {
         console.error("Error checking updates", err);
       }
@@ -95,22 +89,22 @@ export function useTopNav(setMode: (m: UserMode) => void) {
       withCredentials: true,
     });
 
-    socketRef.current.on("new_notification", (data: any) => {
+    socketRef.current.on("new_notification", (data: NotificationEvent) => {
       if (data.applicationId && pathnameRef.current === `/messages/${data.applicationId}`) return;
 
       checkUpdates();
 
       const latestUser = userRef.current; // Берем всегда свежие настройки юзера!
-      if ((latestUser as any)?.soundEnabled !== false) {
-        playNotificationSound((latestUser as any)?.notificationVolume ?? 50);
+      if (latestUser?.soundEnabled !== false) {
+        playNotificationSound(latestUser?.notificationVolume ?? 50);
       }
 
-      if ((latestUser as any)?.toastsEnabled !== false) {
+      if (latestUser?.toastsEnabled !== false) {
         const isMessage = data.type === 'new_message';
         let title = "Notification";
         let desc = "You have a new update";
 
-        if (data.type === "new_application") { title = "New Application"; desc = data.message; }
+        if (data.type === "new_application") { title = "New Application"; desc = data.message || 'New application'; }
         else if (data.type === "status_update") { title = "Status Update"; desc = `Action required for ${data.jobTitle}`; }
         else if (data.type === "new_message") { title = "New Message"; desc = "You received a new message"; }
 

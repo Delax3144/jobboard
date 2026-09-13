@@ -10,6 +10,8 @@ export default function MessagesPage() {
   }
 
   return (
+    <>
+    {chatLogic.error && <p role="alert" style={{ color: '#ff6b6b', textAlign: 'center' }}>{chatLogic.error}</p>}
     <div className="msg-page-wrapper" style={{ background: '#050505', minHeight: 'calc(100vh - 80px)', display: 'flex', justifyContent: 'center', padding: '30px 20px', position: 'relative', overflow: 'hidden' }}>
       
       {/* Premium Dark Glow */}
@@ -41,5 +43,6 @@ export default function MessagesPage() {
 
       </div>
     </div>
+    </>
   );
 }
