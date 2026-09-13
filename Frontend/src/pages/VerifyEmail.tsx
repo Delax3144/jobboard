@@ -7,7 +7,7 @@ const Icons = {
 };
 
 export default function VerifyEmail() {
-  const { status } = useVerifyEmail();
+  const { status, email, setEmail, resendStatus, setResendStatus, resendError, handleResend } = useVerifyEmail();
 
   return (
     <div style={{ background: '#050505', width: '100vw', position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', minHeight: 'calc(100vh - 80px)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -33,8 +33,23 @@ export default function VerifyEmail() {
             <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}><div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255, 75, 75, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255, 75, 75, 0.2)' }}><Icons.X /></div></div>
               <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '10px', color: '#fff', letterSpacing: '-0.5px' }}>Verification Failed</h2>
-              <p style={{ color: '#888', marginBottom: '30px', fontSize: '15px' }}>The link is invalid or has expired. Please try registering again or contact support.</p>
-              <Link to="/register" style={{ display: 'inline-block', width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px 30px', borderRadius: '16px', fontWeight: 800, textDecoration: 'none' }}>Back to Sign Up</Link>
+              <p style={{ color: '#888', marginBottom: '24px', fontSize: '15px' }}>We couldn't verify this link. It may be invalid or expired. Enter your account email to request a new link.</p>
+              {resendStatus === 'success' ? (
+                <>
+                  <p role="status" style={{ color: '#10b981', fontSize: '15px', lineHeight: 1.6 }}>If an unverified account with that email exists, a verification link has been sent. Check your inbox and spam folder.</p>
+                  <button type="button" onClick={() => setResendStatus('idle')} style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '14px', borderRadius: '16px', cursor: 'pointer' }}>Try another email</button>
+                </>
+              ) : (
+                <form onSubmit={handleResend} style={{ textAlign: 'left' }}>
+                  <label htmlFor="verification-email" style={{ display: 'block', color: '#aaa', fontSize: '13px', marginBottom: '8px' }}>Email address</label>
+                  <input id="verification-email" type="email" autoComplete="email" required value={email} disabled={resendStatus === 'loading'} onChange={event => setEmail(event.target.value)} placeholder="name@example.com" style={{ boxSizing: 'border-box', width: '100%', minWidth: 0, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '14px', borderRadius: '16px', fontSize: '16px', marginBottom: '16px' }} />
+                  {resendStatus === 'error' && <p role="alert" style={{ color: '#ff4b4b', fontSize: '14px' }}>{resendError}</p>}
+                  <button type="submit" disabled={resendStatus === 'loading'} style={{ width: '100%', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', border: 'none', padding: '16px', borderRadius: '16px', fontWeight: 800, cursor: resendStatus === 'loading' ? 'wait' : 'pointer', opacity: resendStatus === 'loading' ? 0.7 : 1 }}>
+                    {resendStatus === 'loading' ? 'Sending link...' : 'Send verification link'}
+                  </button>
+                </form>
+              )}
+              <Link to="/login" style={{ display: 'inline-block', marginTop: '24px', color: '#aaa', fontSize: '14px', textDecoration: 'none' }}>Back to Login</Link>
             </div>
           )}
 
