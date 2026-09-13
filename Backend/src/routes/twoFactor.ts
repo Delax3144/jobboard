@@ -45,12 +45,14 @@ twoFactorRouter.post(
     } = parsedBody.data;
 
     let userId: string;
+    let tokenVersion: number;
 
     try {
       const challenge =
         verifyTwoFactorChallenge(challengeToken);
 
       userId = challenge.userId;
+      tokenVersion = challenge.tokenVersion;
     } catch {
       return res.status(401).json({
         message:
@@ -71,6 +73,7 @@ twoFactorRouter.post(
 
       if (
         !user ||
+        user.tokenVersion !== tokenVersion ||
         !user.isTwoFactorEnabled ||
         !user.twoFactorSecret
       ) {

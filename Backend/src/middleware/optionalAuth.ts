@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
-import { verifyAccessToken } from "../lib/authTokens";
+import { verifyActiveAccessToken, InvalidSessionError } from '../lib/activeSession';
 
-export function optionalAuthMiddleware(
+export async function optionalAuthMiddleware(
   req: Request,
   _res: Response,
   next: NextFunction
@@ -15,8 +15,9 @@ export function optionalAuthMiddleware(
   const token = header.slice("Bearer ".length);
 
   try {
-    req.user = verifyAccessToken(token);
-  } catch {
+    req.user = await verifyActiveAccessToken(token);
+  } catch (error) {
+    if (!(error instanceof InvalidSessionError)) return next(error);
     // Invalid optional token is treated as unauthenticated.
   }
 

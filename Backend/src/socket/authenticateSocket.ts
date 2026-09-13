@@ -1,7 +1,7 @@
 import type { Socket } from "socket.io";
-import { verifyAccessToken } from "../lib/authTokens";
+import { verifyActiveAccessToken } from '../lib/activeSession';
 
-export function authenticateSocket(
+export async function authenticateSocket(
   socket: Socket,
   next: (error?: Error) => void
 ) {
@@ -12,7 +12,7 @@ export function authenticateSocket(
   }
 
   try {
-    const user = verifyAccessToken(token);
+    const user = await verifyActiveAccessToken(token);
 
     socket.data.user = user;
 

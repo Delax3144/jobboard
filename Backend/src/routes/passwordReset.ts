@@ -61,6 +61,7 @@ passwordResetRouter.post(
         },
         data: {
           passwordHash,
+          tokenVersion: { increment: 1 },
           resetTokenHash: null,
           resetTokenExpiresAt: null,
         },
@@ -71,6 +72,9 @@ passwordResetRouter.post(
           message: "Invalid or expired reset token",
         });
       }
+
+      // Close existing realtime sessions as well as invalidating future API requests.
+      req.app.get('io')?.in(user.id).disconnectSockets(true);
 
       return res.json({
         message: "Password successfully changed!",

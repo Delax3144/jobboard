@@ -38,7 +38,7 @@ loginRouter.post("/login", loginRateLimit, async (req, res) => {
     return res.status(403).json({ message: "Please verify your email first. Check your inbox!" });
   }
   if (user.isTwoFactorEnabled) {
-    const challengeToken = signTwoFactorChallenge(user.id);
+    const challengeToken = signTwoFactorChallenge(user.id, user.tokenVersion);
 
     return res.json({
       requires2FA: true,

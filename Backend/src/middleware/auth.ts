@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import {
-  verifyAccessToken,
   type AccessTokenUser,
 } from "../lib/authTokens";
+import { verifyActiveAccessToken, InvalidSessionError } from '../lib/activeSession';
 
 export type AuthUser = AccessTokenUser;
 
@@ -14,7 +14,7 @@ declare global {
   }
 }
 
-export function authMiddleware(
+export async function authMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
@@ -30,9 +30,10 @@ export function authMiddleware(
   const token = header.slice("Bearer ".length);
 
   try {
-    req.user = verifyAccessToken(token);
+    req.user = await verifyActiveAccessToken(token);
     next();
-  } catch {
+  } catch (error) {
+    if (!(error instanceof InvalidSessionError)) return next(error);
     return res.status(401).json({
       message: "Invalid token",
     });

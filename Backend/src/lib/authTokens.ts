@@ -3,12 +3,15 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 type TokenUser = {
   id: string;
   role: string;
+  tokenVersion?: number;
 };
 
 export type AccessTokenUser = {
   id: string;
   role: "employer" | "candidate";
   issuedAt: number;
+  tokenVersion: number;
+  expiresAt: number;
 };
 
 type TwoFactorChallengePayload = JwtPayload & {
@@ -32,17 +35,19 @@ export function signAccessToken(user: TokenUser) {
       id: user.id,
       role: user.role,
       tokenType: "access",
+      tokenVersion: user.tokenVersion ?? 0,
     },
     getJwtSecret(),
     { expiresIn: "7d" }
   );
 }
 
-export function signTwoFactorChallenge(userId: string) {
+export function signTwoFactorChallenge(userId: string, tokenVersion = 0) {
   return jwt.sign(
     {
       id: userId,
       purpose: "2fa-login",
+      tokenVersion,
     },
     getJwtSecret(),
     { expiresIn: "5m" }
@@ -56,6 +61,7 @@ export function verifyTwoFactorChallenge(token: string) {
     typeof payload === "string" ||
     typeof payload.id !== "string" ||
     payload.purpose !== "2fa-login"
+    || !Number.isInteger(payload.tokenVersion ?? 0)
   ) {
     throw new Error("Invalid 2FA challenge");
   }
@@ -64,6 +70,7 @@ export function verifyTwoFactorChallenge(token: string) {
 
   return {
     userId: challenge.id,
+    tokenVersion: (challenge.tokenVersion as number | undefined) ?? 0,
   };
 }
 
@@ -75,6 +82,8 @@ export function verifyAccessToken(token: string): AccessTokenUser {
     payload.tokenType !== "access" ||
     typeof payload.id !== "string" ||
     typeof payload.iat !== "number" ||
+    typeof payload.exp !== "number" ||
+    !Number.isInteger(payload.tokenVersion ?? 0) ||
     (payload.role !== "employer" &&
       payload.role !== "candidate")
   ) {
@@ -85,5 +94,7 @@ export function verifyAccessToken(token: string): AccessTokenUser {
     id: payload.id,
     role: payload.role,
     issuedAt: payload.iat,
+    tokenVersion: (payload.tokenVersion as number | undefined) ?? 0,
+    expiresAt: payload.exp,
   };
 }

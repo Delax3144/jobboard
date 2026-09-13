@@ -182,7 +182,7 @@ githubRouter.post(
 
       if (user.isTwoFactorEnabled) {
         const challengeToken = signTwoFactorChallenge(
-          user.id
+          user.id, user.tokenVersion
         );
 
         return res.json({

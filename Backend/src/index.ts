@@ -7,6 +7,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 
 import { authenticateSocket } from "./socket/authenticateSocket";
+import { verifyActiveAccessToken } from './lib/activeSession';
 import { uploadErrorHandler } from "./middleware/uploadErrorHandler";
 
 import { registerRouter } from "./routes/register";
@@ -46,14 +47,21 @@ io.use(authenticateSocket);
 
 app.set("io", io);
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   const user = socket.data.user;
 
-  socket.join(user.id);
+  await socket.join(user.id);
+  try { await verifyActiveAccessToken(socket.handshake.auth.token); }
+  catch { socket.disconnect(true); return; }
+  if (!socket.connected) return;
+  const expirationTimer = setTimeout(() => socket.disconnect(true),
+    Math.max(0, user.expiresAt * 1000 - Date.now()));
+  expirationTimer.unref();
 
   console.log(`User ${user.id} connected:`, socket.id);
 
   socket.on("disconnect", () => {
+    clearTimeout(expirationTimer);
     console.log(`User ${user.id} disconnected:`, socket.id);
   });
 });
