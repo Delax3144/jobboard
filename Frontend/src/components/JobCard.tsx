@@ -1,4 +1,3 @@
-import React from 'react';
 
 // Обновляем интерфейс, чтобы TS не ругался
 interface JobCardProps {

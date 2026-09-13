@@ -1,9 +1,10 @@
 // src/hooks/useLogin.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { githubAuthorizationUrl, consumeGithubState } from '../lib/githubOAuth';
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import type { CredentialResponse } from "@react-oauth/google";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import api from "../lib/api";
 
 type ApiErrorResponse = {
@@ -24,6 +25,7 @@ function getApiErrorMessage(error: unknown, fallback: string) {
 }
 
 export function useLogin() {
+  const processedCode = useRef<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false); 
@@ -56,9 +58,14 @@ export function useLogin() {
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const code = urlParams.get("code");
-    if (code) {
+    if (code && processedCode.current !== code) {
+      processedCode.current = code;
       window.history.replaceState({}, document.title, "/login");
-      const savedRole = localStorage.getItem("github_role") || "candidate";
+      const savedRole = consumeGithubState(urlParams.get('state'));
+      if (!savedRole) {
+        alert('This GitHub sign-in request expired or did not start in this browser. Please try again.');
+        return;
+      }
       githubLogin(code, savedRole)
         .then((result) => {
           localStorage.removeItem("github_role");
@@ -143,7 +150,7 @@ export function useLogin() {
 
   const handleGithubClick = () => {
     const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=user:email`;
+    window.location.href = githubAuthorizationUrl(clientId);
   };
 
   return {

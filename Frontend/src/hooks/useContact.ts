@@ -1,7 +1,7 @@
 // src/hooks/useContact.ts
 import { useState, useEffect } from "react";
 import api from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 export function useContact() {
   const { user } = useAuth();

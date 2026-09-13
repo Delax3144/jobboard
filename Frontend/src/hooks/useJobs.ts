@@ -1,7 +1,7 @@
 // src/hooks/useJobs.ts
 import { useEffect, useState, useMemo } from "react";
 import api from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import type { Job } from "../types/job";
 
 export const FILTER_LOCATIONS = ["Remote", "Poland", "Ukraine", "Germany", "UK", "USA"];

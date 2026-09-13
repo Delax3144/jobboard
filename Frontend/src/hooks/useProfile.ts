@@ -1,6 +1,6 @@
 // src/hooks/useProfile.ts
 import { useState, useRef } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import api from "../lib/api";
 
 export type TabType = "general" | "professional" | "privacy" | "notifications" | "security";

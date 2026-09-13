@@ -1,7 +1,8 @@
 // src/App.tsx
 import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './context/useAuth';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'react-hot-toast';
 

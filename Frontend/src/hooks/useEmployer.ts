@@ -1,7 +1,7 @@
 // src/hooks/useEmployer.ts
 import { useEffect, useMemo, useState } from "react";
 import api from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import type { Job, Application, JobStatus } from "../types/job";
 
 export const LOCATIONS = ["Remote", "Poland", "Ukraine", "Germany", "UK", "USA"];

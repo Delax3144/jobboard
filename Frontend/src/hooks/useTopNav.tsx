@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import toast from 'react-hot-toast';
 import { io } from "socket.io-client";
 import api from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { type UserMode } from "../lib/userMode";
 
 const notificationAudio = new Audio('/notify.mp3');

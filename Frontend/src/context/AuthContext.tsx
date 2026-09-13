@@ -1,117 +1,60 @@
-import { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import axios from 'axios';
 import api from '../lib/api';
+import { AuthContext } from './useAuth';
+import type { User, AuthResult, RegisterInput } from '../types/user';
 
-export type UserRole = 'employer' | 'candidate';
-
-interface User { 
-  id: string; email: string; role: UserRole;
-  username?: string; firstName?: string; lastName?: string;
-  phone?: string; avatarUrl?: string; status?: string;
-}
-
-type OAuthResult =
-  | {
-      requires2FA: true;
-      challengeToken: string;
-    }
-  | {
-      requires2FA?: false;
-      token: string;
-      user: User;
-    };
-
-interface AuthContextType {
-  user: User | null;
-  setUser: (user: User | null) => void;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
-  googleLogin: (credential: string, role?: string) => Promise<OAuthResult>;
-  githubLogin: (code: string, role?: string) => Promise<OAuthResult>;
-  logout: () => void;
-  isLoading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const init = async () => {
+    let cancelled = false;
+    async function init() {
       const token = localStorage.getItem('token');
-      if (token) {
+      if (token === 'undefined' || token === 'null') localStorage.removeItem('token');
+      else if (token) {
         try {
-          const res = await api.get('/auth/me');
-          setUser(res.data.user);
-        } catch { logout(); }
+          const res = await api.get<{ user: User }>('/auth/me');
+          if (!cancelled) setUser(res.data.user);
+        } catch (error) {
+          if (axios.isAxiosError(error) && [401, 404].includes(error.response?.status ?? 0)) {
+            localStorage.removeItem('token');
+          }
+        }
       }
-      setIsLoading(false);
-    };
-    init();
+      if (!cancelled) setIsLoading(false);
+    }
+    void init();
+    const expireSession = () => { setUser(null); };
+    window.addEventListener('auth_expired', expireSession);
+    return () => { cancelled = true; window.removeEventListener('auth_expired', expireSession); };
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const res = await api.post('/auth/login', { email, password });
-    localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
-  };
-
-  const register = async (data: any) => {
-    const res = await api.post('/auth/register', data);
-    localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
-  };
-
-  const googleLogin = async (
-  credential: string,
-  role?: string
-): Promise<OAuthResult> => {
-  const res = await api.post<OAuthResult>("/auth/google", {
-    credential,
-    role,
-  });
-
-  if (!res.data.requires2FA) {
-    localStorage.setItem("token", res.data.token);
-    setUser(res.data.user);
-  }
-
-  return res.data;
-};
-
-  const githubLogin = async (
-  code: string,
-  role?: string
-): Promise<OAuthResult> => {
-  const res = await api.post<OAuthResult>("/auth/github", {
-    code,
-    role,
-  });
-
-  if (!res.data.requires2FA) {
-    localStorage.setItem("token", res.data.token);
-    setUser(res.data.user);
-  }
-
-  return res.data;
-};
-
-  const logout = () => {
+  const authenticate = useCallback(async (path: string, data: object): Promise<AuthResult> => {
+    const res = await api.post<AuthResult>(path, data);
+    if (!res.data.requires2FA) {
+      localStorage.setItem('token', res.data.token);
+      setUser(res.data.user);
+    }
+    return res.data;
+  }, []);
+  const login = useCallback((email: string, password: string) =>
+    authenticate('/auth/login', { email, password }), [authenticate]);
+  const googleLogin = useCallback((credential: string, role?: string) =>
+    authenticate('/auth/google', { credential, role }), [authenticate]);
+  const githubLogin = useCallback((code: string, role?: string) =>
+    authenticate('/auth/github', { code, role }), [authenticate]);
+  const register = useCallback(async (data: RegisterInput) => {
+    await api.post<{ message: string }>('/auth/register', data);
+  }, []);
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
     setUser(null);
-    localStorage.clear();
     window.location.href = '/login';
-  };
+  }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, setUser, login, register, googleLogin, githubLogin, logout, isLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => {
-  const c = useContext(AuthContext);
-  if (!c) throw new Error("useAuth error");
-  return c;
-};
+  return <AuthContext.Provider value={{ user, setUser, login, register, googleLogin, githubLogin, logout, isLoading }}>
+    {children}
+  </AuthContext.Provider>;
+}

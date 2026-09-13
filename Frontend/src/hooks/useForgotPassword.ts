@@ -1,3 +1,4 @@
+import { apiErrorMessage } from '../lib/apiError';
 import { useState } from "react";
 import api from "../lib/api";
 
@@ -14,9 +15,9 @@ export function useForgotPassword() {
     try {
       await api.post("/auth/request-password-reset", { email });
       setStatus("success");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setErrorMsg(err.response?.data?.message || "Something went wrong. Please try again.");
+      setErrorMsg(apiErrorMessage(err, "Something went wrong. Please try again."));
     }
   };
 

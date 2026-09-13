@@ -19,7 +19,7 @@ export function useResetPassword() {
     try {
       await api.post("/auth/reset-password", { token, newPassword: password });
       setStatus("success");
-    } catch (err) {
+    } catch {
       setStatus("error");
     }
   };

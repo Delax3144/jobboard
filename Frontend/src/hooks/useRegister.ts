@@ -1,7 +1,9 @@
+import { apiErrorMessage } from '../lib/apiError';
+import { githubAuthorizationUrl } from '../lib/githubOAuth';
 // src/hooks/useRegister.ts
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import type { CredentialResponse } from "@react-oauth/google";
 
 export function useRegister() {
@@ -40,8 +42,8 @@ export function useRegister() {
     try {
       await register({ ...formData, role });
       setIsSuccess(true);
-    } catch (err: any) {
-      const message = err.response?.data?.message || "";
+    } catch (err: unknown) {
+      const message = apiErrorMessage(err, "");
       if (message.includes("email")) setError("This email is already registered. Try logging in?");
       else if (message.includes("username")) setError("Username is already taken. Try another one.");
       else setError("Registration failed. Check your data.");
@@ -80,9 +82,8 @@ export function useRegister() {
   };
 
   const handleGithubClick = () => {
-    localStorage.setItem("github_role", role);
     const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=user:email`;
+    window.location.href = githubAuthorizationUrl(clientId, role);
   };
 
   return {
