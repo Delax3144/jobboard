@@ -101,6 +101,7 @@ export function useEmployer() {
 
   function resetForm() {
     setEditingJobId(null);
+    setJobStatus("published");
     setTitle(""); setCompanyName(""); setSalaryFrom(""); setSalaryTo(""); 
     setDescription(""); setTags(""); setLogoFile(null);
     setLocation(LOCATIONS[0]); setLevel(LEVELS[1]);
