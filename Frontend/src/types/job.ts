@@ -27,6 +27,22 @@ export interface Application {
     avatarUrl?: string; 
     firstName?: string; 
     lastName?: string; 
+    phone?: string | null;
+    lastActive?: string;
   };
   status: "new" | "reviewed" | "invited" | "rejected";
+  candidateId: string;
+  createdAt: string;
+  coverLetter?: string | null;
+  cvUrl?: string | null;
+  job: Job & { owner?: { lastActive: string } };
+  messages: Message[];
+  hasUpdate?: boolean;
+  statusUpdatedAt?: string | null;
+  lastViewedByCandidate: string;
+  lastViewedByOwner: string;
+}
+
+export interface Message {
+  id: string; applicationId: string; senderId: string; text: string; createdAt: string;
 }

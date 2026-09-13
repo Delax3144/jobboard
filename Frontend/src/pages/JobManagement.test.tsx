@@ -1,0 +1,31 @@
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import api from '../lib/api';
+import JobManagement from './JobManagement';
+
+vi.mock('../lib/api', () => ({ default: { get: vi.fn(), patch: vi.fn() } }));
+
+describe('Employer application management', () => {
+  it('reviews and invites an applicant through the supported API route', async () => {
+    const app = {
+      id: 'application-1', status: 'new', createdAt: '2026-09-01T12:00:00Z',
+      candidate: { id: 'candidate-1', firstName: 'Alex', lastName: 'Demo', email: 'alex@example.test' },
+    };
+    vi.mocked(api.get).mockImplementation(async (url) => ({
+      data: url === '/jobs/job-1' ? { title: 'Frontend Developer', companyName: 'Demo' } : [app],
+    }));
+    vi.mocked(api.patch).mockResolvedValue({ data: {} });
+    const user = userEvent.setup();
+    render(<MemoryRouter initialEntries={['/employer/job/job-1']}>
+      <Routes><Route path='/employer/job/:id' element={<JobManagement />} /></Routes>
+    </MemoryRouter>);
+
+    await user.click(await screen.findByRole('button', { name: 'Review' }));
+    await waitFor(() => expect(api.patch).toHaveBeenCalledWith('/applications/application-1', { status: 'reviewed' }));
+    await user.click(await screen.findByRole('button', { name: 'Invite to Interview' }));
+    await waitFor(() => expect(api.patch).toHaveBeenLastCalledWith('/applications/application-1', { status: 'invited' }));
+    expect(screen.queryByRole('button', { name: 'Invite to Interview' })).toBeNull();
+  });
+});

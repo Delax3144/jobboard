@@ -1,3 +1,5 @@
+import type { useJobManagement } from '../../hooks/useJobManagement';
+import type { Application } from '../../types/job';
 // src/components/employer/CandidateCard.tsx
 import { Link } from "react-router-dom";
 
@@ -11,7 +13,7 @@ const Icons = {
   User: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
 };
 
-export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpdateStatus, getStatusColor, apiUrl }: any) {
+export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpdateStatus, getStatusColor, apiUrl }: Pick<ReturnType<typeof useJobManagement>, 'toggleExpand' | 'handleUpdateStatus' | 'getStatusColor' | 'apiUrl'> & { app: Application; isExpanded: boolean }) {
   const statusStyle = getStatusColor(app.status);
 
   return (

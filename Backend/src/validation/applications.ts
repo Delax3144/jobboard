@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+export const updateApplicationStatusSchema = z.object({
+  status: z.enum(["reviewed", "invited", "rejected"]),
+}).strict();
+
 export const jobIdSchema = z.string().uuid("Invalid job id");
 
 export const createApplicationSchema = z.object({

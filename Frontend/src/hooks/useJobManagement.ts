@@ -1,3 +1,4 @@
+import type { Job, Application } from '../types/job';
 // src/hooks/useJobManagement.ts
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -9,8 +10,8 @@ export function useJobManagement() {
   const { id } = useParams();
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-  const [job, setJob] = useState<any>(null);
-  const [applications, setApplications] = useState<any[]>([]);
+  const [job, setJob] = useState<Job | null>(null);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [filter, setFilter] = useState<FilterType>("all");
@@ -34,11 +35,11 @@ export function useJobManagement() {
     fetchData();
   }, [id]);
 
-  const handleUpdateStatus = async (appId: string, newStatus: string) => {
+  const handleUpdateStatus = async (appId: string, newStatus: Exclude<Application['status'], 'new'>) => {
     try {
-      await api.patch(`/applications/${appId}/status`, { status: newStatus });
+      await api.patch(`/applications/${appId}`, { status: newStatus });
       setApplications(apps => apps.map(app => app.id === appId ? { ...app, status: newStatus } : app));
-    } catch (err) {
+    } catch {
       alert("Error updating status");
     }
   };

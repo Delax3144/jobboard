@@ -1,13 +1,13 @@
 // src/components/candidate/ApplicationCard.tsx
 import { Link } from "react-router-dom";
+import type { Application } from '../../types/job';
 
 const Icons = {
   ArrowRight: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
 };
 
-export default function ApplicationCard({ app }: { app: any }) {
-  const lastEventTime = app.messages?.[0]?.createdAt || app.createdAt;
-  const hasUpdate = lastEventTime > app.lastViewedByCandidate;
+export default function ApplicationCard({ app }: { app: Application }) {
+  const hasUpdate = app.hasUpdate === true;
   const isInvited = app.status === 'invited';
   const isRejected = app.status === 'rejected';
   

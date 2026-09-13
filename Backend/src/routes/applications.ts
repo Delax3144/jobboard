@@ -18,6 +18,7 @@ import {
   jobIdSchema,
   sendMessageSchema
 } from "../validation/applications";
+import { updateApplicationStatusSchema } from "../validation/applications";
 import { escapeHtml } from "../lib/escapeHtml";
 import { sanitizeEmailHeader } from "../lib/sanitizeEmailHeader";
 import {
@@ -81,6 +82,7 @@ applicationsRouter.post(
           cvPublicId,
           candidateId: user.id,
           status: "new",
+          lastViewedByOwner: new Date(0),
         },
       });
 
@@ -164,7 +166,7 @@ applicationsRouter.get(
 // 3. ОБНОВИТЬ СТАТУС (И ОТПРАВИТЬ EMAIL)
 applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
   const user = getAuthenticatedUser(req);
-  const { status } = req.body; // status: 'invited' или 'rejected'
+  const parsedBody = updateApplicationStatusSchema.safeParse(req.body);
 
   const parsedId = applicationIdSchema.safeParse(req.params.id);
 
@@ -176,11 +178,10 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
 
   const applicationId = parsedId.data;
 
-  const allowedStatuses = ["invited", "rejected"];
-
-  if (!allowedStatuses.includes(status)) {
+  if (!parsedBody.success) {
     return res.status(400).json({ message: "Invalid application status" });
   }
+  const { status } = parsedBody.data;
 
   if (user.role !== "employer") {
     return res.status(403).json({ message: "Access denied" });
@@ -420,11 +421,20 @@ applicationsRouter.get("/owner", authMiddleware, async (req, res) => {
       where: { job: { ownerId: user.id } },
       include: {
         job: true,
-        candidate: { select: { id: true, email: true, avatarUrl: true, firstName: true, lastName: true, lastActive: true } } 
+        candidate: { select: { id: true, email: true, avatarUrl: true, firstName: true, lastName: true, lastActive: true } },
+        messages: {
+          where: { senderId: { not: user.id } },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
       },
       orderBy: { createdAt: "desc" }
     });
-    res.json(apps);
+    res.json(apps.map(app => ({
+      ...app,
+      hasUpdate: app.createdAt > app.lastViewedByOwner ||
+        (app.messages[0]?.createdAt ?? new Date(0)) > app.lastViewedByOwner,
+    })));
   } catch (error) {
     res.status(500).json({ message: "Ошибка загрузки откликов" });
   }

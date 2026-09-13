@@ -38,10 +38,10 @@ export default function JobManagement() {
       </div>
 
       <div className="job-mgmt-filters" style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '20px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        {['all', 'new', 'reviewed', 'invited', 'rejected'].map(f => (
+        {(['all', 'new', 'reviewed', 'invited', 'rejected'] as const).map(f => (
           <button
             key={f}
-            onClick={() => setFilter(f as any)}
+            onClick={() => setFilter(f)}
             style={{
               padding: '10px 20px', borderRadius: '14px', fontSize: '14px', fontWeight: 600, textTransform: 'capitalize', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap',
               background: filter === f ? '#fff' : 'transparent',
