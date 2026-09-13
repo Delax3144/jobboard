@@ -10,13 +10,17 @@ export function useChat() {
   const { user } = useAuth();
   const [chats, setChats] = useState<Application[]>([]);
   const [loadedApp, setLoadedApp] = useState<Application | null>(null);
-  const [msg, setMsg] = useState('');
+  const [drafts, setDrafts] = useState<Record<string, { text: string }>>({});
+  const msg = id ? drafts[id]?.text ?? '' : '';
+  const setMsg = (text: string) => {
+    if (id) setDrafts(items => ({ ...items, [id]: { text } }));
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeChatIdRef = useRef(id);
-  const sendingRef = useRef(false);
+  const sendingRef = useRef(new Set<string>());
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
   const role = user?.role;
   const userId = user?.id;
@@ -78,14 +82,24 @@ export function useChat() {
   }, [userId, apiUrl, fetchChats, fetchCurrentChat]);
 
   const sendMsg = async () => {
-    if (!msg.trim() || !id || sendingRef.current) return;
-    sendingRef.current = true;
+    if (!msg.trim() || !id || sendingRef.current.has(id)) return;
+    const sentDraft = drafts[id];
+    sendingRef.current.add(id);
+    setError('');
     try {
       await api.post(`/applications/${id}/messages`, { text: msg });
-      setMsg('');
-      await fetchCurrentChat(id);
-    } catch { setError('Could not send your message. Please try again.'); }
-    finally { sendingRef.current = false; }
+      setDrafts(items => {
+        // Each edit creates a new object, even if the user types the same text again.
+        if (items[id] !== sentDraft) return items;
+        const next = { ...items };
+        delete next[id];
+        return next;
+      });
+      if (activeChatIdRef.current === id) await fetchCurrentChat(id);
+    } catch {
+      if (activeChatIdRef.current === id) setError('Could not send your message. Please try again.');
+    }
+    finally { sendingRef.current.delete(id); }
   };
 
   const filteredChats = chats.filter(chat => {
