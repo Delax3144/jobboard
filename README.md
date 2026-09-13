@@ -14,7 +14,7 @@ JobBoard brings job discovery, applications, candidate profiles, and employer co
 | --- | --- |
 | Search by job title or company; filter by location, seniority, and salary range | Create, edit, publish, archive, and delete vacancies; save drafts |
 | Bookmark jobs and submit applications with a cover letter and optional CV | Review applications and candidate profiles for their own vacancies |
-| Track application statuses: `new`, `invited`, and `rejected` | Invite or reject candidates, with email notifications on status changes |
+| Track application statuses: `new`, `reviewed`, `invited`, and `rejected` | Review, invite, or reject candidates, with email notifications for invitations and rejections |
 | Maintain a profile with skills, experience, location, avatar, and resume | Add company logos, salary ranges, tags, and rich-text job descriptions |
 | Follow up through an application-linked chat | Start conversations with applicants and receive new-application notifications |
 
@@ -26,8 +26,10 @@ Shared account features include email verification, password recovery, Google an
 - **Persistent chat with real-time delivery.** Messages are validated and stored through REST endpoints. Socket.IO authenticates each connection and delivers message and notification events to a room associated with the recipient's user ID.
 - **Relational data integrity.** Prisma models users, jobs, applications, messages, bookmarks, and support tickets. Composite unique constraints prevent duplicate applications and bookmarks; migrations add query indexes and cascade deletion of dependent records.
 - **Account protection.** Passwords are hashed with bcrypt. Email verification and password reset tokens are stored as SHA-256 hashes with expiration timestamps. Two-factor login uses a separate, short-lived challenge token.
+- **Session revocation.** Password resets increment a database-backed token version, invalidating existing access tokens and pending two-factor challenges. Connected chat sessions are closed; new HTTP requests and socket connections check the current version.
 - **Input and upload handling.** Zod validates request data, rich-text content is sanitized, and sensitive routes have rate limits. Uploads use file type and size restrictions, with Cloudinary asset cleanup on failed operations and supported replacement/deletion flows.
 - **Separate UI and interaction logic.** React pages compose reusable components, while feature hooks handle API calls, filtering, forms, and chat state.
+- **Regression checks.** Vitest and Testing Library cover frontend behavior; Node's test runner checks API authorization and session revocation. A PostgreSQL integration test exercises the hiring workflow. GitHub Actions runs these checks, migrations, lint, and builds.
 
 ## Tech stack
 
@@ -137,7 +139,7 @@ npx prisma migrate deploy
 npm run dev
 ```
 
-The Compose file starts **only PostgreSQL**, exposed on port `5432`, with data persisted in a named volume. If using an existing database, skip the Docker command and set its connection string in `DATABASE_URL`. Apply migrations to a database dedicated to this project. No seed script or demo accounts are included.
+The Compose file starts **only PostgreSQL**, exposed on port `5432`, with data persisted in a named volume. If using an existing database, skip the Docker command and set its connection string in `DATABASE_URL`. Apply migrations to a database dedicated to this project. Optional local demo accounts and vacancies can be created with the seed command below.
 
 ### 4. Start the frontend
 
@@ -156,10 +158,25 @@ Without email credentials, public job browsing can still be exercised, but newly
 
 Use separate browser profiles for the employer and candidate sessions.
 
-1. Register one employer and one candidate account, then verify both email addresses.
+For a local demo, after applying migrations, run from the repository root:
+
+```sh
+npm --prefix Backend run seed:demo
+```
+
+This creates two verified accounts, four fictional vacancies, one application, and one message. Repeating the seed preserves existing records. The script refuses production mode and remote database hosts.
+
+| Local account | Initial password |
+| --- | --- |
+| `employer@jobboard.test` | `DemoOnly123!` |
+| `candidate@jobboard.test` | `DemoOnly123!` |
+
+These accounts are for local development only. Core browsing, application, status, and chat flows can be demonstrated without sending verification emails; uploads, OAuth, and email delivery still require their respective service credentials.
+
+1. Sign in with the two local demo accounts, or register an employer and candidate and verify their email addresses.
 2. As the employer, create a published vacancy with a title, company, location, salary range, and description.
 3. As the candidate, find the vacancy, save it, and submit an application. Attach a CV if Cloudinary is configured.
-4. As the employer, open the vacancy's applications, inspect the candidate, and change the application status to `invited`.
+4. As the employer, open the vacancy's applications, click **Review**, then **Invite to Interview**.
 5. Exchange messages between the two sessions to demonstrate stored conversations and real-time notifications.
 6. Check the candidate's updated application status, then explore profile editing and optional two-factor authentication.
 
@@ -175,20 +192,29 @@ Run these commands from the repository root:
 | `npm --prefix Frontend run build` | Bundle the frontend into `Frontend/dist` |
 | `npm --prefix Frontend run preview` | Preview the frontend build locally |
 | `npm --prefix Frontend run lint` | Run the configured ESLint checks |
+| `npm --prefix Frontend run typecheck` | Check frontend TypeScript |
+| `npm --prefix Frontend test` | Run frontend regression tests |
+| `npm --prefix Backend test` | Build and run isolated API/session tests |
+| `npm --prefix Backend run test:integration` | Run the hiring scenario against a dedicated PostgreSQL database |
+| `npm --prefix Backend run seed:demo` | Populate a local development database with demo data |
 | `npm --prefix Backend run dev` | Start the API with automatic restart |
 | `npm --prefix Backend run build` | Compile the backend into `Backend/dist` |
 | `npm --prefix Backend start` | Run the compiled backend |
 | `npm --prefix Backend run prisma:migrate` | Create/apply development migrations |
 
-The frontend build runs Vite without a separate TypeScript check. To check frontend types, run `npx tsc -p tsconfig.app.json --noEmit` from `Frontend/`; for backend types, run `npx tsc --noEmit` from `Backend/`.
+The frontend build checks TypeScript before bundling. Secondary pages load on demand. ESLint runs with its configured rules; the frontend source uses explicit domain and component types rather than explicit `any`.
+
+The default tests isolate database and email I/O. The integration test requires an empty database named **`jobboard_test`**: set `DATABASE_URL` to it, run `npx prisma migrate deploy` from `Backend/`, then run `npm run test:integration`. It exercises real database operations while replacing email delivery. It deletes only its own generated test records. CI provisions PostgreSQL 16 for this workflow. See [verification details](docs/VERIFICATION.md) and [portfolio notes](docs/PORTFOLIO.md).
 
 For deployment, build the frontend with its public environment variables set and serve `Frontend/dist`. The included Vercel configuration rewrites SPA routes to `index.html`. Deploy the backend to a Node.js host that supports persistent Socket.IO connections, generate the Prisma client, apply committed migrations with `npx prisma migrate deploy` from `Backend/`, and run the backend build and start commands. Set `NODE_ENV=production` and `FRONTEND_URL` to the exact frontend origin; update the frontend API URL and OAuth configuration for the deployed domains.
+
+Apply the `20260913090000_revoke_sessions_on_password_reset` migration before starting this backend version: authentication now reads `User.tokenVersion`. The migration preserves existing users and initializes their version to zero. Demo seeding is not part of deployment.
 
 ## Current scope
 
 - Job filtering runs in the browser after fetching published jobs; server-side search and pagination are not implemented.
-- Automated tests and CI workflows are not included. The backend `test` script is a placeholder that exits with an error.
-- Docker Compose provisions the database; application containers and a seed dataset are not included.
+- Docker Compose provisions the database; application containers are not included.
 - Translation coverage is partial, and live email, OAuth, and upload flows depend on external services.
+- Real-time rooms and forced disconnection currently assume one backend instance. Multiple instances require a shared Socket.IO adapter and shared rate-limit storage.
 
-Natural next steps are integration tests for the hiring and authentication flows, server-side job search with pagination, and reproducible demo data.
+Future work includes server-side search and pagination, complete translations, and browser end-to-end coverage for live service integrations.

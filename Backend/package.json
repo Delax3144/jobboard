@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "seed:demo": "node scripts/seed-demo.cjs",
     "test:integration": "npm run build && node --test test/integration/*.test.cjs",
     "test": "npm run build && node --test test/*.test.cjs",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
