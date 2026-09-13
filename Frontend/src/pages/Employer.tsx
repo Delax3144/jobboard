@@ -55,7 +55,7 @@ export default function Employer() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '50px', alignItems: 'start' }}>
+        <div className="employer-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '50px', alignItems: 'start' }}>
           
           {/* LEFT COLUMN: ACTIVE VACANCIES */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

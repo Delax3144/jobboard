@@ -505,7 +505,9 @@ a {
   /* --- Страница Employer (Dashboard) --- */
   .employer-header { flex-direction: column !important; align-items: stretch !important; text-align: center !important; }
   .employer-stats { justify-content: center !important; }
-  .employer-grid { grid-template-columns: 1fr !important; gap: 30px !important; }
+  .employer-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 30px !important; }
+  .employer-grid > * { min-width: 0; }
+  .employer-grid #logoInput { width: 100%; min-width: 0; }
   .employer-job-card { padding: 25px 20px !important; }
   .employer-job-info { flex-direction: column !important; align-items: center !important; text-align: center !important; }
   .employer-job-info > div:last-child > div { justify-content: center !important; }
