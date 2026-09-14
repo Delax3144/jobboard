@@ -71,7 +71,7 @@ registerRouter.post("/register", registerRateLimit, async (req, res) => {
 
     const verifyLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
     
-    res.status(201).json({ message: "Успешная регистрация. Проверьте почту!" });
+    res.status(201).json({ message: "Registration successful. Please check your email!" });
 
     const safeFirstName = escapeHtml(firstName);
 

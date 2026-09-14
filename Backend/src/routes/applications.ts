@@ -93,7 +93,7 @@ applicationsRouter.post(
       if (io) {
         io.to(job.ownerId).emit("new_notification", {
           type: "new_application",
-          message: `Новый отклик на вакансию ${job.title}`,
+          message: `New application for ${job.title}`,
         });
       }
 
@@ -108,12 +108,12 @@ applicationsRouter.post(
         error.code === "P2002"
       ) {
           return res.status(400).json({
-            message: "Вы уже отправили отклик на эту вакансию",
+            message: "You have already applied for this vacancy",
           });
         }
 
       return res.status(500).json({
-        message: "Ошибка при отправке отклика",
+        message: "Could not submit your application",
       });
     }
   }
@@ -236,49 +236,49 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
     let htmlText = "";
 
     if (status === "invited") {
-      subject = `🎉 Вас пригласили на вакансию: ${updated.job.title}!`;
+      subject = `🎉 Interview invitation for: ${updated.job.title}!`;
 
       htmlText = `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2 style="color: #10b981;">Хорошие новости!</h2>
-          <p>Здравствуйте!</p>
+          <h2 style="color: #10b981;">Good news!</h2>
+          <p>Hello!</p>
           <p>
-            Работодатель рассмотрел ваш отклик на вакансию
+            The employer has reviewed your application for
             <b>"${safeJobTitle}"</b>
-            в компании
+            at
             <b>${safeCompanyName}</b>
-            и приглашает вас к общению.
+            and would like to discuss the role with you.
           </p>
           <p>
-            Войдите в личный кабинет на JobBoard, чтобы прочитать сообщение и начать чат.
+            Sign in to JobBoard to open your application and start a conversation.
           </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
           <p style="font-size: 12px; color: #888;">
-            Это автоматическое письмо, пожалуйста, не отвечайте на него.
+            This is an automated email. Please do not reply.
           </p>
         </div>
       `;
     } else if (status === "rejected") {
-      subject = `Ответ по вакансии: ${updated.job.title}`;
+      subject = `Application update for: ${updated.job.title}`;
 
       htmlText = `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2>Статус вашего отклика обновлен</h2>
-          <p>Здравствуйте.</p>
+          <h2>Your application status has been updated</h2>
+          <p>Hello,</p>
           <p>
-            Спасибо за интерес к вакансии
+            Thank you for your interest in
             <b>"${safeJobTitle}"</b>
-            в компании
+            at
             <b>${safeCompanyName}</b>.
           </p>
           <p>
-            К сожалению, на данный момент работодатель принял решение продолжить
-            общение с другими кандидатами. Мы желаем вам успехов в дальнейших поисках!
+            Unfortunately, the employer has decided to continue
+            with other candidates. We wish you success in your job search.
           </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
           <p style="font-size: 12px; color: #888;">
-            С уважением,<br />
-            Команда JobBoard
+            Best regards,<br />
+            The JobBoard team
           </p>
         </div>
       `;
@@ -436,7 +436,7 @@ applicationsRouter.get("/owner", authMiddleware, async (req, res) => {
         (app.messages[0]?.createdAt ?? new Date(0)) > app.lastViewedByOwner,
     })));
   } catch (error) {
-    res.status(500).json({ message: "Ошибка загрузки откликов" });
+    res.status(500).json({ message: "Could not load applications" });
   }
 });
 
@@ -557,7 +557,7 @@ applicationsRouter.post(
         },
       });
 
-      if (!app) return res.status(404).json({ message: "Отклик не найден" });
+      if (!app) return res.status(404).json({ message: "Application not found" });
 
       const isCandidate = app.candidateId === user.id;
       const isOwner = app.job.ownerId === user.id;
@@ -572,7 +572,7 @@ applicationsRouter.post(
         app.status === "new"
       ) {
         return res.status(403).json({
-          message: "Подождите, пока работодатель напишет первым или изменит статус",
+          message: "Please wait for the employer to send a message or update your application status",
         });
       }
 
@@ -607,6 +607,6 @@ applicationsRouter.post(
 
       res.status(201).json(message);
     } catch (error) {
-      res.status(500).json({ message: "Ошибка отправки сообщения" });
+      res.status(500).json({ message: "Could not send your message" });
     }
   });

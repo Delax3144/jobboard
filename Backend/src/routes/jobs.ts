@@ -62,18 +62,18 @@ jobsRouter.get("/:id", optionalAuthMiddleware, async (req, res) => {
     });
 
     if (!job) {
-      return res.status(404).json({ message: "Вакансия не найдена" });
+      return res.status(404).json({ message: "Job not found" });
     }
 
     const isOwner = req.user?.id === job.ownerId;
 
     if (job.status !== "published" && !isOwner) {
-      return res.status(404).json({ message: "Вакансия не найдена" });
+      return res.status(404).json({ message: "Job not found" });
     }
 
     res.json(job);
   } catch (error) {
-    res.status(500).json({ message: "Ошибка сервера" });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -278,7 +278,7 @@ jobsRouter.patch(
       console.error("Job update failed:", error);
 
       return res.status(500).json({
-        message: "Ошибка при обновлении",
+        message: "Could not update the vacancy",
       });
     }
   }

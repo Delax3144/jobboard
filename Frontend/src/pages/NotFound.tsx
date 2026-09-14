@@ -40,11 +40,11 @@ export default function NotFound() {
         </h1>
 
         <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: '0 0 15px 0', letterSpacing: '-0.5px' }}>
-          Страница не найдена
+          Page not found
         </h2>
         
         <p style={{ color: '#888', fontSize: '16px', lineHeight: '1.6', margin: '0 0 40px 0', padding: '0 20px' }}>
-          Похоже, такого адреса не существует. Вернись на главную страницу платформы или перейди к активному поиску вакансий.
+          This page doesn't exist. Return to the home page or browse available vacancies.
         </p>
 
         {/* Красивые кнопки действий */}
@@ -59,7 +59,7 @@ export default function NotFound() {
             onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
             onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            ← На главную
+            ← Back to Home
           </Link>
           
           <Link 
@@ -72,7 +72,7 @@ export default function NotFound() {
             onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'; }}
             onMouseOut={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
           >
-            К вакансиям →
+            Browse Jobs →
           </Link>
         </div>
 

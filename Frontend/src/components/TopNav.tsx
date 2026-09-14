@@ -8,18 +8,12 @@ const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>,
   Close: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>,
   LogOut: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>,
-  Globe: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path strokeLinecap="round" strokeLinejoin="round" d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2 12h20"></path></svg>
 };
 
 export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserMode) => void }) {
   const { user, logout, unreadCount, isMobileMenuOpen, setIsMobileMenuOpen, apiUrl } = useTopNav(setMode);
 
-  const { t, i18n } = useTranslation();
-  
-  const toggleLanguage = () => {
-    const newLang = i18n.language.startsWith('ru') ? 'en' : 'ru';
-    i18n.changeLanguage(newLang);
-  };
+  const { t } = useTranslation();
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) => 
     `top-nav-link ${isActive ? 'active' : ''}`;
@@ -80,10 +74,7 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
 
           <div className="desktop-actions" style={{ display: "flex", gap: "15px", alignItems: "center" }}>
             
-            {/* КНОПКА СМЕНЫ ЯЗЫКА (ДЕСКТОП) */}
-            <button onClick={toggleLanguage} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', padding: '8px 14px', borderRadius: '20px', cursor: 'pointer', fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }} onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'; }} onMouseOut={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
-              <Icons.Globe /> {i18n.language.startsWith('ru') ? 'RU' : 'EN'}
-            </button>
+
 
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -126,10 +117,7 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
         
         <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '15px 0' }} />
         
-        {/* КНОПКА СМЕНЫ ЯЗЫКА (МОБИЛКА) */}
-        <button onClick={toggleLanguage} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '14px', borderRadius: '16px', cursor: 'pointer', fontWeight: 800, fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'all 0.2s', marginBottom: '10px' }}>
-          <Icons.Globe /> {i18n.language.startsWith('ru') ? 'English (EN)' : 'Русский (RU)'}
-        </button>
+
 
         {user ? (
           <>
