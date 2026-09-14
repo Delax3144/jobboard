@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { useJobs } from "../hooks/useJobs";
 import JobsFilters from "../components/jobs/JobsFilters";
+import LoadError from "../components/LoadError";
 
 const Icons = {
   Search: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
@@ -48,7 +49,7 @@ export default function Jobs() {
             <h1 style={{ fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: '950', margin: '0 0 10px', letterSpacing: '-1.5px', color: '#fff' }}>
               Explore <span style={{ background: 'linear-gradient(90deg, #10b981, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Careers</span>
             </h1>
-            <p style={{ color: '#888', margin: 0, fontSize: '16px' }}>Showing <span style={{ color: '#fff', fontWeight: 700 }}>{list.filteredJobs.length}</span> opportunities</p>
+            {!data.error && !data.loading && <p style={{ color: '#888', margin: 0, fontSize: '16px' }}>Showing <span style={{ color: '#fff', fontWeight: 700 }}>{list.filteredJobs.length}</span> opportunities</p>}
           </div>
           
           <div className="jobs-search-flex-group" style={{ display: 'flex', gap: '15px', width: '100%', maxWidth: '500px', alignItems: 'center' }}>
@@ -70,7 +71,9 @@ export default function Jobs() {
           </aside>
 
           <main style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {list.filteredJobs.length === 0 && !data.loading && (
+            {data.error && <LoadError message={data.error} loading={data.loading} onRetry={data.retry} />}
+            {data.loading && !data.error && <p role="status" style={{ color: '#aaa', textAlign: 'center' }}>Loading jobs...</p>}
+            {list.filteredJobs.length === 0 && !data.loading && !data.error && (
               <div style={{ textAlign: 'center', padding: '80px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: '32px', border: '1px dashed rgba(255,255,255,0.1)' }}>
                 <div style={{ fontSize: '48px', marginBottom: '20px', filter: 'grayscale(1)' }}>📭</div>
                 <h3 style={{ margin: '0 0 10px', color: '#fff', fontSize: '24px', fontWeight: 800 }}>No matching roles found</h3>
@@ -78,7 +81,7 @@ export default function Jobs() {
               </div>
             )}
 
-            {list.filteredJobs.map((job) => {
+            {!data.error && list.filteredJobs.map((job) => {
               const isSaved = data.savedJobIds.has(job.id);
               
               return (

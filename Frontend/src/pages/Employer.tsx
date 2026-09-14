@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { useEmployer } from "../hooks/useEmployer";
 import JobForm from "../components/employer/JobForm";
+import LoadError from "../components/LoadError";
 
 const Icons = {
   Briefcase: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
@@ -16,7 +17,7 @@ export default function Employer() {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
   const { data, list, form } = useEmployer();
 
-  if (data.isLoading) return <div style={{ color: '#fff', padding: '100px', textAlign: 'center' }}>Loading Admin Console...</div>;
+  if (data.isLoading && !data.error) return <div role="status" style={{ color: '#fff', padding: '80px 20px', textAlign: 'center' }}>Loading Admin Console...</div>;
 
   return (
     <div style={{ background: '#050505', minHeight: 'calc(100vh - 100px)', position: 'relative', overflowX: 'clip', paddingBottom: '100px' }}>
@@ -46,11 +47,11 @@ export default function Employer() {
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ background: 'rgba(16, 185, 129, 0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '20px 30px', borderRadius: '24px', textAlign: 'center', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.1)' }}>
                   <div style={{ fontSize: '12px', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', marginBottom: '5px', letterSpacing: '1px' }}>Active Ads</div>
-                  <div style={{ fontSize: '32px', fontWeight: 900, color: '#fff' }}>{data.dashboardStats.active}</div>
+                  <div style={{ fontSize: '32px', fontWeight: 900, color: '#fff' }}>{data.error ? '—' : data.dashboardStats.active}</div>
               </div>
               <div style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '20px 30px', borderRadius: '24px', textAlign: 'center', boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)' }}>
                   <div style={{ fontSize: '12px', color: '#888', fontWeight: 800, textTransform: 'uppercase', marginBottom: '5px', letterSpacing: '1px' }}>New Apps</div>
-                  <div style={{ fontSize: '32px', fontWeight: 900, color: '#fff' }}>{data.dashboardStats.newApps}</div>
+                  <div style={{ fontSize: '32px', fontWeight: 900, color: '#fff' }}>{data.error ? '—' : data.dashboardStats.newApps}</div>
               </div>
           </div>
         </div>
@@ -78,11 +79,12 @@ export default function Employer() {
               )}
             </div>
 
-            {list.filteredJobs.length === 0 && data.jobs.length > 0 && (
+            {data.error && <LoadError message={data.error} loading={data.isLoading} onRetry={data.retry} />}
+            {!data.error && list.filteredJobs.length === 0 && data.jobs.length > 0 && (
               <div style={{ padding: '40px 20px', textAlign: 'center', color: '#888', background: 'rgba(255,255,255,0.02)', borderRadius: '24px' }}>No vacancies match your search.</div>
             )}
 
-            {data.jobs.length === 0 && (
+            {!data.error && data.jobs.length === 0 && (
               <div style={{ padding: '80px 20px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '32px', textAlign: 'center', color: '#666' }}>
                 <div style={{ fontSize: '40px', marginBottom: '15px' }}>📋</div>
                 <h3 style={{ margin: '0 0 10px', color: '#fff', fontSize: '20px' }}>No vacancies posted yet</h3>
@@ -91,7 +93,7 @@ export default function Employer() {
             )}
 
             {/* СПИСОК ВАКАНСИЙ */}
-            {list.currentJobs.map((job) => {
+            {!data.error && list.currentJobs.map((job) => {
               const jobApps = data.applications.filter((a) => a.jobId === job.id);
               const newAppsCount = jobApps.filter((a) => a.status === 'new').length;
 
@@ -141,7 +143,7 @@ export default function Employer() {
             })}
 
             {/* ПАГИНАЦИЯ */}
-            {list.totalPages > 1 && (
+            {!data.error && list.totalPages > 1 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '10px' }}>
                 <button onClick={() => list.setCurrentPage((p: number) => Math.max(1, p - 1))} disabled={list.currentPage === 1} style={{ background: 'rgba(255,255,255,0.05)', color: list.currentPage === 1 ? '#444' : '#fff', border: 'none', padding: '10px 20px', borderRadius: '12px', cursor: list.currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 700 }}>Prev</button>
                 <span style={{ color: '#888', fontSize: '14px', fontWeight: 600 }}>Page <span style={{ color: '#fff' }}>{list.currentPage}</span> of {list.totalPages}</span>

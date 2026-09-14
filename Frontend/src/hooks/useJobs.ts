@@ -1,5 +1,5 @@
 // src/hooks/useJobs.ts
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import api from "../lib/api";
 import { useAuth } from "../context/useAuth";
 import type { Job } from "../types/job";
@@ -13,6 +13,9 @@ export function useJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const userId = user?.id;
+  const role = user?.role;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
@@ -20,26 +23,32 @@ export function useJobs() {
   const [minSalary, setMinSalary] = useState<number>(0);
   const [maxSalary, setMaxSalary] = useState<number>(MAX_SALARY_LIMIT);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const jobsRes = await api.get("/jobs");
-        const data = Array.isArray(jobsRes.data) ? jobsRes.data : (jobsRes.data.jobs || []);
-        setJobs(data);
+  const fetchData = useCallback(async () => {
+    try {
+      const jobsRes = await api.get("/jobs");
+      const data = Array.isArray(jobsRes.data) ? jobsRes.data : (jobsRes.data.jobs || []);
+      setJobs(data);
 
-        if (user && user.role === 'candidate') {
-          const bookmarksRes = await api.get<Job[]>("/bookmarks");
-          const ids = new Set(bookmarksRes.data.map((job) => job.id));
-          setSavedJobIds(ids);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
+      if (userId && role === 'candidate') {
+        const bookmarksRes = await api.get<Job[]>("/bookmarks");
+        const ids = new Set(bookmarksRes.data.map((job) => job.id));
+        setSavedJobIds(ids);
+      } else {
+        setSavedJobIds(new Set());
       }
-    };
-    fetchData();
-  }, [user]);
+      setError('');
+    } catch {
+      setError('Could not load jobs or saved jobs. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, role]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  const retry = () => {
+    if (loading) return;
+    setLoading(true);
+    void fetchData();
+  };
 
   const toggleBookmark = async (e: React.MouseEvent, jobId: string) => {
     e.preventDefault(); 
@@ -99,7 +108,7 @@ export function useJobs() {
   }, [jobs, searchTerm, selectedLocations, selectedLevels, minSalary, maxSalary]);
 
   return {
-    data: { loading, savedJobIds, user },
+    data: { loading, error, retry, savedJobIds, user },
     list: { filteredJobs, toggleBookmark },
     filters: {
       searchTerm, setSearchTerm,

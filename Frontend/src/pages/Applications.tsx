@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { useApplications } from "../hooks/useApplications";
 import ApplicationCard from "../components/candidate/ApplicationCard";
+import LoadError from "../components/LoadError";
 
 const Icons = {
   Briefcase: () => <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
@@ -11,9 +12,9 @@ const Icons = {
 };
 
 export default function Applications() {
-  const { apps, isLoading, stats } = useApplications();
+  const { apps, isLoading, error, retry, stats } = useApplications();
 
-  if (isLoading) return <div style={{ color: '#fff', textAlign: 'center', paddingTop: '100vh', background: '#050505', height: '100vh' }}>Loading Dashboard...</div>;
+  if (isLoading && !error) return <div role="status" style={{ color: '#fff', textAlign: 'center', padding: '80px 20px', background: '#050505', minHeight: '50vh' }}>Loading Dashboard...</div>;
 
   return (
     <div style={{ 
@@ -48,7 +49,7 @@ export default function Applications() {
         </header>
 
         {/* === МИНИ-ДАШБОРД (СТАТИСТИКА) === */}
-        {apps.length > 0 && (
+        {!error && apps.length > 0 && (
           <div className="app-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '50px', animation: 'fadeIn 0.6s ease-out' }}>
             <div style={{ background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
               <div style={{ color: '#fff', marginBottom: '10px' }}><Icons.Briefcase /></div>
@@ -71,7 +72,7 @@ export default function Applications() {
         )}
 
         {/* === СПИСОК ОТКЛИКОВ === */}
-        {apps.length === 0 ? (
+        {error ? <LoadError message={error} loading={isLoading} onRetry={retry} /> : apps.length === 0 ? (
           <div style={{ background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(20px)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '40px', padding: '100px 20px', textAlign: 'center' }}>
             <div style={{ color: '#333', marginBottom: '25px', display: 'flex', justifyContent: 'center' }}><Icons.Search /></div>
             <h3 style={{ fontSize: '28px', fontWeight: 900, color: '#fff', marginBottom: '15px' }}>No applications yet</h3>

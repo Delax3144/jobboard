@@ -12,6 +12,8 @@ export function useEmployer() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const userId = user?.id;
   
   // Search & Pagination
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,7 +34,7 @@ export function useEmployer() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
     try {
       const [jobsRes, appsRes] = await Promise.all([
         api.get("/jobs/mine"),
@@ -40,11 +42,17 @@ export function useEmployer() {
       ]);
       setJobs(jobsRes.data.jobs);
       setApplications(appsRes.data);
-    } catch (err) { console.error(err); }
+      setError('');
+    } catch { setError('Could not load your vacancies and applications. Please try again.'); }
     finally { setIsLoading(false); }
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => { void fetchData(); }, [fetchData]);
+  const retry = () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    void fetchData();
+  };
 
   const dashboardStats = useMemo(() => ({
     active: jobs.filter(j => j.status === "published").length,
@@ -126,7 +134,7 @@ export function useEmployer() {
 
   // Возвращаем аккуратно сгруппированные данные
   return {
-    data: { jobs, applications, isLoading, dashboardStats },
+    data: { jobs, applications, isLoading, error, retry, dashboardStats },
     list: { searchQuery, setSearchQuery, currentJobs, filteredJobs, currentPage, setCurrentPage, totalPages, handleDelete, fillForm },
     form: { title, setTitle, companyName, setCompanyName, location, setLocation, salaryFrom, setSalaryFrom, salaryTo, setSalaryTo, level, setLevel, tags, setTags, description, setDescription, status, setJobStatus, setLogoFile, editingJobId, handleSubmit, resetForm }
   };

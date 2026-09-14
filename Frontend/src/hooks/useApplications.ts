@@ -1,23 +1,28 @@
 import type { Application } from '../types/job';
 // src/hooks/useApplications.ts
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import api from "../lib/api";
 
 export function useApplications() {
   const [apps, setApps] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    api.get("/applications/my")
+  const fetchData = useCallback(async () => {
+    await api.get("/applications/my")
       .then((res) => {
         setApps(res.data);
-        setIsLoading(false);
+        setError('');
       })
-      .catch((err) => {
-        console.error(err);
-        setIsLoading(false);
-      });
+      .catch(() => { setError('Could not load your applications. Please try again.'); })
+      .finally(() => { setIsLoading(false); });
   }, []);
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  const retry = () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    void fetchData();
+  };
 
   // useMemo гарантирует, что статистика пересчитывается только если изменился массив apps
   const stats = useMemo(() => {
@@ -28,5 +33,5 @@ export function useApplications() {
     };
   }, [apps]);
 
-  return { apps, isLoading, stats };
+  return { apps, isLoading, error, retry, stats };
 }
