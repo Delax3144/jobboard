@@ -170,6 +170,7 @@
 .titleGradient {
   background: linear-gradient(135deg, #10b981, #059669, #3b82f6);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -640,6 +641,16 @@
   .communicationCard, .cvCard, .securityCard, .searchCard {
     grid-column: auto;
     padding: 30px 20px;
+  }
+  .chatPreview {
+    position: static;
+    width: 100%;
+    max-width: 300px;
+    margin: 24px 0 0 auto;
+    transform: none;
+  }
+  .avatar {
+    flex-shrink: 0;
   }
   .cta {
     padding: 30px 20px;
