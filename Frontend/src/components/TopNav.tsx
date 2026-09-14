@@ -106,12 +106,12 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
             )}
           </div>
 
-          <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <Icons.Close /> : <Icons.Menu />}</button>
+          <button aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"} aria-expanded={isMobileMenuOpen} aria-controls="mobile-navigation" className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <Icons.Close /> : <Icons.Menu />}</button>
         </div>
       </header>
 
       {/* МОБИЛЬНОЕ МЕНЮ */}
-      <div className={`mobile-dropdown ${isMobileMenuOpen ? 'open' : ''}`}>
+      <div id="mobile-navigation" className={`mobile-dropdown ${isMobileMenuOpen ? 'open' : ''}`}>
         <NavLink to="/jobs" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.explore_jobs', 'Explore Jobs')}</NavLink>
         {user?.role === 'candidate' && (
           <>

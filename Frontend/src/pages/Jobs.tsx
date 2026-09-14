@@ -55,13 +55,13 @@ export default function Jobs() {
           <div className="jobs-search-flex-group" style={{ display: 'flex', gap: '15px', width: '100%', maxWidth: '500px', alignItems: 'center' }}>
             <div style={{ position: 'relative', flex: 1 }}>
               <input 
-                placeholder="Search job title, skills, or company..." value={filters.searchTerm} onChange={(e) => filters.setSearchTerm(e.target.value)}
+                aria-label="Search jobs" placeholder="Search job title, skills, or company..." value={filters.searchTerm} onChange={(e) => filters.setSearchTerm(e.target.value)}
                 style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '18px 20px 18px 55px', color: '#fff', borderRadius: '20px', fontSize: '15px', outline: 'none' }} 
                 onFocus={e => e.target.style.borderColor = 'rgba(16, 185, 129, 0.5)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
               />
               <span style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', display: 'flex' }}><Icons.Search /></span>
             </div>
-            <button className="mobile-filter-trigger-btn" onClick={() => setIsFilterModalOpen(true)} style={{ display: 'none', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', padding: '16px', borderRadius: '16px', cursor: 'pointer', alignItems: 'center', justifyContent: 'center' }}><Icons.Filter /></button>
+            <button aria-label="Open filters" aria-expanded={isFilterModalOpen} className="mobile-filter-trigger-btn" onClick={() => setIsFilterModalOpen(true)} style={{ display: 'none', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', padding: '16px', borderRadius: '16px', cursor: 'pointer', alignItems: 'center', justifyContent: 'center' }}><Icons.Filter /></button>
           </div>
         </div>
 
@@ -97,7 +97,7 @@ export default function Jobs() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                         <h3 style={{ margin: 0, fontSize: '22px', color: '#fff', fontWeight: 800, paddingRight: '50px', letterSpacing: '-0.5px' }}>{job.title}</h3>
                         {(!data.user || data.user.role === 'candidate') && (
-                          <button onClick={(e) => list.toggleBookmark(e, job.id)} style={{ position: 'absolute', top: '30px', right: '30px', background: isSaved ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)', border: isSaved ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', padding: '10px', borderRadius: '50%', color: isSaved ? '#10b981' : '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(0,0,0,0.2)' }}>
+                          <button aria-label={`${isSaved ? "Unsave" : "Save"} ${job.title}`} aria-pressed={isSaved} onClick={(e) => list.toggleBookmark(e, job.id)} style={{ position: 'absolute', top: '30px', right: '30px', background: isSaved ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)', border: isSaved ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', padding: '10px', borderRadius: '50%', color: isSaved ? '#10b981' : '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(0,0,0,0.2)' }}>
                             {isSaved ? <Icons.BookmarkFilled /> : <Icons.BookmarkOutline />}
                           </button>
                         )}
@@ -135,14 +135,14 @@ export default function Jobs() {
         </div>
       </div>
 
-      <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ position: 'fixed', bottom: '30px', left: '30px', zIndex: 100, width: '45px', height: '45px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: showTopBtn ? 1 : 0, visibility: showTopBtn ? 'visible' : 'hidden', transform: showTopBtn ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.3s' }}>
+      <button aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ position: 'fixed', bottom: '30px', left: '30px', zIndex: 100, width: '45px', height: '45px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: showTopBtn ? 1 : 0, visibility: showTopBtn ? 'visible' : 'hidden', transform: showTopBtn ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.3s' }}>
         <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
       </button>
 
       {isFilterModalOpen && document.body && createPortal(
         <div className="premium-scroll" style={{ position: 'fixed', inset: 0, zIndex: 999999, display: 'flex', flexDirection: 'column', background: '#050505', padding: '30px 25px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-            <button onClick={() => setIsFilterModalOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Icons.Close /></button>
+            <button aria-label="Close filters" onClick={() => setIsFilterModalOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Icons.Close /></button>
           </div>
           <div style={{ flex: 1 }}><JobsFilters filters={filters} /></div>
           <button onClick={() => setIsFilterModalOpen(false)} style={{ width: '100%', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', padding: '16px', borderRadius: '16px', fontWeight: 800, fontSize: '16px', border: 'none', marginTop: '40px', cursor: 'pointer', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)' }}>

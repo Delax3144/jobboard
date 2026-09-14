@@ -36,7 +36,7 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
       <div className="msg-chat-header" style={{ padding: '20px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(10, 10, 10, 0.8)', backdropFilter: 'blur(10px)', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           
-          <button className="msg-back-to-list-btn" onClick={() => navigate('/messages')} style={{ display: 'none', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', padding: '8px', borderRadius: '12px' }}>
+          <button aria-label="Back to conversations" className="msg-back-to-list-btn" onClick={() => navigate('/messages')} style={{ display: 'none', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', padding: '8px', borderRadius: '12px' }}>
             <Icons.ArrowLeft />
           </button>
 
@@ -105,8 +105,8 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
           {/* INPUT AREA */}
           <div style={{ padding: '20px 40px 30px', background: 'rgba(10, 10, 10, 0.8)', backdropFilter: 'blur(10px)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ display: 'flex', gap: '15px', background: '#0a0a0a', padding: '10px 15px', borderRadius: '24px', border: '1px solid #222', alignItems: 'flex-end' }}>
-              <textarea value={msg} onChange={(e) => setMsg(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }} placeholder="Type your message..." style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', outline: 'none', padding: '10px', resize: 'none', minHeight: '24px', maxHeight: '150px', fontFamily: 'inherit', fontSize: '15px', lineHeight: '1.5' }} />
-              <button onClick={sendMsg} disabled={!msg.trim()} style={{ background: msg.trim() ? '#10b981' : '#222', color: msg.trim() ? '#000' : '#555', border: 'none', width: '48px', height: '48px', borderRadius: '16px', cursor: msg.trim() ? 'pointer' : 'not-allowed', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}><Icons.Send /></button>
+              <textarea aria-label="Message" value={msg} onChange={(e) => setMsg(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }} placeholder="Type your message..." style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', outline: 'none', padding: '10px', resize: 'none', minHeight: '24px', maxHeight: '150px', fontFamily: 'inherit', fontSize: '15px', lineHeight: '1.5' }} />
+              <button aria-label="Send message" onClick={sendMsg} disabled={!msg.trim()} style={{ background: msg.trim() ? '#10b981' : '#222', color: msg.trim() ? '#000' : '#555', border: 'none', width: '48px', height: '48px', borderRadius: '16px', cursor: msg.trim() ? 'pointer' : 'not-allowed', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}><Icons.Send /></button>
             </div>
           </div>
         </>

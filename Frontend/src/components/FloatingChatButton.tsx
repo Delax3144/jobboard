@@ -33,6 +33,7 @@ export default function FloatingChatButton() {
   return (
     <Link 
       to="/messages" 
+      aria-label={hasNewMsg ? 'Open messages — unread updates' : 'Open messages'}
       className={`floating-chat-btn ${hasNewMsg ? 'has-notification' : ''}`}
       style={{
         background: 'linear-gradient(135deg, #10b981, #059669)',

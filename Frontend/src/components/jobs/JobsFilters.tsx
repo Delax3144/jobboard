@@ -23,10 +23,7 @@ export default function JobsFilters({ filters }: { filters: ReturnType<typeof us
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {FILTER_LOCATIONS.map(loc => (
             <label key={loc} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontSize: '14px', color: filters.selectedLocations.includes(loc) ? '#fff' : '#888', fontWeight: filters.selectedLocations.includes(loc) ? 600 : 400 }}>
-              <div style={{ width: '18px', height: '18px', borderRadius: '6px', border: filters.selectedLocations.includes(loc) ? 'none' : '1px solid #444', background: filters.selectedLocations.includes(loc) ? '#10b981' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {filters.selectedLocations.includes(loc) && <span style={{ color: '#000', fontSize: '12px', fontWeight: 'bold' }}>✓</span>}
-              </div>
-              <input type="checkbox" checked={filters.selectedLocations.includes(loc)} onChange={() => filters.toggleFilter(filters.setSelectedLocations, loc)} style={{ display: 'none' }} /> 
+              <input type="checkbox" checked={filters.selectedLocations.includes(loc)} onChange={() => filters.toggleFilter(filters.setSelectedLocations, loc)} style={{ width: '18px', height: '18px', margin: 0, accentColor: '#10b981', cursor: 'pointer' }} />
               {loc}
             </label>
           ))}
@@ -39,7 +36,7 @@ export default function JobsFilters({ filters }: { filters: ReturnType<typeof us
           {FILTER_LEVELS.map(lv => {
             const isActive = filters.selectedLevels.includes(lv);
             return (
-              <button key={lv} onClick={() => filters.toggleFilter(filters.setSelectedLevels, lv)} style={{ background: isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.03)', border: isActive ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255,255,255,0.08)', color: isActive ? '#10b981' : '#888', borderRadius: '12px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}>
+              <button aria-pressed={isActive} key={lv} onClick={() => filters.toggleFilter(filters.setSelectedLevels, lv)} style={{ background: isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.03)', border: isActive ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255,255,255,0.08)', color: isActive ? '#10b981' : '#888', borderRadius: '12px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}>
                 {lv}
               </button>
             );
@@ -52,15 +49,15 @@ export default function JobsFilters({ filters }: { filters: ReturnType<typeof us
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '20px' }}>
           <div style={{ flex: 1 }}>
             <span style={{ fontSize: '11px', color: '#444', display: 'block', marginBottom: '4px', fontWeight: 600 }}>MIN</span>
-            <input type="number" value={filters.minSalary} onChange={(e) => filters.setMinSalary(Math.max(0, parseInt(e.target.value) || 0))} style={{ width: '100%', background: '#000', border: '1px solid rgba(255,255,255,0.08)', padding: '10px', borderRadius: '10px', color: '#fff', fontSize: '13px', outline: 'none' }} />
+            <input aria-label="Minimum salary in PLN" type="number" value={filters.minSalary} onChange={(e) => filters.setMinSalary(Math.max(0, parseInt(e.target.value) || 0))} style={{ width: '100%', background: '#000', border: '1px solid rgba(255,255,255,0.08)', padding: '10px', borderRadius: '10px', color: '#fff', fontSize: '13px', outline: 'none' }} />
           </div>
           <div style={{ flex: 1 }}>
             <span style={{ fontSize: '11px', color: '#444', display: 'block', marginBottom: '4px', fontWeight: 600 }}>MAX</span>
-            <input type="number" value={filters.maxSalary} onChange={(e) => filters.setMaxSalary(Math.max(filters.minSalary, parseInt(e.target.value) || 0))} style={{ width: '100%', background: '#000', border: '1px solid rgba(255,255,255,0.08)', padding: '10px', borderRadius: '10px', color: '#fff', fontSize: '13px', outline: 'none' }} />
+            <input aria-label="Maximum salary in PLN" type="number" value={filters.maxSalary} onChange={(e) => filters.setMaxSalary(Math.max(filters.minSalary, parseInt(e.target.value) || 0))} style={{ width: '100%', background: '#000', border: '1px solid rgba(255,255,255,0.08)', padding: '10px', borderRadius: '10px', color: '#fff', fontSize: '13px', outline: 'none' }} />
           </div>
         </div>
         <div style={{ padding: '0 5px' }}>
-          <input type="range" min="0" max={MAX_SALARY_LIMIT} step="1000" value={filters.maxSalary > MAX_SALARY_LIMIT ? MAX_SALARY_LIMIT : filters.maxSalary} onChange={(e) => filters.setMaxSalary(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#10b981', cursor: 'pointer' }} />
+          <input aria-label="Maximum salary slider in PLN" type="range" min="0" max={MAX_SALARY_LIMIT} step="1000" value={filters.maxSalary > MAX_SALARY_LIMIT ? MAX_SALARY_LIMIT : filters.maxSalary} onChange={(e) => filters.setMaxSalary(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#10b981', cursor: 'pointer' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#444', fontSize: '11px', marginTop: '5px', fontWeight: 600 }}>
             <span>0</span>
             <span>{MAX_SALARY_LIMIT.toLocaleString()}+ PLN</span>

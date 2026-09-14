@@ -1,6 +1,6 @@
 import type { useChat } from '../../hooks/useChat';
 // src/components/chat/ChatSidebar.tsx
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Icons = {
   Search: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
@@ -15,7 +15,6 @@ const formatChatTime = (dateString: string) => {
 };
 
 export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery, activeId, user, checkIsOnline, apiUrl }: Pick<ReturnType<typeof useChat>, 'filteredChats' | 'searchQuery' | 'setSearchQuery' | 'user' | 'checkIsOnline' | 'apiUrl'> & { activeId?: string }) {
-  const navigate = useNavigate();
 
   return (
     <div className="msg-sidebar-panel" style={{ width: '380px', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', background: '#0a0a0a', flexShrink: 0 }}>
@@ -23,6 +22,7 @@ export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery
         <h2 style={{ margin: '0 0 20px', fontSize: '24px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>Messages</h2>
         <div style={{ position: 'relative' }}>
           <input 
+            aria-label="Search conversations"
             placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} 
             style={{ width: '100%', background: '#111', border: '1px solid #222', padding: '12px 15px 12px 42px', color: '#fff', borderRadius: '12px', fontSize: '14px', outline: 'none', transition: 'border-color 0.2s' }} 
             onFocus={e => e.target.style.borderColor = '#10b981'} onBlur={e => e.target.style.borderColor = '#222'} 
@@ -44,7 +44,7 @@ export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery
           const unreadCount = hasUnread ? 1 : 0; 
 
           return (
-            <div key={chat.id} onClick={() => navigate(`/messages/${chat.id}`)} style={{ padding: '20px 30px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.02)', background: isActive ? 'rgba(16, 185, 129, 0.05)' : 'transparent', display: 'flex', gap: '16px', alignItems: 'center', transition: 'background 0.2s', position: 'relative' }}>
+            <Link key={chat.id} to={`/messages/${chat.id}`} aria-current={isActive ? 'page' : undefined} aria-label={`${partnerName} — ${chat.job.title}${hasUnread ? ' — unread updates' : ''}`} style={{ textDecoration: 'none', padding: '20px 30px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.02)', background: isActive ? 'rgba(16, 185, 129, 0.05)' : 'transparent', display: 'flex', gap: '16px', alignItems: 'center', transition: 'background 0.2s', position: 'relative' }}>
               {isActive && <div style={{ position: 'absolute', left: 0, top: '20px', bottom: '20px', width: '3px', background: '#10b981', borderRadius: '0 4px 4px 0' }} />}
               <div style={{ position: 'relative' }}>
                 <div style={{ width: '56px', height: '56px', borderRadius: isEmployer ? '50%' : '16px', background: '#111', border: isActive ? '1px solid rgba(16,185,129,0.3)' : '1px solid #222', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden', color: isActive ? '#fff' : '#666', fontSize: '20px' }}>
@@ -64,7 +64,7 @@ export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery
                   {unreadCount > 0 && <div style={{ background: '#10b981', color: '#000', fontSize: '11px', fontWeight: 900, padding: '2px 6px', borderRadius: '8px', minWidth: '20px', textAlign: 'center' }}>{unreadCount}</div>}
                 </div>
               </div>
-            </div>
+            </Link>
           );
         })}
         {filteredChats.length === 0 && (
