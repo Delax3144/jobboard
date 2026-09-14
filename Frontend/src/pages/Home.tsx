@@ -104,9 +104,9 @@ export default function Home() {
       <section style={{ padding: '40px 0', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#050505' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 30px', textAlign: 'center' }}>
           <p style={{ color: '#666', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600, marginBottom: '30px' }}>From finding a role to starting a conversation</p>
-          <div className="home-trusted-logos" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.5, flexWrap: 'wrap', gap: '30px' }}>
+          <div className="home-trusted-logos home-workflow-words" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '30px' }}>
              {['Search', 'Save', 'Apply', 'Track', 'Chat'].map(step => (
-               <span key={step} style={{ fontSize: '24px', fontWeight: 800 }}>{step}</span>
+               <span key={step} className={`workflow-word workflow-word--${step.toLowerCase()}`}>{step}</span>
              ))}
           </div>
         </div>
