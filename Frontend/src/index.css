@@ -435,10 +435,6 @@ a {
   .m-mb-40 { margin-bottom: 40px !important; }
   .container { padding: 20px !important; } /* Фикс для общих контейнеров */
 
-  /* --- Страница Contact --- */
-  .contact-hero { padding: 30px 20px !important; margin-bottom: 40px !important; }
-  .contact-card { padding: 30px 20px !important; }
-
   /* --- Страница Blog --- */
   .blog-hero { padding: 50px 0 30px !important; }
   .blog-featured-img { height: 250px !important; } /* Сильно уменьшаем картинку на мобилке */
