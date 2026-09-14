@@ -6,8 +6,13 @@ import api from '../lib/api';
 import { useChat } from './useChat';
 
 vi.mock('../lib/api', () => ({ default: { get: vi.fn(), post: vi.fn() } }));
-vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: { id: 'owner', role: 'employer' } }) }));
-vi.mock('socket.io-client', () => ({ io: () => ({ on: vi.fn(), disconnect: vi.fn() }) }));
+const { authState, socket } = vi.hoisted(() => ({
+  authState: { user: { id: 'owner', role: 'employer' } },
+  socket: { on: vi.fn(), disconnect: vi.fn() },
+}));
+vi.mock('../context/useAuth', () => ({ useAuth: () => authState }));
+vi.mock('socket.io-client', () => ({ io: () => socket }));
+beforeEach(() => { authState.user = { id: 'owner', role: 'employer' }; });
 const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter>{children}</MemoryRouter>;
 
 describe('Conversation list', () => {
@@ -27,6 +32,70 @@ describe('Conversation list', () => {
     const { result } = renderHook(useChat, { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.error).toContain('Could not load');
+  });
+});
+
+describe('Conversation notifications', () => {
+  const chatWrapper = ({ children }: { children: ReactNode }) => (
+    <MemoryRouter initialEntries={['/messages/app-a']}>
+      <Routes><Route path="/messages/:id" element={children} /></Routes>
+    </MemoryRouter>
+  );
+  const application = {
+    id: 'app-a', createdAt: '2026-09-14', messages: [], status: 'new',
+    candidate: { firstName: 'Alex', lastName: 'Example' },
+    job: { title: 'Developer', companyName: 'Demo' },
+  };
+  const notify = async (data: { type: string; applicationId?: string }) => {
+    const listener = socket.on.mock.calls.find(([event]) => event === 'new_notification')?.[1];
+    expect(listener).toBeTypeOf('function');
+    await act(async () => { await listener(data); });
+  };
+
+  beforeEach(() => {
+    localStorage.setItem('token', 'test-token');
+    vi.mocked(api.post).mockResolvedValue({ data: {} });
+  });
+
+  it.each(['invited', 'rejected'])('refreshes the open candidate conversation after a status change to %s', async status => {
+    authState.user = { id: 'candidate', role: 'candidate' };
+    let current = application;
+    vi.mocked(api.get).mockImplementation(async url => ({ data: url === '/applications/my' ? [current] : current }));
+    const { result, unmount } = renderHook(useChat, { wrapper: chatWrapper });
+    await waitFor(() => expect(result.current.currentApp?.status).toBe('new'));
+    expect(result.current.isCurrentLockedForCandidate).toBe(true);
+    expect(result.current.filteredChats).toHaveLength(0);
+    current = { ...application, status };
+    await notify({ type: 'status_update', applicationId: 'app-a' });
+    expect(result.current.currentApp?.status).toBe(status);
+    expect(result.current.isCurrentLockedForCandidate).toBe(false);
+    expect(result.current.filteredChats[0].status).toBe(status);
+    unmount();
+    expect(socket.disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('adds a newly received application to the employer list without an application id in the notification', async () => {
+    let received = false;
+    vi.mocked(api.get).mockImplementation(async () => ({ data: received ? [application] : [] }));
+    const { result } = renderHook(useChat, { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    received = true;
+    await notify({ type: 'new_application' });
+    expect(result.current.filteredChats.map(app => app.id)).toEqual(['app-a']);
+    expect(api.get).toHaveBeenLastCalledWith('/applications/owner');
+  });
+
+  it('refreshes another conversation in the list without opening it or fetching messages twice', async () => {
+    vi.mocked(api.get).mockImplementation(async url => ({ data: url === '/applications/owner' ? [application] : application }));
+    const { result } = renderHook(useChat, { wrapper: chatWrapper });
+    await waitFor(() => expect(result.current.currentApp?.id).toBe('app-a'));
+    vi.mocked(api.get).mockClear();
+    await notify({ type: 'status_update', applicationId: 'app-b' });
+    expect(api.get).toHaveBeenCalledExactlyOnceWith('/applications/owner');
+    expect(result.current.currentApp?.id).toBe('app-a');
+    vi.mocked(api.get).mockClear();
+    await notify({ type: 'new_message', applicationId: 'app-a' });
+    expect(api.get).not.toHaveBeenCalled();
   });
 });
 

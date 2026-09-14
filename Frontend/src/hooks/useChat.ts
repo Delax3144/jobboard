@@ -70,9 +70,13 @@ export function useChat() {
     const token = localStorage.getItem('token');
     if (!userId || !token) return;
     const socket = io(apiUrl, { auth: { token }, withCredentials: true });
-    socket.on('new_message', async (data: { applicationId: string }) => {
+    const refreshConversation = async (data: { applicationId?: string }) => {
       await fetchChats();
-      if (activeChatIdRef.current === data.applicationId) await fetchCurrentChat(data.applicationId);
+      if (data.applicationId && activeChatIdRef.current === data.applicationId) await fetchCurrentChat(data.applicationId);
+    };
+    socket.on('new_message', refreshConversation);
+    socket.on('new_notification', async (data: { type: string; applicationId?: string }) => {
+      if (data.type === 'status_update' || data.type === 'new_application') await refreshConversation(data);
     });
     socket.on('connect', () => {
       void fetchChats();
