@@ -7,7 +7,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'react-hot-toast';
 
 // Импорт страниц
-import Home from "./pages/Home";
+import Home from "./pages/Home/Home";
 const Jobs = lazy(() => import('./pages/Jobs'));
 const JobDetails = lazy(() => import('./pages/JobDetails'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -20,7 +20,7 @@ const ApplicationDetails = lazy(() => import('./pages/ApplicationDetails'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const JobManagement = lazy(() => import('./pages/JobManagement'));
 const SavedJobs = lazy(() => import('./pages/SavedJobs'));
-const AboutUs = lazy(() => import('./pages/AboutUs'));
+const AboutUs = lazy(() => import('./pages/AboutUs/AboutUs'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Contact = lazy(() => import('./pages/Contact'));

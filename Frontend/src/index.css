@@ -435,13 +435,6 @@ a {
   .m-mb-40 { margin-bottom: 40px !important; }
   .container { padding: 20px !important; } /* Фикс для общих контейнеров */
 
-  /* --- Страница AboutUs --- */
-  .about-hero { padding: 60px 0 40px !important; }
-  .about-mission { grid-template-columns: 1fr !important; gap: 20px !important; margin-bottom: 60px !important; }
-  .about-mission-img { min-height: 250px !important; }
-  .about-card { padding: 25px 20px !important; } /* Уменьшаем отступы в карточках */
-  .about-cta { padding: 40px 20px !important; }
-
   /* --- Страница Contact --- */
   .contact-hero { padding: 30px 20px !important; margin-bottom: 40px !important; }
   .contact-card { padding: 30px 20px !important; }
