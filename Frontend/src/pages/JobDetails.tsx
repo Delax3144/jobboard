@@ -74,6 +74,7 @@ export default function JobDetails() {
           {user?.role === 'candidate' && (
             <button 
               onClick={bookmarks.toggleBookmark}
+              disabled={bookmarks.isSaving}
               style={{ background: bookmarks.isBookmarked ? 'rgba(239, 68, 68, 0.1)' : 'transparent', border: bookmarks.isBookmarked ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(255,255,255,0.1)', color: bookmarks.isBookmarked ? '#ef4444' : '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: 700, padding: '10px 16px', borderRadius: '12px', transition: 'all 0.2s' }}
               onMouseOver={(e) => { e.currentTarget.style.background = bookmarks.isBookmarked ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = bookmarks.isBookmarked ? '#ef4444' : '#fff'; }}
               onMouseOut={(e) => { e.currentTarget.style.background = bookmarks.isBookmarked ? 'rgba(239, 68, 68, 0.1)' : 'transparent'; e.currentTarget.style.color = bookmarks.isBookmarked ? '#ef4444' : '#888'; }}
@@ -165,6 +166,7 @@ export default function JobDetails() {
                  
                  <button 
                   onClick={bookmarks.toggleBookmark}
+                  disabled={bookmarks.isSaving}
                   style={{ background: 'transparent', border: 'none', color: bookmarks.isBookmarked ? '#ef4444' : '#10b981', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', borderRadius: '12px', transition: 'background 0.2s' }}
                   onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                   onMouseOut={e => e.currentTarget.style.background = 'transparent'}
