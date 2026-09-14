@@ -32,7 +32,7 @@ export default function Home() {
           <div className="home-hero-content">
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 16px', borderRadius: '30px', background: 'rgba(16, 185, 129, 0.05)', color: '#10b981', fontSize: '13px', fontWeight: '700', marginBottom: '30px', border: '1px solid rgba(16, 185, 129, 0.15)', textTransform: 'uppercase', letterSpacing: '1px' }}>
               <span style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }} />
-              The #1 Tech Hiring Platform
+              Tech Jobs & Direct Communication
             </div>
 
             <h1 style={{ fontSize: 'clamp(46px, 6vw, 72px)', fontWeight: '950', lineHeight: '1.05', marginBottom: '25px', letterSpacing: '-0.03em' }}>
@@ -41,7 +41,7 @@ export default function Home() {
             </h1>
 
             <p style={{ fontSize: '19px', color: '#888', maxWidth: '500px', marginBottom: '40px', lineHeight: '1.6', fontWeight: 400 }}>
-              Connect with leading tech companies, chat directly with engineering teams, and get hired faster. No middleman, no spam.
+              Browse tech vacancies, apply with your CV, and follow your application status. Continue the conversation with employers in one place.
             </p>
 
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -55,17 +55,10 @@ export default function Home() {
               )}
             </div>
 
-            {/* Social Proof Avatars */}
+            {/* Candidate workflow */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '40px' }}>
-              <div style={{ display: 'flex', marginLeft: '10px' }}>
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid #000', marginLeft: '-10px', background: '#222', overflow: 'hidden' }}>
-                    <img src={`https://i.pravatar.cc/100?img=${i + 10}`} style={{ width: '100%', height: '100%' }} />
-                  </div>
-                ))}
-              </div>
               <div style={{ fontSize: '13px', color: '#666', fontWeight: 500 }}>
-                Join <b style={{ color: '#fff' }}>10,000+</b> developers <br/>already hired this year.
+                Search vacancies. Save your favourites. Track your applications.
               </div>
             </div>
           </div>
@@ -81,8 +74,8 @@ export default function Home() {
             <div style={{ position: 'absolute', top: '10%', left: '-30px', background: 'rgba(10, 10, 10, 0.7)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px 20px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', animation: 'float 6s ease-in-out infinite' }}>
               <div style={{ width: '40px', height: '40px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icons.Check /></div>
               <div>
-                <div style={{ color: '#fff', fontSize: '14px', fontWeight: 700 }}>Offer Accepted</div>
-                <div style={{ color: '#888', fontSize: '12px' }}>Senior React Developer</div>
+                <div style={{ color: '#fff', fontSize: '14px', fontWeight: 700 }}>Application Tracking</div>
+                <div style={{ color: '#888', fontSize: '12px' }}>Follow each status update</div>
               </div>
             </div>
 
@@ -90,8 +83,8 @@ export default function Home() {
             <div style={{ position: 'absolute', bottom: '15%', right: '-20px', background: 'rgba(10, 10, 10, 0.7)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px 20px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', animation: 'float 8s ease-in-out infinite reverse' }}>
               <div style={{ width: '10px', height: '10px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }} />
               <div>
-                <div style={{ color: '#fff', fontSize: '14px', fontWeight: 700 }}>New Message</div>
-                <div style={{ color: '#888', fontSize: '12px' }}>From Spotify HR Team</div>
+                <div style={{ color: '#fff', fontSize: '14px', fontWeight: 700 }}>Application Chats</div>
+                <div style={{ color: '#888', fontSize: '12px' }}>Messages with employers</div>
               </div>
             </div>
           </div>
@@ -107,16 +100,14 @@ export default function Home() {
         }
       `}</style>
 
-      {/* --- SECTION 2: TRUSTED LOGOS --- */}
+      {/* --- SECTION 2: APPLICATION WORKFLOW --- */}
       <section style={{ padding: '40px 0', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#050505' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 30px', textAlign: 'center' }}>
-          <p style={{ color: '#666', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600, marginBottom: '30px' }}>Trusted by innovative teams worldwide</p>
+          <p style={{ color: '#666', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600, marginBottom: '30px' }}>From finding a role to starting a conversation</p>
           <div className="home-trusted-logos" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.5, flexWrap: 'wrap', gap: '30px' }}>
-             <h3 style={{ fontSize: '24px', fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>acme.</h3>
-             <h3 style={{ fontSize: '24px', fontWeight: 800, margin: 0, fontStyle: 'italic' }}>GlobalTech</h3>
-             <h3 style={{ fontSize: '24px', fontWeight: 800, margin: 0, fontFamily: 'monospace' }}>_build</h3>
-             <h3 style={{ fontSize: '24px', fontWeight: 800, margin: 0 }}>NEXUS</h3>
-             <h3 style={{ fontSize: '24px', fontWeight: 800, margin: 0, letterSpacing: '2px' }}>PULSE</h3>
+             {['Search', 'Save', 'Apply', 'Track', 'Chat'].map(step => (
+               <span key={step} style={{ fontSize: '24px', fontWeight: 800 }}>{step}</span>
+             ))}
           </div>
         </div>
       </section>
@@ -129,7 +120,7 @@ export default function Home() {
               Built for <span style={{ color: '#10b981' }}>modern</span> teams.
             </h2>
             <p style={{ color: '#888', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>
-              Everything you need to hire or get hired, wrapped in a beautiful, lightning-fast platform.
+              Search, applications, and conversations for candidates and employers.
             </p>
           </div>
 
@@ -142,7 +133,7 @@ export default function Home() {
                 <Icons.Message />
               </div>
               <h3 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '15px' }}>Direct Communication</h3>
-              <p style={{ color: '#888', fontSize: '16px', maxWidth: '350px', lineHeight: '1.6' }}>Skip the middleman. Chat directly with technical recruiters and managers in real-time. Discuss projects, not just resumes.</p>
+              <p style={{ color: '#888', fontSize: '16px', maxWidth: '350px', lineHeight: '1.6' }}>Keep messages linked to each application. Talk with employers about the role and next steps as your application progresses.</p>
               
               {/* Fake UI Element */}
               <div style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '300px', background: '#111', borderRadius: '24px', padding: '20px', border: '1px solid #222', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', transform: 'rotate(-5deg)' }}>
@@ -161,8 +152,8 @@ export default function Home() {
               <div style={{ width: '48px', height: '48px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
                 <Icons.Lightning />
               </div>
-              <h3 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '15px' }}>Lightning Fast</h3>
-              <p style={{ color: '#888', fontSize: '15px', lineHeight: '1.6' }}>Built on modern infrastructure. Apply to jobs in one click without filling out endless forms.</p>
+              <h3 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '15px' }}>Apply with Your CV</h3>
+              <p style={{ color: '#888', fontSize: '15px', lineHeight: '1.6' }}>Send your CV and a message with your application, then follow its progress from your dashboard.</p>
             </div>
 
             {/* Feature 3: Medium (Privacy) */}
@@ -170,8 +161,8 @@ export default function Home() {
               <div style={{ width: '48px', height: '48px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
                 <Icons.Shield />
               </div>
-              <h3 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '15px' }}>Privacy First</h3>
-              <p style={{ color: '#888', fontSize: '15px', lineHeight: '1.6' }}>You control who sees your profile. Hide your status from your current employer effortlessly.</p>
+              <h3 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '15px' }}>Account Security</h3>
+              <p style={{ color: '#888', fontSize: '15px', lineHeight: '1.6' }}>Verify your email and enable two-factor authentication from your profile settings.</p>
             </div>
 
             {/* Feature 4: Wide (Global) */}
@@ -180,13 +171,13 @@ export default function Home() {
                 <div style={{ width: '48px', height: '48px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
                   <Icons.Globe />
                 </div>
-                <h3 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '15px' }}>Global Reach</h3>
-                <p style={{ color: '#888', fontSize: '16px', lineHeight: '1.6' }}>Find remote opportunities worldwide. Filter by timezone, visa sponsorship, and relocation packages.</p>
+                <h3 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '15px' }}>Find Your Next Role</h3>
+                <p style={{ color: '#888', fontSize: '16px', lineHeight: '1.6' }}>Search by job title, company, or skills. Filter vacancies by location, experience level, and salary range.</p>
               </div>
               
               {/* Fake UI Element */}
               <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                {['Warsaw, PL', 'Remote', 'London, UK', 'Berlin, DE', 'New York, US'].map(tag => (
+                {['Remote', 'Poland', 'Germany', 'UK', 'USA'].map(tag => (
                   <span key={tag} style={{ padding: '8px 16px', background: '#111', border: '1px solid #333', borderRadius: '20px', fontSize: '13px', color: '#aaa' }}>{tag}</span>
                 ))}
               </div>
@@ -208,7 +199,7 @@ export default function Home() {
               Ready to make your next move?
             </h2>
             <p style={{ fontSize: '20px', color: 'rgba(255,255,255,0.9)', marginBottom: '40px', fontWeight: 500 }}>
-              Join thousands of tech professionals finding their dream jobs today.
+              Create a candidate account to apply for roles, or an employer account to post vacancies and review applications.
             </p>
             <Link to="/register" style={{ background: '#000', color: '#fff', padding: '18px 40px', borderRadius: '20px', fontSize: '18px', fontWeight: 800, textDecoration: 'none', transition: 'transform 0.2s', display: 'inline-block' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
               Get Started for Free

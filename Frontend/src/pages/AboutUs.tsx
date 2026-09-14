@@ -46,16 +46,16 @@ export default function AboutUs() {
             <span style={{ background: 'linear-gradient(135deg, #10b981, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Talent Meets Opportunity</span>
           </h1>
           <p style={{ fontSize: 'clamp(18px, 2vw, 22px)', color: '#888', maxWidth: '750px', margin: '0 auto', lineHeight: '1.6', fontWeight: 500 }}>
-            JobBoard isn't just another job site. We are building the modern infrastructure for elite engineering teams and world-class professionals to connect seamlessly.
+            JobBoard brings vacancy search, applications, and employer conversations together. Candidates can explore roles while employers manage their job listings and applicants.
           </p>
         </section>
 
-        {/* === STATS SECTION === */}
+        {/* === PLATFORM FEATURES === */}
         <section className="m-mb-40" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center', marginBottom: '140px' }}>
           {[
-            { label: "Active Jobs", value: "10,000+" },
-            { label: "Tech Talents", value: "50,000+" },
-            { label: "Global Partners", value: "2,500+" }
+            { label: "Vacancy filters", value: "Search" },
+            { label: "Application updates", value: "Track" },
+            { label: "Direct messages", value: "Chat" }
           ].map((stat, i) => (
             <div key={i} className="about-card" style={{ flex: '1 1 250px', background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '30px 40px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
               <div style={{ fontSize: '42px', fontWeight: 900, color: '#fff', letterSpacing: '-1px', marginBottom: '5px' }}>{stat.value}</div>
@@ -74,7 +74,7 @@ export default function AboutUs() {
               </div>
               <h2 style={{ fontSize: '36px', fontWeight: 900, color: '#fff', marginBottom: '20px', letterSpacing: '-1px' }}>Our Mission</h2>
               <p style={{ color: '#aaa', fontSize: '18px', lineHeight: '1.8' }}>
-                We believe that finding a dream job or the perfect candidate shouldn't feel like a black box. By leveraging modern technology, sleek design, and transparent communication, we provide an unparalleled experience that respects both the employer's time and the candidate's ambition.
+                Our goal is to make each step easier to follow: find a suitable vacancy, submit an application, check its status, and discuss next steps with the employer.
               </p>
             </div>
           </div>
@@ -92,9 +92,9 @@ export default function AboutUs() {
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
             {[
-              { title: 'Transparency', desc: 'No hidden salaries, no ghosting. We enforce clear communication between candidates and companies.', icon: <Icons.Globe /> },
-              { title: 'Innovation', desc: 'We continuously improve our matching algorithms and platform speed to provide a seamless UX.', icon: <Icons.Zap /> },
-              { title: 'Community First', desc: 'Built by developers, for developers. We actively support the growth of the global tech ecosystem.', icon: <Icons.Users /> }
+              { title: 'Clear Information', desc: 'Compare salary ranges, locations, experience levels, and skill tags before applying.', icon: <Icons.Globe /> },
+              { title: 'Application Tracking', desc: 'Review application statuses and keep related conversations together.', icon: <Icons.Zap /> },
+              { title: 'Two Perspectives', desc: 'Candidate and employer dashboards support both sides of the application process.', icon: <Icons.Users /> }
             ].map((value, i) => (
               <div 
                 key={i} 
@@ -161,7 +161,7 @@ export default function AboutUs() {
           <div style={{ position: 'relative', zIndex: 1 }}>
             <h2 style={{ fontSize: 'clamp(36px, 5vw, 48px)', fontWeight: 950, color: '#fff', marginBottom: '20px', letterSpacing: '-1px' }}>Ready to elevate your career?</h2>
             <p style={{ fontSize: '18px', color: '#aaa', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px', lineHeight: '1.6' }}>
-              Join thousands of forward-thinking companies and top-tier developers. The future of hiring starts here.
+              Explore available roles or create an account to apply, post vacancies, and manage applications.
             </p>
             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link to="/register" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', padding: '18px 40px', borderRadius: '16px', textDecoration: 'none', fontWeight: 800, fontSize: '16px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
