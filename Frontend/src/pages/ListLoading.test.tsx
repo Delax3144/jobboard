@@ -1,9 +1,9 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import api from '../lib/api';
-import Jobs from './Jobs';
+import Jobs from './Jobs/Jobs';
 import Applications from './Applications';
 import Employer from './Employer';
 
@@ -32,6 +32,15 @@ const response = (url: string, empty = false) => ({ data:
 });
 
 beforeEach(() => { auth.user.role = 'employer'; });
+
+it('keeps a job card usable when its company logo fails to load', async () => {
+  vi.mocked(api.get).mockResolvedValue({ data: [{ ...job, companyLogo: '/missing-logo.png' }] });
+  render(<MemoryRouter><Jobs /></MemoryRouter>);
+  fireEvent.error(await screen.findByRole('img', { name: 'Demo' }));
+  expect(screen.queryByRole('img', { name: 'Demo' })).toBeNull();
+  expect(screen.getByText('D')).toBeTruthy();
+  expect(screen.getByRole('link', { name: /Frontend Developer/ }).getAttribute('href')).toBe('/jobs/job-1');
+});
 
 it.each([
   ...cases,

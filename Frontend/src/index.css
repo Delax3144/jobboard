@@ -536,16 +536,6 @@ a {
   .job-mgmt-actions > button, .job-mgmt-actions > a { width: 100% !important; }
   
   .job-mgmt-details { grid-template-columns: 1fr !important; gap: 25px !important; }
-  /* --- Страница поиска вакансий (Jobs) --- */
-  .jobs-layout { grid-template-columns: 1fr !important; gap: 30px !important; }
-  .jobs-sidebar { display: none !important; } /* Прячем десктопный сайдбар на мобилках */
-  .mobile-filter-trigger-btn { display: flex !important; } /* Включаем красивую кнопку фильтров */
-  .jobs-search-flex-group { max-width: unset !important; width: 100% !important; }
-  
-  .job-card-flex { flex-direction: column !important; align-items: flex-start !important; padding: 25px 20px !important; gap: 20px !important; }
-  .job-card-flex > div:last-child { width: 100% !important; }
-  .job-card-flex h3 { font-size: 18px !important; padding-right: 40px !important; }
-  
   /* Фикс для нативных инпутов и шторки на мобилке */
   .premium-scroll input[type="range"] { margin: 15px 0 !important; }
   /* --- Страница Legal Center --- */

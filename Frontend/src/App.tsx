@@ -8,7 +8,7 @@ import { Toaster } from 'react-hot-toast';
 
 // Импорт страниц
 import Home from "./pages/Home/Home";
-const Jobs = lazy(() => import('./pages/Jobs'));
+const Jobs = lazy(() => import('./pages/Jobs/Jobs'));
 const JobDetails = lazy(() => import('./pages/JobDetails'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Applications = lazy(() => import('./pages/Applications'));
