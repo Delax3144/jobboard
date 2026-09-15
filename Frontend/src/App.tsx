@@ -27,7 +27,7 @@ const Contact = lazy(() => import('./pages/Contact/Contact'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const Legal = lazy(() => import('./pages/Legal'));
-const Blog = lazy(() => import('./pages/Blog'));
+const Blog = lazy(() => import('./pages/Blog/Blog'));
 
 // Импорт компонентов
 import TopNav from "./components/TopNav";

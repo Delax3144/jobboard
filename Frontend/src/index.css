@@ -436,7 +436,6 @@ a {
   .container { padding: 20px !important; } /* Фикс для общих контейнеров */
 
   /* --- Страница Blog --- */
-  .blog-hero { padding: 50px 0 30px !important; }
   .blog-featured-img { height: 250px !important; } /* Сильно уменьшаем картинку на мобилке */
   .blog-featured-content { padding: 25px 20px !important; }
   .blog-grid { grid-template-columns: 1fr !important; }
