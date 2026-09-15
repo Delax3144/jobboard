@@ -512,17 +512,10 @@ a {
   .auth-card { padding: 30px 20px !important; }
 
   /* --- Страница Job Details --- */
-  .job-details-hero { flex-direction: column !important; align-items: center !important; text-align: center !important; gap: 20px !important; }
-  .job-details-hero > div:last-child { width: 100% !important; min-width: unset !important; }
-  .job-details-hero > div:last-child > div:first-child { justify-content: center !important; }
-  .job-details-hero > div:last-child > div:last-child { justify-content: center !important; }
   
-  .job-details-content { flex-direction: column !important; gap: 30px !important; }
-  .job-details-sidebar { width: 100% !important; position: static !important; }
   
   .job-details-modal > div:last-child { padding: 30px 20px !important; }
   /* Фикс для тегов в Job Details */
-  .job-tags-container { justify-content: center !important; }
   /* Фикс отступов модалки ApplyForm на телефонах */
   .job-apply-modal-inner { padding: 30px 20px !important; border-radius: 24px !important; }
   /* --- Страница Job Management (Список откликов) --- */
