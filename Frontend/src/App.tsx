@@ -11,7 +11,7 @@ import Home from "./pages/Home/Home";
 const Jobs = lazy(() => import('./pages/Jobs/Jobs'));
 const JobDetails = lazy(() => import('./pages/JobDetails/JobDetails'));
 const NotFound = lazy(() => import('./pages/NotFound'));
-const Applications = lazy(() => import('./pages/Applications'));
+const Applications = lazy(() => import('./pages/Applications/Applications'));
 const Employer = lazy(() => import('./pages/Employer'));
 const Profile = lazy(() => import('./pages/Profile'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage/RegisterPage'));

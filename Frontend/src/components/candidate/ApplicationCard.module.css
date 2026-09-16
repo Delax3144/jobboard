@@ -1,0 +1,43 @@
+.card {
+  background: rgba(15, 15, 15, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 25px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  transition: transform 0.3s, background 0.3s, box-shadow 0.3s;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  background: rgba(25, 25, 25, 0.8);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.card:global(.status-invited):hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 20px 40px rgba(16, 185, 129, 0.15);
+}
+
+.card:global(.status-default):hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.card :global(.card-arrow) {
+  color: #555;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.card:hover :global(.card-arrow) {
+  transform: translateX(6px);
+  color: #fff;
+}
+
+.card:global(.status-invited):hover :global(.card-arrow) {
+  color: #10b981;
+}

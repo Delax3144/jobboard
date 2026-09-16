@@ -442,8 +442,6 @@ a {
   .blog-card-content { padding: 25px 20px !important; }
 
   /* --- Страница Applications (Dashboard) --- */
-  .app-stats-grid { grid-template-columns: 1fr !important; gap: 15px !important; }
-  .app-stats-grid > div { padding: 15px !important; }
   .app-card { padding: 20px 15px !important; }
   .app-card-inner { flex-direction: column !important; align-items: flex-start !important; gap: 15px !important; }
   .app-card-inner > div:first-child { width: 100% !important; }

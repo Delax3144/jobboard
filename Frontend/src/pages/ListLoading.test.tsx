@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import api from '../lib/api';
 import Jobs from './Jobs/Jobs';
-import Applications from './Applications';
+import Applications from './Applications/Applications';
 import Employer from './Employer';
 
 vi.mock('../lib/api', () => ({ default: { get: vi.fn() } }));

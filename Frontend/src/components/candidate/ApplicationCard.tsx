@@ -2,6 +2,8 @@
 import { Link } from "react-router-dom";
 import type { Application } from '../../types/job';
 
+import styles from "./ApplicationCard.module.css";
+
 const Icons = {
   ArrowRight: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
 };
@@ -33,7 +35,7 @@ export default function ApplicationCard({ app }: { app: Application }) {
   return (
     <Link 
       to={`/applications/${app.id}`} 
-      className={`app-card app-card-inner ${borderClass}`}
+      className={`${styles.card} app-card app-card-inner ${borderClass}`}
       style={{ border: isInvited ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(255,255,255,0.05)' }}
     >
       {/* ИНДИКАТОР НОВЫХ СООБЩЕНИЙ */}
