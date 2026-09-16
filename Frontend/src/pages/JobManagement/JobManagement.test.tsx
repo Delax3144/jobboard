@@ -2,10 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import api from '../lib/api';
+import api from '../../lib/api';
 import JobManagement from './JobManagement';
 
-vi.mock('../lib/api', () => ({ default: { get: vi.fn(), patch: vi.fn() } }));
+vi.mock('../../lib/api', () => ({ default: { get: vi.fn(), patch: vi.fn() } }));
 
 describe('Employer application management', () => {
   it('reviews and invites an applicant through the supported API route', async () => {
@@ -27,5 +27,10 @@ describe('Employer application management', () => {
     await user.click(await screen.findByRole('button', { name: 'Invite to Interview' }));
     await waitFor(() => expect(api.patch).toHaveBeenLastCalledWith('/applications/application-1', { status: 'invited' }));
     expect(screen.queryByRole('button', { name: 'Invite to Interview' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'rejected' }));
+    expect(screen.getByRole('button', { name: 'rejected' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByText('No candidates found for this filter.')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'invited' }));
+    expect(screen.getByText('Alex Demo')).toBeTruthy();
   });
 });
