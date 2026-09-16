@@ -458,41 +458,6 @@ a {
   /* --- Страница Application Details (Candidate & Employer Views) --- */
   .app-loading-mobile { padding: 40px 20px !important; }
   
-  /* Фикс огромных отступов по краям экрана */
-  .app-header-flex { 
-    flex-direction: column !important; 
-    align-items: flex-start !important; 
-    gap: 20px !important; 
-  }
-  .app-title-group { 
-    flex-direction: column !important; 
-    align-items: flex-start !important; 
-    gap: 15px !important; 
-  }
-  .app-status-wrapper { 
-    text-align: left !important; 
-    width: 100% !important; 
-    display: flex !important; 
-    flex-direction: column !important; 
-    align-items: flex-start !important; 
-  }
-  .app-bento-grid { 
-    grid-template-columns: 1fr !important; /* Bento-Grid в одну колонку */
-    gap: 20px !important;
-  }
-  .app-bento-grid > div {
-    grid-column: 1 / -1 !important; /* Заставляем элементы занимать всю ширину */
-  }
-  .app-footer-actions { 
-    flex-direction: column !important; 
-    align-items: flex-start !important; 
-    gap: 15px !important; 
-  }
-  /* Уменьшаем шрифты заголовков на деталях заявки */
-  .app-title-group h1 {
-    font-size: 24px !important;
-  }
-
   /* --- Страница Employer (Dashboard) --- */
   .employer-header { flex-direction: column !important; align-items: stretch !important; text-align: center !important; }
   .employer-stats { justify-content: center !important; }
