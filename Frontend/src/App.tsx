@@ -17,7 +17,7 @@ const Profile = lazy(() => import('./pages/Profile/Profile'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage/RegisterPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage/LoginPage'));
 const ApplicationDetails = lazy(() => import('./pages/ApplicationDetails/ApplicationDetails'));
-const MessagesPage = lazy(() => import('./pages/MessagesPage'));
+const MessagesPage = lazy(() => import('./pages/MessagesPage/MessagesPage'));
 const JobManagement = lazy(() => import('./pages/JobManagement/JobManagement'));
 const SavedJobs = lazy(() => import('./pages/SavedJobs'));
 const AboutUs = lazy(() => import('./pages/AboutUs/AboutUs'));

@@ -486,17 +486,6 @@ a {
   .legal-tabs-wrapper a { padding: 12px 20px !important; font-size: 14px !important; }
   .legal-info-footer { display: none !important; } /* Прячем инфу о дате на мобилках */
   .legal-card-content { padding: 30px 20px !important; border-radius: 24px !important; }
-  /* --- Мобильный мессенджер (MessagesPage) --- */
-  .msg-page-wrapper { padding: 10px !important; }
-  .msg-messenger-container { height: calc(100vh - 90px) !important; border-radius: 20px !important; }
-  
-  /* Логика Telegram: если активен список, прячем окно чата. Если зашли в чат — прячем список */
-  .msg-messenger-container.list-active .msg-sidebar-panel { width: 100% !important; border-right: none !important; }
-  .msg-messenger-container.list-active .msg-chat-window { display: none !important; }
-  
-  .msg-messenger-container.chat-active .msg-sidebar-panel { display: none !important; }
-  .msg-messenger-container.chat-active .msg-chat-window { width: 100% !important; display: flex !important; }
-  
   /* Элементы управления внутри чата */
   .msg-back-to-list-btn { display: flex !important; align-items: center; justify-content: center; }
   .msg-chat-header { padding: 15px !important; }
