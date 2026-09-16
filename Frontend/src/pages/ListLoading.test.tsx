@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import api from '../lib/api';
 import Jobs from './Jobs/Jobs';
 import Applications from './Applications/Applications';
-import Employer from './Employer';
+import Employer from './Employer/Employer';
 
 vi.mock('../lib/api', () => ({ default: { get: vi.fn() } }));
 const auth = vi.hoisted(() => ({ user: { id: 'user', role: 'employer' } }));

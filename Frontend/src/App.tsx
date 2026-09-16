@@ -12,7 +12,7 @@ const Jobs = lazy(() => import('./pages/Jobs/Jobs'));
 const JobDetails = lazy(() => import('./pages/JobDetails/JobDetails'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Applications = lazy(() => import('./pages/Applications/Applications'));
-const Employer = lazy(() => import('./pages/Employer'));
+const Employer = lazy(() => import('./pages/Employer/Employer'));
 const Profile = lazy(() => import('./pages/Profile/Profile'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage/RegisterPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage/LoginPage'));
