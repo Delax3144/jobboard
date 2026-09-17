@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import styles from "./Legal.module.css";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 
 const Icons = {
@@ -11,7 +12,7 @@ const Icons = {
 export default function Legal() {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Определяем активную вкладку на основе URL
   const activeTab = location.pathname.includes("terms") ? "terms" : location.pathname.includes("cookies") ? "cookies" : "privacy";
 
@@ -26,85 +27,60 @@ export default function Legal() {
   ];
 
   return (
-    <div style={{ 
-      background: '#050505', 
-      width: '100vw', 
-      position: 'relative', 
-      left: '50%',
-      right: '50%',
-      marginLeft: '-50vw',
-      marginRight: '-50vw',
-      minHeight: 'calc(100vh - 80px)', 
-      overflowX: 'clip',
-      paddingBottom: '80px'
-    }}>
-      
-      {/* Декоративные свечения */}
-      <div style={{ position: 'absolute', top: '0', left: '10%', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: '0', right: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+    <div className={styles.page}>
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 20px', position: 'relative', zIndex: 1 }}>
-        
-        <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#10b981', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px', marginBottom: '40px', textTransform: 'uppercase', letterSpacing: '0.5px', padding: 0 }}>
+      {/* Декоративные свечения */}
+      <div className={styles.greenGlow} />
+      <div className={styles.blueGlow} />
+
+      <div className={styles.container}>
+
+        <button onClick={() => navigate(-1)} className={styles.backButton}>
           <Icons.ArrowLeft /> Go Back
         </button>
 
-        <div style={{ marginBottom: '50px' }}>
-          <div style={{ display: 'inline-block', padding: '6px 14px', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.05)', color: '#888', fontSize: '12px', fontWeight: '800', marginBottom: '15px', border: '1px solid rgba(255, 255, 255, 0.1)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+        <div className={styles.header}>
+          <div className={styles.badge}>
             Legal Center
           </div>
-          <h1 style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 950, margin: '0 0 15px', letterSpacing: '-1.5px', color: '#fff' }}>
-            Commitment to <span style={{ color: '#10b981' }}>Transparency</span>
+          <h1 className={styles.title}>
+            Commitment to <span className={styles.accent}>Transparency</span>
           </h1>
-          <p style={{ color: '#888', margin: 0, fontSize: '18px', maxWidth: '600px', lineHeight: '1.6' }}>
+          <p className={styles.description}>
             We believe in clear, honest, and secure practices. Read our policies below to understand how we protect your data and operate JobBoard.
           </p>
         </div>
 
-        <div className="legal-layout" style={{ display: 'flex', gap: '50px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          
+        <div className={styles.layout}>
+
           {/* === НАВИГАЦИЯ СЛЕВА === */}
-          <div className="legal-sidebar" style={{ width: '280px', flexShrink: 0, position: 'sticky', top: '100px' }}>
-            <div style={{ background: 'rgba(15, 15, 15, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '15px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
-              <div className="legal-tabs-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className={styles.sidebar}>
+            <div className={styles.navigation}>
+              <div className={styles.tabs}>
                 {TABS.map(tab => (
-                  <Link 
-                    key={tab.id} 
+                  <Link
+                    key={tab.id}
                     to={tab.path}
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', whiteSpace: 'nowrap',
-                      background: activeTab === tab.id ? 'rgba(16, 185, 129, 0.1)' : 'transparent', 
-                      color: activeTab === tab.id ? '#10b981' : '#888', 
-                      border: '1px solid', borderColor: activeTab === tab.id ? 'rgba(16, 185, 129, 0.2)' : 'transparent', 
-                      borderRadius: '16px', cursor: 'pointer', fontSize: '15px', fontWeight: activeTab === tab.id ? 700 : 600, 
-                      transition: 'all 0.2s', textDecoration: 'none'
-                    }}
+                    className={styles.tab} aria-current={activeTab === tab.id ? "page" : undefined}
                   >
                     {tab.icon} {tab.label}
                   </Link>
                 ))}
               </div>
             </div>
-            <div className="legal-info-footer" style={{ marginTop: '30px', padding: '0 15px', color: '#555', fontSize: '13px', lineHeight: '1.6' }}>
+            <div className={styles.footer}>
               Last updated: <strong>May 2026</strong><br/>
-              Have questions? <Link to="/contact" style={{ color: '#10b981', textDecoration: 'none' }}>Contact Support</Link>
+              Have questions? <Link to="/contact" className={styles.textLink}>Contact Support</Link>
             </div>
           </div>
 
           {/* === КОНТЕНТ СПРАВА === */}
-          <div className="legal-card-content" style={{ flex: 1, minWidth: '300px', background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', padding: '50px', boxShadow: '0 30px 60px rgba(0,0,0,0.2)' }}>
-            
-            <style>{`
-              .legal-content h2 { color: #fff; font-size: 24px; font-weight: 800; margin: 40px 0 15px; letter-spacing: -0.5px; }
-              .legal-content h2:first-child { margin-top: 0; }
-              .legal-content p { color: #aaa; font-size: 16px; line-height: 1.8; margin-bottom: 20px; }
-              .legal-content ul { color: #aaa; font-size: 16px; line-height: 1.8; margin-bottom: 20px; padding-left: 20px; }
-              .legal-content li { margin-bottom: 10px; }
-              .legal-content strong { color: #ddd; }
-            `}</style>
+          <div className={styles.card}>
 
-            <div className="legal-content" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-              
+
+
+            <div className={styles.content}>
+
               {/* --- PRIVACY POLICY --- */}
               {activeTab === "privacy" && (
                 <>
@@ -130,7 +106,7 @@ export default function Legal() {
                   </ul>
 
                   <h2>4. Your GDPR & CCPA Rights</h2>
-                  <p>Depending on your location, you have the right to access, correct, delete, or port your personal data. You can manage your data directly from your <Link to="/profile" style={{ color: '#10b981', textDecoration: 'none' }}>Profile Settings</Link>. For complete data deletion, contact our privacy team.</p>
+                  <p>Depending on your location, you have the right to access, correct, delete, or port your personal data. You can manage your data directly from your <Link to="/profile" className={styles.textLink}>Profile Settings</Link>. For complete data deletion, contact our privacy team.</p>
                 </>
               )}
 
@@ -180,24 +156,22 @@ export default function Legal() {
                   </ul>
 
                   <h2>3. Manage Your Preferences</h2>
-                  <p>We believe in putting you in control. While strictly necessary cookies cannot be disabled (as the platform would break), you can opt-out of analytics tracking.</p>
-                  
-                  <div style={{ marginTop: '30px', background: 'rgba(0,0,0,0.5)', padding: '25px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #222', paddingBottom: '15px' }}>
+                  <p>Cookie preferences cannot currently be changed from this page. You can manage site cookies through your browser settings.</p>
+
+                  <div className={styles.preferences}>
+                    <div className={styles.essentialRow}>
                       <div>
-                        <strong style={{ color: '#fff', display: 'block', fontSize: '15px' }}>Essential Cookies</strong>
-                        <span style={{ color: '#666', fontSize: '13px' }}>Required for the site to function.</span>
+                        <strong className={styles.preferenceTitle}>Essential Cookies</strong>
+                        <span className={styles.preferenceDescription}>Required for the site to function.</span>
                       </div>
-                      <div style={{ background: '#111', color: '#666', padding: '6px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: 800 }}>Always Active</div>
+                      <div className={styles.alwaysActive}>Always Active</div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className={styles.analyticsRow}>
                       <div>
-                        <strong style={{ color: '#fff', display: 'block', fontSize: '15px' }}>Analytics & Performance</strong>
-                        <span style={{ color: '#666', fontSize: '13px' }}>Help us improve the platform.</span>
+                        <strong className={styles.preferenceTitle}>Analytics & Performance</strong>
+                        <span className={styles.preferenceDescription}>Help us improve the platform.</span>
                       </div>
-                      <div style={{ width: '44px', height: '24px', borderRadius: '12px', background: '#10b981', position: 'relative', cursor: 'pointer' }}>
-                         <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '3px', left: '23px' }} />
-                      </div>
+                      <span className={styles.unavailable}>Setting unavailable</span>
                     </div>
                   </div>
                 </>

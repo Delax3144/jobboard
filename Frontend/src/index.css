@@ -479,13 +479,6 @@ a {
   .job-mgmt-details { grid-template-columns: 1fr !important; gap: 25px !important; }
   /* Фикс для нативных инпутов и шторки на мобилке */
   .premium-scroll input[type="range"] { margin: 15px 0 !important; }
-  /* --- Страница Legal Center --- */
-  .legal-layout { grid-template-columns: 1fr !important; gap: 20px !important; }
-  .legal-sidebar { width: 100% !important; position: static !important; }
-  .legal-tabs-wrapper { flex-direction: row !important; overflow-x: auto !important; padding-bottom: 10px !important; -webkit-overflow-scrolling: touch; }
-  .legal-tabs-wrapper a { padding: 12px 20px !important; font-size: 14px !important; }
-  .legal-info-footer { display: none !important; } /* Прячем инфу о дате на мобилках */
-  .legal-card-content { padding: 30px 20px !important; border-radius: 24px !important; }
   /* --- Обрезка аватара --- */
   .prof-cropper-modal-container { padding: 20px 15px !important; }
   .prof-cropper-frame-view { height: 240px !important; }

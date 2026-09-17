@@ -26,7 +26,7 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword/ResetPassword'));
 const Contact = lazy(() => import('./pages/Contact/Contact'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword/ForgotPassword'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile/PublicProfile'));
-const Legal = lazy(() => import('./pages/Legal'));
+const Legal = lazy(() => import('./pages/Legal/Legal'));
 const Blog = lazy(() => import('./pages/Blog/Blog'));
 
 // Импорт компонентов
