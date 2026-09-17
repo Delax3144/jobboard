@@ -19,7 +19,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage/LoginPage'));
 const ApplicationDetails = lazy(() => import('./pages/ApplicationDetails/ApplicationDetails'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage/MessagesPage'));
 const JobManagement = lazy(() => import('./pages/JobManagement/JobManagement'));
-const SavedJobs = lazy(() => import('./pages/SavedJobs'));
+const SavedJobs = lazy(() => import('./pages/SavedJobs/SavedJobs'));
 const AboutUs = lazy(() => import('./pages/AboutUs/AboutUs'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));

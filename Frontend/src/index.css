@@ -505,9 +505,6 @@ a {
   .public-prof-sidebar { position: static !important; } /* Сбрасываем sticky */
   .public-prof-layout > div { padding: 25px 20px !important; }
   /* --- Сохраненные вакансии (SavedJobs) --- */
-  .saved-job-card { flex-direction: column !important; align-items: stretch !important; padding: 20px !important; gap: 15px !important; }
-  .saved-job-right-side { justify-content: space-between !important; width: 100% !important; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
-  .saved-job-actions-block { border-left: none !important; padding-left: 0 !important; }
   /* --- Адаптивный Футер (Footer) --- */
   .footer-grid-layout { grid-template-columns: 1fr !important; gap: 40px !important; }
   .footer-nav-col { gap: 12px !important; }
