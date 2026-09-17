@@ -21,7 +21,7 @@ const MessagesPage = lazy(() => import('./pages/MessagesPage/MessagesPage'));
 const JobManagement = lazy(() => import('./pages/JobManagement/JobManagement'));
 const SavedJobs = lazy(() => import('./pages/SavedJobs/SavedJobs'));
 const AboutUs = lazy(() => import('./pages/AboutUs/AboutUs'));
-const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail/VerifyEmail'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword/ResetPassword'));
 const Contact = lazy(() => import('./pages/Contact/Contact'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword/ForgotPassword'));

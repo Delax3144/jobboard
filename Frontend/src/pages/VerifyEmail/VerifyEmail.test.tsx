@@ -2,10 +2,10 @@ import { expect, it, vi } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import api from '../lib/api';
+import api from '../../lib/api';
 import VerifyEmail from './VerifyEmail';
 
-vi.mock('../lib/api', () => ({ default: { post: vi.fn() } }));
+vi.mock('../../lib/api', () => ({ default: { post: vi.fn() } }));
 
 function renderPage(path = '/verify-email?token=expired-token') {
   return render(<MemoryRouter initialEntries={[path]}><VerifyEmail /></MemoryRouter>);
