@@ -1,6 +1,8 @@
 import type { useChat } from '../../hooks/useChat';
-// src/components/chat/ChatWindow.tsx
+
 import { Link, useNavigate } from "react-router-dom";
+
+import styles from "./ChatWindow.module.css";
 
 const Icons = {
   Send: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>,
@@ -15,11 +17,11 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
 
   if (!currentApp) {
     return (
-      <div className="msg-chat-window" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', color: '#555' }}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: '#111', border: '1px solid #222', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}><Icons.Search /></div>
-          <h3 style={{ fontSize: '24px', fontWeight: 900, color: '#fff', marginBottom: '10px', letterSpacing: '-0.5px' }}>Your Messages</h3>
-          <p style={{ fontSize: '15px', color: '#888' }}>Select a conversation from the left to start chatting</p>
+      <div className={`msg-chat-window ${styles.emptyWindow}`}>
+        <div className={styles.emptyContent}>
+          <div className={styles.emptyIcon}><Icons.Search /></div>
+          <h3 className={styles.emptyTitle}>Your Messages</h3>
+          <p className={styles.emptyDescription}>Select a conversation from the left to start chatting</p>
         </div>
       </div>
     );
@@ -31,45 +33,45 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
   const isOnline = checkIsOnline(user?.role === 'employer' ? currentApp.candidate?.lastActive : currentApp.job?.owner?.lastActive);
 
   return (
-    <div className="msg-chat-window" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(5, 5, 5, 0.4)', minWidth: 0, position: 'relative' }}>
+    <div className={`msg-chat-window ${styles.window}`}>
       {/* HEADER */}
-      <div className="msg-chat-header" style={{ padding: '20px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(10, 10, 10, 0.8)', backdropFilter: 'blur(10px)', zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          
-          <button aria-label="Back to conversations" className="msg-back-to-list-btn" onClick={() => navigate('/messages')} style={{ display: 'none', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', padding: '8px', borderRadius: '12px' }}>
+      <div className={styles.header}>
+        <div className={styles.partner}>
+
+          <button aria-label="Back to conversations"  onClick={() => navigate('/messages')} className={styles.backButton}>
             <Icons.ArrowLeft />
           </button>
 
-          <div style={{ width: '48px', height: '48px', borderRadius: user?.role === 'employer' ? '50%' : '12px', background: '#111', border: '1px solid #222', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555', fontSize: '18px' }}>
-            {partnerAvatar ? <img src={partnerAvatar?.startsWith('http') ? partnerAvatar : `${apiUrl}${partnerAvatar}`} style={{width:'100%',height:'100%',objectFit:'cover'}}/> : <span>{partnerName[0].toUpperCase()}</span>}
+          <div className={styles.avatar} data-person={user?.role === 'employer'}>
+            {partnerAvatar ? <img src={partnerAvatar?.startsWith('http') ? partnerAvatar : `${apiUrl}${partnerAvatar}`} className={styles.avatarImage}/> : <span>{partnerName[0].toUpperCase()}</span>}
           </div>
           <div>
-            <Link to={partnerLink} style={{ fontWeight: '800', fontSize: '18px', color: '#fff', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#10b981'} onMouseOut={e => e.currentTarget.style.color = '#fff'}>
+            <Link to={partnerLink} className={styles.partnerLink} >
               {partnerName}
             </Link>
-            <div style={{ fontSize: '13px', color: '#666', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: 8, height: 8, background: isOnline ? '#10b981' : '#444', borderRadius: '50%' }} /> {isOnline ? "Online" : "Offline"}
+            <div className={styles.presenceLabel}>
+              <span className={styles.presence} data-online={isOnline} /> {isOnline ? "Online" : "Offline"}
             </div>
           </div>
         </div>
-        <div className="msg-chat-header-job-badge" style={{ background: '#111', border: '1px solid #222', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', color: '#888', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-          <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 800 }}>Context</span>
-          <span style={{ color: '#fff', fontWeight: 600 }}>{currentApp.job.title}</span>
+        <div className={styles.jobBadge}>
+          <span className={styles.contextLabel}>Context</span>
+          <span className={styles.jobTitle}>{currentApp.job.title}</span>
         </div>
       </div>
 
       {isCurrentLockedForCandidate ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center', padding: '40px', maxWidth: '400px' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: '#111', border: '1px solid #222', color: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}><Icons.Lock /></div>
-            <h3 style={{ color: '#fff', fontSize: '24px', fontWeight: 900, marginBottom: '12px', letterSpacing: '-0.5px' }}>Chat is Locked</h3>
-            <p style={{ color: '#888', fontSize: '15px', lineHeight: '1.6', margin: '0 0 32px' }}>This conversation will be unlocked automatically if the employer decides to proceed with your application.</p>
+        <div className={styles.lockedWindow}>
+          <div className={styles.lockedContent}>
+            <div className={styles.lockedIcon}><Icons.Lock /></div>
+            <h3 className={styles.lockedTitle}>Chat is Locked</h3>
+            <p className={styles.lockedDescription}>This conversation will be unlocked automatically if the employer decides to proceed with your application.</p>
           </div>
         </div>
       ) : (
         <>
-          <div ref={scrollContainerRef} className="premium-scroll" style={{ flex: 1, overflowY: 'auto', padding: '30px 40px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ alignSelf: 'center', background: '#111', border: '1px solid #222', padding: '8px 20px', borderRadius: '20px', fontSize: '11px', color: '#666', marginBottom: '30px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <div ref={scrollContainerRef} className={`premium-scroll ${styles.messages}`}>
+            <div className={styles.startDate}>
               Application started {new Date(currentApp.createdAt).toLocaleDateString()}
             </div>
             {currentApp.messages.map((m, index) => {
@@ -80,21 +82,18 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
               const isLastInGroup = !nextMsg || nextMsg.senderId !== m.senderId;
               const currentDate = new Date(m.createdAt).toLocaleDateString();
               const prevDate = prevMsg ? new Date(prevMsg.createdAt).toLocaleDateString() : null;
-              
+
               return (
-                <div key={m.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                  {currentDate !== prevDate && <div style={{ alignSelf: 'center', margin: '20px 0', fontSize: '11px', fontWeight: '800', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>{currentDate}</div>}
-                  <div style={{ alignSelf: isMine ? 'flex-end' : 'flex-start', maxWidth: '75%', display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start', marginTop: isFirstInGroup ? '12px' : '2px' }}>
-                    <div style={{ 
-                      background: isMine ? '#10b981' : '#111', color: isMine ? '#000' : '#fff', border: isMine ? 'none' : '1px solid #222',
-                      padding: '14px 20px', borderRadius: '20px', borderTopLeftRadius: !isMine && !isFirstInGroup ? '6px' : '20px', borderBottomLeftRadius: !isMine && !isLastInGroup ? '6px' : (isMine ? '20px' : '6px'), borderTopRightRadius: isMine && !isFirstInGroup ? '6px' : '20px', borderBottomRightRadius: isMine && !isLastInGroup ? '6px' : (isMine ? '6px' : '20px'), fontSize: '15px', fontWeight: isMine ? '600' : '400', wordBreak: 'break-word', whiteSpace: 'pre-wrap', lineHeight: '1.5'
-                    }}>
+                <div key={m.id} className={styles.messageRow}>
+                  {currentDate !== prevDate && <div className={styles.dateSeparator}>{currentDate}</div>}
+                  <div className={styles.messageGroup} data-mine={isMine} data-first={isFirstInGroup}>
+                    <div className={styles.bubble}>
                       {m.text}
                     </div>
                     {isLastInGroup && (
-                      <div style={{ fontSize: '11px', color: '#555', marginTop: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div className={styles.messageTime}>
                         {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        {isMine && <span style={{ color: '#10b981' }}><Icons.Check /></span>}
+                        {isMine && <span className={styles.sentIndicator}><Icons.Check /></span>}
                       </div>
                     )}
                   </div>
@@ -103,10 +102,10 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
             })}
           </div>
           {/* INPUT AREA */}
-          <div style={{ padding: '20px 40px 30px', background: 'rgba(10, 10, 10, 0.8)', backdropFilter: 'blur(10px)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ display: 'flex', gap: '15px', background: '#0a0a0a', padding: '10px 15px', borderRadius: '24px', border: '1px solid #222', alignItems: 'flex-end' }}>
-              <textarea aria-label="Message" value={msg} onChange={(e) => setMsg(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }} placeholder="Type your message..." style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', outline: 'none', padding: '10px', resize: 'none', minHeight: '24px', maxHeight: '150px', fontFamily: 'inherit', fontSize: '15px', lineHeight: '1.5' }} />
-              <button aria-label="Send message" onClick={sendMsg} disabled={!msg.trim()} style={{ background: msg.trim() ? '#10b981' : '#222', color: msg.trim() ? '#000' : '#555', border: 'none', width: '48px', height: '48px', borderRadius: '16px', cursor: msg.trim() ? 'pointer' : 'not-allowed', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}><Icons.Send /></button>
+          <div className={styles.composer}>
+            <div className={styles.composerInner}>
+              <textarea aria-label="Message" value={msg} onChange={(e) => setMsg(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }} placeholder="Type your message..." className={styles.messageInput} />
+              <button aria-label="Send message" onClick={sendMsg} disabled={!msg.trim()} className={styles.sendButton}><Icons.Send /></button>
             </div>
           </div>
         </>

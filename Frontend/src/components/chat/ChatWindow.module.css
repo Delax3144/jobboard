@@ -1,0 +1,369 @@
+.emptyWindow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyContent {
+  text-align: center;
+  color: #555;
+}
+
+.emptyIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: #111;
+  border: 1px solid #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.emptyTitle {
+  font-size: 24px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 10px;
+  letter-spacing: -0.5px;
+}
+
+.emptyDescription {
+  font-size: 15px;
+  color: #888;
+}
+
+.window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(5, 5, 5, 0.4);
+  min-width: 0;
+  position: relative;
+}
+
+.header {
+  padding: 20px 40px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.partner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.backButton {
+  display: none;
+  background: rgba(255,255,255,0.05);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #111;
+  border: 1px solid #222;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 18px;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.partnerLink {
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.presenceLabel {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.presence {
+  width: 8px;
+  height: 8px;
+  background: #444;
+  border-radius: 50%;
+}
+
+.jobBadge {
+  background: #111;
+  border: 1px solid #222;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #888;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.contextLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 800;
+}
+
+.jobTitle {
+  color: #fff;
+  font-weight: 600;
+}
+
+.lockedWindow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lockedContent {
+  text-align: center;
+  padding: 40px;
+  max-width: 400px;
+}
+
+.lockedIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: #111;
+  border: 1px solid #222;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.lockedTitle {
+  color: #fff;
+  font-size: 24px;
+  font-weight: 900;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.lockedDescription {
+  color: #888;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 32px;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 30px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.startDate {
+  align-self: center;
+  background: #111;
+  border: 1px solid #222;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 30px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.messageRow {
+  display: flex;
+  flex-direction: column;
+}
+
+.dateSeparator {
+  align-self: center;
+  margin: 20px 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.messageGroup {
+  align-self: flex-start;
+  max-width: 75%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 2px;
+}
+
+.bubble {
+  background: #111;
+  color: #fff;
+  border: 1px solid #222;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 400;
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.messageTime {
+  font-size: 11px;
+  color: #555;
+  margin-top: 6px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sentIndicator {
+  color: #10b981;
+}
+
+.composer {
+  padding: 20px 40px 30px;
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.composerInner {
+  display: flex;
+  gap: 15px;
+  background: #0a0a0a;
+  padding: 10px 15px;
+  border-radius: 24px;
+  border: 1px solid #222;
+  align-items: flex-end;
+}
+
+.messageInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  outline: none;
+  padding: 10px;
+  resize: none;
+  min-height: 24px;
+  max-height: 150px;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.sendButton {
+  background: #222;
+  color: #555;
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  cursor: not-allowed;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.avatar[data-person="true"] {
+  border-radius: 50%;
+}
+
+.presence[data-online="true"] {
+  background: #10b981;
+}
+
+.messageGroup[data-mine="true"] {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.messageGroup[data-first="true"] {
+  margin-top: 12px;
+}
+
+.messageGroup[data-mine="true"] .bubble {
+  background: #10b981;
+  color: #000;
+  border: none;
+  font-weight: 600;
+}
+
+.sendButton:not(:disabled) {
+  background: #10b981;
+  color: #000;
+  cursor: pointer;
+}
+
+.partnerLink:hover {
+  color: #10b981;
+}
+
+.bubble {
+  border-bottom-left-radius: 6px;
+}
+
+.messageGroup[data-mine="true"] .bubble {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 6px;
+}
+
+.messageGroup[data-mine="false"][data-first="false"] .bubble {
+  border-top-left-radius: 6px;
+}
+
+.messageGroup[data-mine="true"][data-first="false"] .bubble {
+  border-top-right-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header {
+    padding: 15px;
+  }
+
+  .jobBadge {
+    display: none;
+  }
+}
