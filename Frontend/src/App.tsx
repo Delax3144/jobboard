@@ -25,7 +25,7 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Contact = lazy(() => import('./pages/Contact/Contact'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile/PublicProfile'));
 const Legal = lazy(() => import('./pages/Legal'));
 const Blog = lazy(() => import('./pages/Blog/Blog'));
 
