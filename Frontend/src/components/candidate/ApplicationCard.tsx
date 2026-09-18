@@ -12,63 +12,46 @@ export default function ApplicationCard({ app }: { app: Application }) {
   const isInvited = app.status === 'invited';
   const isRejected = app.status === 'rejected';
   
-  let statusColor = '#3b82f6';
-  let statusBg = 'rgba(59, 130, 246, 0.1)';
-  let statusBorder = 'rgba(59, 130, 246, 0.2)';
-  let statusLabel = 'Under Review';
-  let borderClass = 'status-default';
-  
-  if (isInvited) {
-    statusColor = '#10b981';
-    statusBg = 'rgba(16, 185, 129, 0.1)';
-    statusBorder = 'rgba(16, 185, 129, 0.3)';
-    statusLabel = 'Interview';
-    borderClass = 'status-invited';
-  } else if (isRejected) {
-    statusColor = '#ff4b4b';
-    statusBg = 'rgba(255, 75, 75, 0.05)';
-    statusBorder = 'rgba(255, 75, 75, 0.2)';
-    statusLabel = 'Declined';
-  }
+  const statusLabel = isInvited ? 'Interview' : isRejected ? 'Declined' : 'Under Review';
 
   return (
     <Link 
       to={`/applications/${app.id}`} 
-      className={`${styles.card} app-card app-card-inner ${borderClass}`}
-      style={{ border: isInvited ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(255,255,255,0.05)' }}
+      className={styles.card}
+      data-status={app.status}
     >
       {hasUpdate && (
-        <div style={{ position: 'absolute', top: '-4px', right: '-4px', display: 'flex', alignItems: 'center' }}>
-          <div style={{ width: '12px', height: '12px', background: '#10b981', border: '3px solid #050505', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }} />
+        <div className={styles.updateIndicator}>
+          <div className={styles.updateDot} />
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1, minWidth: '0' }}>
-        <div style={{ width: '52px', height: '52px', flexShrink: 0, borderRadius: '14px', background: '#111', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 900, color: '#555', overflow: 'hidden' }}>
-          {app.job?.companyLogo ? <img src={app.job.companyLogo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Logo" /> : app.job?.companyName?.charAt(0).toUpperCase()}
+      <div className={styles.identity}>
+        <div className={styles.logo}>
+          {app.job?.companyLogo ? <img src={app.job.companyLogo} className={styles.logoImage} alt="Logo" /> : app.job?.companyName?.charAt(0).toUpperCase()}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '0', paddingRight: '15px' }}>
-          <h3 style={{ fontSize: '18px', margin: '0 0 4px 0', fontWeight: '800', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div className={styles.details}>
+          <h3 className={styles.title}>
             {app.job?.title}
           </h3>
-          <div style={{ color: '#888', fontSize: '14px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div className={styles.company}>
             {app.job?.companyName}
           </div>
         </div>
       </div>
 
-      <div className="app-card-right" style={{ display: 'flex', alignItems: 'center', gap: '30px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', color: statusColor, background: statusBg, border: `1px solid ${statusBorder}`, padding: '4px 10px', borderRadius: '8px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor', boxShadow: isInvited ? '0 0 8px #10b981' : 'none' }} />
+      <div className={styles.summary}>
+        <div className={styles.statusInfo}>
+          <div className={styles.statusBadge}>
+            <span className={styles.statusDot} />
             {statusLabel}
           </div>
-          <div style={{ color: '#555', fontSize: '12px', fontWeight: 600 }}>
+          <div className={styles.date}>
             {new Date(app.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </div>
         </div>
 
-        <div className="card-arrow" style={{ display: 'flex', alignItems: 'center', paddingLeft: '10px', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className={styles.arrow}>
           <Icons.ArrowRight />
         </div>
       </div>
