@@ -1,0 +1,149 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clearButton {
+  background: none;
+  border: none;
+  color: #10b981;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.section {
+  margin-bottom: 35px;
+}
+
+.label {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  display: block;
+  margin-bottom: 15px;
+  font-weight: 800;
+}
+
+.locations {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #888;
+  font-weight: 400;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #10b981;
+  cursor: pointer;
+}
+
+.levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.level {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #888;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.salaryRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.salaryField {
+  flex: 1;
+}
+
+.salaryLabel {
+  font-size: 11px;
+  color: #444;
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.salaryInput {
+  width: 100%;
+  background: #000;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 10px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+
+.sliderContainer {
+  padding: 0 5px;
+}
+
+.slider {
+  width: 100%;
+  accent-color: #10b981;
+  cursor: pointer;
+}
+
+.scale {
+  display: flex;
+  justify-content: space-between;
+  color: #444;
+  font-size: 11px;
+  margin-top: 5px;
+  font-weight: 600;
+}
+
+.location[data-selected="true"] {
+  color: #fff;
+  font-weight: 600;
+}
+
+.level[aria-pressed="true"] {
+  background: rgba(16,185,129,0.1);
+  border-color: rgba(16,185,129,0.3);
+  color: #10b981;
+}
+
+@media (max-width: 768px) {
+  .slider {
+    margin: 15px 0;
+  }
+}

@@ -1,3 +1,4 @@
+import styles from "./JobsFilters.module.css";
 import type { useJobs } from '../../hooks/useJobs';
 import { FILTER_LOCATIONS, FILTER_LEVELS, MAX_SALARY_LIMIT } from "../../hooks/useJobs";
 
@@ -8,34 +9,34 @@ const Icons = {
 export default function JobsFilters({ filters }: { filters: ReturnType<typeof useJobs>['filters'] }) {
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className={styles.header}>
+        <h4 className={styles.title}>
           <Icons.Filter /> Filters
         </h4>
-        <button onClick={filters.clearAllFilters} style={{ background: 'none', border: 'none', color: '#10b981', fontSize: '13px', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+        <button type="button" onClick={filters.clearAllFilters} className={styles.clearButton}>
           Clear All
         </button>
       </div>
       
-      <div style={{ marginBottom: '35px' }}>
-        <label style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'block', marginBottom: '15px', fontWeight: 800 }}>Location</label>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className={styles.section}>
+        <label className={styles.label}>Location</label>
+        <div className={styles.locations}>
           {FILTER_LOCATIONS.map(loc => (
-            <label key={loc} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontSize: '14px', color: filters.selectedLocations.includes(loc) ? '#fff' : '#888', fontWeight: filters.selectedLocations.includes(loc) ? 600 : 400 }}>
-              <input type="checkbox" checked={filters.selectedLocations.includes(loc)} onChange={() => filters.toggleFilter(filters.setSelectedLocations, loc)} style={{ width: '18px', height: '18px', margin: 0, accentColor: '#10b981', cursor: 'pointer' }} />
+            <label key={loc} className={styles.location} data-selected={filters.selectedLocations.includes(loc)}>
+              <input type="checkbox" checked={filters.selectedLocations.includes(loc)} onChange={() => filters.toggleFilter(filters.setSelectedLocations, loc)} className={styles.checkbox} />
               {loc}
             </label>
           ))}
         </div>
       </div>
 
-      <div style={{ marginBottom: '35px' }}>
-        <label style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'block', marginBottom: '15px', fontWeight: 800 }}>Experience Level</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+      <div className={styles.section}>
+        <label className={styles.label}>Experience Level</label>
+        <div className={styles.levels}>
           {FILTER_LEVELS.map(lv => {
             const isActive = filters.selectedLevels.includes(lv);
             return (
-              <button aria-pressed={isActive} key={lv} onClick={() => filters.toggleFilter(filters.setSelectedLevels, lv)} style={{ background: isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.03)', border: isActive ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255,255,255,0.08)', color: isActive ? '#10b981' : '#888', borderRadius: '12px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}>
+              <button type="button" aria-pressed={isActive} key={lv} onClick={() => filters.toggleFilter(filters.setSelectedLevels, lv)} className={styles.level}>
                 {lv}
               </button>
             );
@@ -44,20 +45,20 @@ export default function JobsFilters({ filters }: { filters: ReturnType<typeof us
       </div>
 
       <div>
-        <label style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'block', marginBottom: '15px', fontWeight: 800 }}>Salary Range (PLN)</label>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '20px' }}>
-          <div style={{ flex: 1 }}>
-            <span style={{ fontSize: '11px', color: '#444', display: 'block', marginBottom: '4px', fontWeight: 600 }}>MIN</span>
-            <input aria-label="Minimum salary in PLN" type="number" value={filters.minSalary} onChange={(e) => filters.setMinSalary(Math.max(0, parseInt(e.target.value) || 0))} style={{ width: '100%', background: '#000', border: '1px solid rgba(255,255,255,0.08)', padding: '10px', borderRadius: '10px', color: '#fff', fontSize: '13px', outline: 'none' }} />
+        <label className={styles.label}>Salary Range (PLN)</label>
+        <div className={styles.salaryRow}>
+          <div className={styles.salaryField}>
+            <span className={styles.salaryLabel}>MIN</span>
+            <input aria-label="Minimum salary in PLN" type="number" value={filters.minSalary} onChange={(e) => filters.setMinSalary(Math.max(0, parseInt(e.target.value) || 0))} className={styles.salaryInput} />
           </div>
-          <div style={{ flex: 1 }}>
-            <span style={{ fontSize: '11px', color: '#444', display: 'block', marginBottom: '4px', fontWeight: 600 }}>MAX</span>
-            <input aria-label="Maximum salary in PLN" type="number" value={filters.maxSalary} onChange={(e) => filters.setMaxSalary(Math.max(filters.minSalary, parseInt(e.target.value) || 0))} style={{ width: '100%', background: '#000', border: '1px solid rgba(255,255,255,0.08)', padding: '10px', borderRadius: '10px', color: '#fff', fontSize: '13px', outline: 'none' }} />
+          <div className={styles.salaryField}>
+            <span className={styles.salaryLabel}>MAX</span>
+            <input aria-label="Maximum salary in PLN" type="number" value={filters.maxSalary} onChange={(e) => filters.setMaxSalary(Math.max(filters.minSalary, parseInt(e.target.value) || 0))} className={styles.salaryInput} />
           </div>
         </div>
-        <div style={{ padding: '0 5px' }}>
-          <input aria-label="Maximum salary slider in PLN" type="range" min="0" max={MAX_SALARY_LIMIT} step="1000" value={filters.maxSalary > MAX_SALARY_LIMIT ? MAX_SALARY_LIMIT : filters.maxSalary} onChange={(e) => filters.setMaxSalary(parseInt(e.target.value))} style={{ width: '100%', accentColor: '#10b981', cursor: 'pointer' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#444', fontSize: '11px', marginTop: '5px', fontWeight: 600 }}>
+        <div className={styles.sliderContainer}>
+          <input aria-label="Maximum salary slider in PLN" type="range" min="0" max={MAX_SALARY_LIMIT} step="1000" value={filters.maxSalary > MAX_SALARY_LIMIT ? MAX_SALARY_LIMIT : filters.maxSalary} onChange={(e) => filters.setMaxSalary(parseInt(e.target.value))} className={styles.slider} />
+          <div className={styles.scale}>
             <span>0</span>
             <span>{MAX_SALARY_LIMIT.toLocaleString()}+ PLN</span>
           </div>
