@@ -1,0 +1,49 @@
+.button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #000;
+  text-decoration: none;
+  z-index: 1000;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+}
+
+.button:hover {
+  transform: scale(1.1) translateY(-5px);
+  background-color: #34d399;
+}
+
+.button[data-unread="true"] {
+  animation: pulse 2s infinite;
+}
+
+.icon {
+  margin-left: -2px;
+  margin-top: 2px;
+}
+
+.badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  background-color: #ff4b4b;
+  border: 2px solid #050505;
+  border-radius: 50%;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.7); }
+  100% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+}
