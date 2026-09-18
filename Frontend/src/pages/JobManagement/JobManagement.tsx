@@ -11,7 +11,7 @@ const Icons = {
 export default function JobManagement() {
   const {
     job, applications, loading, filter, setFilter, apiUrl,
-    filteredApps, expandedAppId, toggleExpand, handleUpdateStatus, getStatusColor
+    filteredApps, expandedAppId, toggleExpand, handleUpdateStatus
   } = useJobManagement();
 
   if (loading) return <div className={styles.loading}>Loading...</div>;
@@ -63,7 +63,6 @@ export default function JobManagement() {
               isExpanded={expandedAppId === app.id}
               toggleExpand={toggleExpand}
               handleUpdateStatus={handleUpdateStatus}
-              getStatusColor={getStatusColor}
               apiUrl={apiUrl}
             />
           ))

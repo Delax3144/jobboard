@@ -22,7 +22,14 @@ describe('Employer application management', () => {
       <Routes><Route path='/employer/job/:id' element={<JobManagement />} /></Routes>
     </MemoryRouter>);
 
-    await user.click(await screen.findByRole('button', { name: 'Review' }));
+    await user.click(await screen.findByRole('button', { name: 'View CV' }));
+    expect(screen.getByRole('button', { name: 'Hide Details' }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByText('No motivation letter provided.')).toBeTruthy();
+    expect((screen.getByRole('button', { name: 'No CV Uploaded' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole('link', { name: 'Profile' }).getAttribute('href')).toBe('/candidate/candidate-1');
+    await user.click(screen.getByRole('button', { name: 'Hide Details' }));
+    expect(screen.queryByText('No motivation letter provided.')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Review' }));
     await waitFor(() => expect(api.patch).toHaveBeenCalledWith('/applications/application-1', { status: 'reviewed' }));
     await user.click(await screen.findByRole('button', { name: 'Invite to Interview' }));
     await waitFor(() => expect(api.patch).toHaveBeenLastCalledWith('/applications/application-1', { status: 'invited' }));

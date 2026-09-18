@@ -49,17 +49,9 @@ export function useJobManagement() {
 
   const filteredApps = filter === "all" ? applications : applications.filter(a => a.status === filter);
 
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'reviewed': return { bg: 'rgba(59, 130, 246, 0.1)', text: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)' }; 
-      case 'invited': return { bg: 'rgba(16, 185, 129, 0.1)', text: '#10b981', border: 'rgba(16, 185, 129, 0.3)' }; 
-      case 'rejected': return { bg: 'rgba(239, 68, 68, 0.1)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' }; 
-      default: return { bg: 'rgba(255, 255, 255, 0.05)', text: '#aaa', border: 'rgba(255, 255, 255, 0.1)' }; 
-    }
-  };
 
   return {
     job, applications, loading, filter, setFilter, apiUrl,
-    filteredApps, expandedAppId, toggleExpand, handleUpdateStatus, getStatusColor
+    filteredApps, expandedAppId, toggleExpand, handleUpdateStatus
   };
 }
