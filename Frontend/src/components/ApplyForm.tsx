@@ -1,5 +1,6 @@
+import styles from "./ApplyForm.module.css";
 import { apiErrorMessage } from '../lib/apiError';
-import { useState, useRef } from "react";
+import { useState, useRef, useId } from "react";
 import api from "../lib/api";
 
 const Icons = {
@@ -16,6 +17,7 @@ interface ApplyFormProps {
 }
 
 export default function ApplyForm({ jobId, jobTitle, onSuccess }: ApplyFormProps) {
+  const fieldId = useId();
   const [coverLetter, setCoverLetter] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
@@ -56,95 +58,77 @@ export default function ApplyForm({ jobId, jobTitle, onSuccess }: ApplyFormProps
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.4s ease-out' }}>
-      
+    <form onSubmit={handleSubmit} className={styles.form}>
+
       {status === "error" && (
-        <div style={{ background: 'rgba(255, 75, 75, 0.05)', border: '1px solid rgba(255, 75, 75, 0.2)', color: '#ff4b4b', padding: '14px', borderRadius: '16px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div role="alert" className={styles.error}>
           <Icons.X /> {errorMsg}
         </div>
       )}
 
       <div>
-        <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <span style={{ fontSize: '11px', color: '#888', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Motivation Pitch</span>
-          <span style={{ fontSize: '11px', color: '#555', fontWeight: 600 }}>Optional</span>
+        <label htmlFor={`${fieldId}-pitch`} className={styles.pitchLabel}>
+          <span className={styles.labelText}>Motivation Pitch</span>
+          <span className={styles.optional}>Optional</span>
         </label>
-        <textarea 
+        <textarea id={`${fieldId}-pitch`}
           placeholder={`Why are you a great fit for the ${jobTitle} role?`}
           value={coverLetter}
           onChange={(e) => setCoverLetter(e.target.value)}
-          style={{
-            width: '100%', minHeight: '120px', padding: '16px 20px', borderRadius: '20px',
-            background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)',
-            color: '#fff', fontSize: '15px', lineHeight: '1.6', outline: 'none', resize: 'vertical',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', fontFamily: 'inherit'
-          }}
-          onFocus={e => { e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.5)'; e.currentTarget.style.background = 'rgba(16, 185, 129, 0.02)'; }}
-          onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)'; }}
+          className={styles.textarea}
+
+
         />
       </div>
 
       <div>
-        <label style={{ fontSize: '11px', color: '#888', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', display: 'block' }}>
+        <label htmlFor={`${fieldId}-cv`} className={styles.resumeLabel}>
           Resume / CV
         </label>
-        
+
         {!file ? (
-          <div 
+          <button type="button"
             onClick={() => fileInputRef.current?.click()}
-            style={{
-              background: 'rgba(255, 255, 255, 0.01)', border: '2px dashed rgba(255, 255, 255, 0.1)', borderRadius: '24px',
-              padding: '30px 20px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px'
-            }}
-            onMouseOver={e => { e.currentTarget.style.borderColor = '#10b981'; e.currentTarget.style.background = 'rgba(16, 185, 129, 0.05)'; }}
-            onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.01)'; }}
+            className={styles.uploadButton}
+
+
           >
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className={styles.uploadIcon}>
               <Icons.Upload />
             </div>
             <div>
-              <div style={{ color: '#fff', fontSize: '15px', fontWeight: 700, marginBottom: '4px' }}>Click to upload your CV</div>
-              <div style={{ color: '#666', fontSize: '12px', fontWeight: 500 }}>PDF, DOC, DOCX (Max 5MB)</div>
+              <div className={styles.uploadTitle}>Click to upload your CV</div>
+              <div className={styles.uploadHint}>PDF, DOC, DOCX (Max 5MB)</div>
             </div>
-          </div>
+          </button>
         ) : (
-          <div style={{
-            background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '20px',
-            padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'all 0.3s'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-              <div style={{ color: '#10b981' }}><Icons.File /></div>
-              <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff', fontWeight: 600, fontSize: '14px' }}>
+          <div className={styles.selectedFile}>
+            <div className={styles.fileInfo}>
+              <div className={styles.fileIcon}><Icons.File /></div>
+              <div className={styles.fileName}>
                 {file.name}
               </div>
             </div>
-            <button type="button" onClick={clearFile} style={{ background: 'rgba(255,75,75,0.1)', color: '#ff4b4b', border: 'none', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
+            <button type="button" aria-label="Remove CV" onClick={clearFile} className={styles.removeButton}  >
               <Icons.X />
             </button>
           </div>
         )}
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileChange} 
-          accept=".pdf,.doc,.docx" 
-          style={{ display: 'none' }} 
+        <input
+          id={`${fieldId}-cv`} type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept=".pdf,.doc,.docx"
+          className={styles.hiddenInput}
         />
       </div>
 
-      <button 
-        type="submit" 
+      <button
+        type="submit"
         disabled={status === "submitting"}
-        style={{
-          marginTop: '10px', width: '100%', padding: '18px', borderRadius: '20px', border: 'none',
-          background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', fontSize: '16px', fontWeight: 800,
-          cursor: status === "submitting" ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-          boxShadow: '0 15px 30px -10px rgba(16, 185, 129, 0.5)', transition: 'all 0.3s',
-          opacity: status === "submitting" ? 0.8 : 1
-        }}
-        onMouseOver={e => { if (status !== "submitting") e.currentTarget.style.transform = 'translateY(-2px)' }}
-        onMouseOut={e => { if (status !== "submitting") e.currentTarget.style.transform = 'translateY(0)' }}
+        className={styles.submit}
+
+
       >
         {status === "submitting" ? (
           "Sending Application..."
@@ -153,7 +137,7 @@ export default function ApplyForm({ jobId, jobTitle, onSuccess }: ApplyFormProps
         )}
       </button>
 
-      <div style={{ textAlign: 'center', color: '#666', fontSize: '11px', fontWeight: 500 }}>
+      <div className={styles.consent}>
         By applying, you agree to share your platform profile and provided documents with the employer.
       </div>
     </form>

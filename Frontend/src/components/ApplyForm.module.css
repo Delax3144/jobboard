@@ -1,0 +1,208 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.error {
+  background: rgba(255, 75, 75, 0.05);
+  border: 1px solid rgba(255, 75, 75, 0.2);
+  color: #ff4b4b;
+  padding: 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pitchLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.labelText {
+  font-size: 11px;
+  color: #888;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.optional {
+  font-size: 11px;
+  color: #555;
+  font-weight: 600;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.6;
+  outline: none;
+  resize: vertical;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+}
+
+.resumeLabel {
+  font-size: 11px;
+  color: #888;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.uploadButton {
+  background: rgba(255, 255, 255, 0.01);
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 30px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.uploadIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.03);
+  color: #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.uploadTitle {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.uploadHint {
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.selectedFile {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 20px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s;
+}
+
+.fileInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.fileIcon {
+  color: #10b981;
+}
+
+.fileName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.removeButton {
+  background: rgba(255,75,75,0.1);
+  color: #ff4b4b;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.submit {
+  margin-top: 10px;
+  width: 100%;
+  padding: 18px;
+  border-radius: 20px;
+  border: none;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #000;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 15px 30px -10px rgba(16, 185, 129, 0.5);
+  transition: all 0.3s;
+  opacity: 1;
+}
+
+.consent {
+  text-align: center;
+  color: #666;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.uploadButton {
+  width: 100%;
+  font: inherit;
+}
+
+.textarea:focus {
+  border-color: rgba(16,185,129,0.5);
+  background: rgba(16,185,129,0.02);
+}
+
+.uploadButton:hover {
+  border-color: #10b981;
+  background: rgba(16,185,129,0.05);
+}
+
+.removeButton:hover {
+  transform: scale(1.1);
+}
+
+.submit:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
