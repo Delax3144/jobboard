@@ -138,7 +138,6 @@ a {
 @media (max-width: 768px) {
   .m-grid-1 { grid-template-columns: 1fr !important; }
   .container { padding: 20px !important; }
-  .job-apply-modal-inner { padding: 30px 20px !important; border-radius: 24px !important; }
   .hidden-mobile { display: none !important; }
   .premium-scroll input[type="range"] { margin: 15px 0 !important; }
 }
