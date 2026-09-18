@@ -18,7 +18,6 @@ export async function optionalAuthMiddleware(
     req.user = await verifyActiveAccessToken(token);
   } catch (error) {
     if (!(error instanceof InvalidSessionError)) return next(error);
-    // Invalid optional token is treated as unauthenticated.
   }
 
   next();

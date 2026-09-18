@@ -22,7 +22,6 @@ import { jobUploadRateLimit } from "../middleware/rateLimits";
 
 export const jobsRouter = Router();
 
-// 1. Получение опубликованных вакансий
 jobsRouter.get("/", async (_req, res) => {
   const jobs = await prisma.job.findMany({
     where: { status: "published" },
@@ -46,7 +45,6 @@ jobsRouter.get("/mine", authMiddleware, async (req, res) => {
   res.json({ jobs });
 });
 
-// 2. Получение одной
 jobsRouter.get("/:id", optionalAuthMiddleware, async (req, res) => {
   const parsedId = jobIdSchema.safeParse(req.params.id);
 
@@ -77,7 +75,6 @@ jobsRouter.get("/:id", optionalAuthMiddleware, async (req, res) => {
   }
 });
 
-// 3. Создание
 jobsRouter.post(
   "/",
   authMiddleware,
@@ -148,7 +145,6 @@ jobsRouter.post(
     }
   });
 
-// 4. РЕДАКТИРОВАНИЕ 
 jobsRouter.patch(
   "/:id",
   authMiddleware,
@@ -284,7 +280,6 @@ jobsRouter.patch(
   }
 );
 
-// 5. Удаление
 jobsRouter.delete("/:id", authMiddleware, async (req, res) => {
   const user = getAuthenticatedUser(req);
 

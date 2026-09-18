@@ -8,7 +8,6 @@ import { jobIdSchema } from "../validation/jobs";
 
 export const bookmarksRouter = Router();
 
-// 1. Получить все сохраненные вакансии кандидата
 bookmarksRouter.get("/", authMiddleware, async (req, res) => {
   const user = getAuthenticatedUser(req);
   try {
@@ -42,7 +41,6 @@ bookmarksRouter.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-// 2. Переключить статус избранного (Поставить / Убрать лайк)
 bookmarksRouter.post("/:jobId", authMiddleware, async (req, res) => {
   const user = getAuthenticatedUser(req);
   const parsedJobId = jobIdSchema.safeParse(req.params.jobId);

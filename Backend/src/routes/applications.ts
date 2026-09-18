@@ -28,7 +28,6 @@ import {
 
 export const applicationsRouter = Router();
 
-// 1. ОТПРАВИТЬ ОТКЛИК
 applicationsRouter.post(
   "/",
   authMiddleware,
@@ -119,7 +118,6 @@ applicationsRouter.post(
   }
 );
 
-// 2. ПОЛУЧИТЬ ОТКЛИКИ ДЛЯ ВАКАНСИИ
 applicationsRouter.get(
   "/job/:jobId",
   authMiddleware,
@@ -163,7 +161,6 @@ applicationsRouter.get(
     }
   });
 
-// 3. ОБНОВИТЬ СТАТУС (И ОТПРАВИТЬ EMAIL)
 applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
   const user = getAuthenticatedUser(req);
   const parsedBody = updateApplicationStatusSchema.safeParse(req.body);
@@ -212,7 +209,6 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
     const statusChanged =
       application.status !== status;
 
-    // Обновляем статус в базе и достаем инфу для письма
     const updated = await prisma.application.update({
       where: { id: applicationId },
       data: {
@@ -286,7 +282,6 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
 
     const safeSubject = sanitizeEmailHeader(subject);
 
-    // Если статус сменился на тот, что требует письма, отправляем!
     if (
       statusChanged &&
       (status === "invited" ||
@@ -301,12 +296,9 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
         });
       } catch (mailError) {
         console.error("Ошибка при отправке письма:", mailError);
-        // Мы не прерываем выполнение (не кидаем ошибку 500), 
-        // чтобы статус всё равно сохранился в базе, даже если почта упала.
       }
     }
 
-    // === СОКЕТ: Уведомляем кандидата о смене статуса ===
     const io = req.app.get("io");
 
     if (io && statusChanged) {
@@ -327,7 +319,6 @@ applicationsRouter.patch("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// 4. ПОЛУЧИТЬ МОИ ОТКЛИКИ ДЛЯ КАНДИДАТА
 applicationsRouter.get(
   "/my",
   authMiddleware,
@@ -409,7 +400,6 @@ applicationsRouter.get(
   }
 );
 
-// 5. ПОЛУЧИТЬ ОТКЛИКИ ДЛЯ РАБОТОДАТЕЛЯ
 applicationsRouter.get("/owner", authMiddleware, async (req, res) => {
   const user = getAuthenticatedUser(req);
   if (user.role !== "employer") {
@@ -440,7 +430,6 @@ applicationsRouter.get("/owner", authMiddleware, async (req, res) => {
   }
 });
 
-// 6. ПОЛУЧИТЬ ОДИН ОТКЛИК ПО ID (ИСПРАВЛЕНО)
 applicationsRouter.get("/:id", authMiddleware, async (req, res) => {
   const user = getAuthenticatedUser(req);
   try {
@@ -509,7 +498,6 @@ applicationsRouter.get("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// 7. ОТПРАВИТЬ СООБЩЕНИЕ В ЧАТ
 applicationsRouter.post(
   "/:id/messages",
   authMiddleware,
@@ -537,7 +525,6 @@ applicationsRouter.post(
     const { text } = parsedBody.data;
 
     try {
-      // Достаем отклик вместе с вакансией, чтобы знать ID работодателя
       const app = await prisma.application.findUnique({
         where: { id },
         select: {
@@ -584,21 +571,17 @@ applicationsRouter.post(
         }
       });
 
-      // === СОКЕТ: Отправляем сообщение второму участнику ===
       const io = req.app.get("io");
       if (io) {
-        // Определяем, кому слать уведомление
         const recipientId = isOwner
           ? app.candidateId
           : app.job.ownerId;
         
-        // Отправляем само сообщение (чтобы обновить чат)
         io.to(recipientId).emit("new_message", {
           applicationId: id,
           message
         });
         
-        // Отправляем сигнал для "колокольчика" и звука
         io.to(recipientId).emit("new_notification", {
           type: "new_message",
           applicationId: id

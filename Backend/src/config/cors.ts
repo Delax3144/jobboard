@@ -25,7 +25,6 @@ function checkOrigin(
   origin: string | undefined,
   callback: (error: Error | null, allow?: boolean) => void
 ) {
-  // curl, Postman, server-to-server requests may not send Origin.
   if (!origin) {
     return callback(null, true);
   }

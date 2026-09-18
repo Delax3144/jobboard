@@ -24,7 +24,6 @@ import { userIdSchema } from "../validation/users";
 
 export const profileRouter = Router();
 
-// Get current authenticated user
 profileRouter.get("/me", authMiddleware, async (req, res) => {
   const user = getAuthenticatedUser(req);
 
@@ -50,7 +49,6 @@ profileRouter.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
-// Update profile
 profileRouter.put("/profile", authMiddleware, async (req, res) => {
   const parsedBody = updateProfileSchema.safeParse(req.body);
 
@@ -89,7 +87,6 @@ profileRouter.put("/profile", authMiddleware, async (req, res) => {
   }
 });
 
-// Upload avatar
 profileRouter.post(
   "/avatar",
   authMiddleware,
@@ -155,7 +152,6 @@ profileRouter.post(
   }
 );
 
-// Upload resume
 profileRouter.post(
   "/resume",
   authMiddleware,
@@ -224,7 +220,6 @@ profileRouter.post(
   }
 );
 
-// Update last activity
 profileRouter.post(
   "/ping",
   authMiddleware,
@@ -248,7 +243,6 @@ profileRouter.post(
   }
 );
 
-// Get public user profile
 profileRouter.get("/users/:id", async (req, res) => {
   const parsedId = userIdSchema.safeParse(req.params.id);
 

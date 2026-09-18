@@ -73,7 +73,6 @@ passwordResetRouter.post(
         });
       }
 
-      // Close existing realtime sessions as well as invalidating future API requests.
       req.app.get('io')?.in(user.id).disconnectSockets(true);
 
       return res.json({
