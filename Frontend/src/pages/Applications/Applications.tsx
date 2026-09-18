@@ -20,13 +20,11 @@ export default function Applications() {
   return (
     <div className={styles.page}>
 
-      {/* Декоративные свечения */}
       <div className={styles.greenGlow} />
       <div className={styles.blueGlow} />
 
       <div className={styles.container}>
 
-        {/* === ШАПКА === */}
         <header className={styles.header}>
           <div className={styles.eyebrow}>
             Candidate Dashboard
@@ -36,7 +34,6 @@ export default function Applications() {
           </h1>
         </header>
 
-        {/* === МИНИ-ДАШБОРД (СТАТИСТИКА) === */}
         {!error && apps.length > 0 && (
           <div className={styles.statsGrid}>
             <div className={styles.totalCard}>
@@ -59,7 +56,6 @@ export default function Applications() {
           </div>
         )}
 
-        {/* === СПИСОК ОТКЛИКОВ === */}
         {error ? <LoadError message={error} loading={isLoading} onRetry={retry} /> : apps.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}><Icons.Search /></div>

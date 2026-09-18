@@ -46,13 +46,11 @@ export default function JobDetails() {
   return (
     <div className={styles.page}>
 
-      {/* Декоративные свечения */}
       <div className={styles.greenGlow} />
       <div className={styles.blueGlow} />
 
       <div className={styles.container}>
 
-        {/* === ВЕРХНЯЯ НАВИГАЦИЯ === */}
         <div className={styles.navigation}>
           <button onClick={() => window.history.back()} className={styles.backButton}>
             <Icons.ArrowLeft /> Back to Search
@@ -70,7 +68,6 @@ export default function JobDetails() {
           )}
         </div>
 
-        {/* ШАПКА ВАКАНСИИ */}
         <div className={styles.hero}>
           <div className={styles.logo}>
             {job.companyLogo ? (
@@ -100,7 +97,6 @@ export default function JobDetails() {
           </div>
         </div>
 
-        {/* ОСНОВНОЙ КОНТЕНТ */}
         <div className={styles.content}>
 
           <div className={styles.descriptionColumn}>
@@ -166,7 +162,6 @@ export default function JobDetails() {
         </div>
       </div>
 
-      {/* МОДАЛКА ОТКЛИКА */}
       <ApplyModal
         isOpen={modal.isModalOpen}
         onClose={() => modal.setIsModalOpen(false)}

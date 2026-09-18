@@ -1,4 +1,3 @@
-// src/hooks/useJobDetails.ts
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import api from "../lib/api";

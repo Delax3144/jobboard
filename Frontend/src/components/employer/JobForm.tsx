@@ -1,5 +1,4 @@
 import type { useEmployer } from '../../hooks/useEmployer';
-// src/components/employer/JobForm.tsx
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { LOCATIONS, LEVELS } from '../../hooks/useEmployer';

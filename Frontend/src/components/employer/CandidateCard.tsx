@@ -1,6 +1,5 @@
 import type { useJobManagement } from '../../hooks/useJobManagement';
 import type { Application } from '../../types/job';
-// src/components/employer/CandidateCard.tsx
 import { Link } from "react-router-dom";
 
 const Icons = {

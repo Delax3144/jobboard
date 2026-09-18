@@ -1,4 +1,3 @@
-// src/components/TopNav.tsx
 import { NavLink, Link } from "react-router-dom";
 import { useTopNav } from "../hooks/useTopNav";
 import { type UserMode } from "../lib/userMode";
@@ -101,7 +100,6 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
         </div>
       </header>
 
-      {/* МОБИЛЬНОЕ МЕНЮ */}
       <div id="mobile-navigation" className={`mobile-dropdown ${isMobileMenuOpen ? 'open' : ''}`}>
         <NavLink to="/jobs" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.explore_jobs', 'Explore Jobs')}</NavLink>
         {user?.role === 'candidate' && (

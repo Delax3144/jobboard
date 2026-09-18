@@ -1,4 +1,3 @@
-// src/hooks/useEmployer.ts
 import { useEffect, useMemo, useState, useCallback } from "react";
 import api from "../lib/api";
 import { useAuth } from "../context/useAuth";
@@ -15,12 +14,10 @@ export function useEmployer() {
   const [error, setError] = useState('');
   const userId = user?.id;
   
-  // Search & Pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 5;
 
-  // Form State
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -132,7 +129,6 @@ export function useEmployer() {
     }, 100);
   }
 
-  // Возвращаем аккуратно сгруппированные данные
   return {
     data: { jobs, applications, isLoading, error, retry, dashboardStats },
     list: { searchQuery, setSearchQuery, currentJobs, filteredJobs, currentPage, setCurrentPage, totalPages, handleDelete, fillForm },

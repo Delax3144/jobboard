@@ -1,5 +1,4 @@
 import type { Job, Application } from '../types/job';
-// src/hooks/useJobManagement.ts
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../lib/api";

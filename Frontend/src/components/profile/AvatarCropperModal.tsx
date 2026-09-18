@@ -1,6 +1,5 @@
 import type { Area } from 'react-easy-crop';
 import type { User } from '../../types/user';
-// src/components/profile/AvatarCropperModal.tsx
 import { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import Modal from "../../components/Modal";

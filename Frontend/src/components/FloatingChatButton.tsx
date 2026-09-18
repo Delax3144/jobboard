@@ -1,4 +1,3 @@
-// src/components/FloatingChatButton.tsx
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../lib/api";

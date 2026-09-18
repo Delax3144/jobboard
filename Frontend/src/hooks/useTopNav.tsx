@@ -1,6 +1,5 @@
 import type { Socket } from 'socket.io-client';
 import type { NotificationEvent } from '../types/events';
-// src/hooks/useTopNav.tsx
 import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from 'react-hot-toast';
@@ -31,16 +30,15 @@ export function useTopNav(setMode: (m: UserMode) => void) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isLoading } = useAuth();
-  
+
   const [unreadCount, setUnreadCount] = useState(0);
   const [menuPath, setMenuPath] = useState<string | null>(null);
   const isMobileMenuOpen = menuPath === location.key;
   const setIsMobileMenuOpen = (open: boolean) => setMenuPath(open ? location.key : null);
-  
+
   const socketRef = useRef<Socket | null>(null);
   const pathnameRef = useRef(location.pathname);
-  
-  // === НОВЫЙ ХАК: ТИХАЯ ССЫЛКА НА ЮЗЕРА ===
+
   const userRef = useRef(user);
 
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
@@ -50,16 +48,14 @@ export function useTopNav(setMode: (m: UserMode) => void) {
 
   }, [location.pathname]);
 
-  // Тихо обновляем данные юзера, не вызывая переподключение сокетов
   useEffect(() => {
     userRef.current = user;
   }, [user]);
 
-  // Вытаскиваем ID (примитив), чтобы сокет подключался только 1 раз при логине
   const userId = user?.id;
 
   useEffect(() => {
-    if (!userId) return; // Запускаем ТОЛЬКО если есть ID
+    if (!userId) return;
 
     const currentUser = userRef.current;
     if (currentUser?.role) {
@@ -94,7 +90,7 @@ export function useTopNav(setMode: (m: UserMode) => void) {
 
       checkUpdates();
 
-      const latestUser = userRef.current; // Берем всегда свежие настройки юзера!
+      const latestUser = userRef.current;
       if (latestUser?.soundEnabled !== false) {
         playNotificationSound(latestUser?.notificationVolume ?? 50);
       }
@@ -109,14 +105,14 @@ export function useTopNav(setMode: (m: UserMode) => void) {
         else if (data.type === "new_message") { title = "New Message"; desc = "You received a new message"; }
 
         toast.custom((t) => (
-          <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full`} style={{ 
-            background: 'rgba(15, 15, 15, 0.8)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', 
+          <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full`} style={{
+            background: 'rgba(15, 15, 15, 0.8)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: '24px', padding: '20px', display: 'flex', gap: '15px', alignItems: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
             cursor: 'pointer', transition: 'all 0.2s'
           }}
-          onClick={() => { 
-            toast.dismiss(t.id); 
-            if (data.applicationId) navigate(`/messages/${data.applicationId}`); 
+          onClick={() => {
+            toast.dismiss(t.id);
+            if (data.applicationId) navigate(`/messages/${data.applicationId}`);
             else navigate(latestUser?.role === 'employer' ? '/employer' : '/applications');
           }}
           onMouseOver={e => e.currentTarget.style.background = 'rgba(25, 25, 25, 0.9)'}
@@ -142,7 +138,6 @@ export function useTopNav(setMode: (m: UserMode) => void) {
       if (socketRef.current) socketRef.current.disconnect();
       window.removeEventListener('update_unread', checkUpdates);
     };
-  // === ВАЖНО: Зависимости теперь только ID юзера и API_URL ===
   }, [userId, apiUrl, setMode, navigate]);
 
   useEffect(() => {

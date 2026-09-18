@@ -1,5 +1,4 @@
 import type { Job } from '../../types/job';
-// src/components/jobs/ApplyModal.tsx
 import { createPortal } from "react-dom";
 import ApplyForm from "../ApplyForm";
 

@@ -50,7 +50,6 @@ export default function Jobs() {
 
       <div className={`container ${styles.container}`}>
 
-        {/* PAGE HEADER & SEARCH */}
         <div className={styles.header}>
           <div>
             <div className={styles.eyebrow}>Find Your Match</div>

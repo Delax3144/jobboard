@@ -93,7 +93,6 @@ export function useChat() {
     try {
       await api.post(`/applications/${id}/messages`, { text: msg });
       setDrafts(items => {
-        // Each edit creates a new object, even if the user types the same text again.
         if (items[id] !== sentDraft) return items;
         const next = { ...items };
         delete next[id];

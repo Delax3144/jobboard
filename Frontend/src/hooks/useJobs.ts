@@ -1,4 +1,3 @@
-// src/hooks/useJobs.ts
 import { useEffect, useState, useMemo, useCallback } from "react";
 import api from "../lib/api";
 import { useAuth } from "../context/useAuth";

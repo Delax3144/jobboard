@@ -1,5 +1,4 @@
 import { apiErrorMessage } from '../lib/apiError';
-// src/hooks/useContact.ts
 import { useState, useEffect } from "react";
 import api from "../lib/api";
 import { useAuth } from "../context/useAuth";
@@ -30,7 +29,6 @@ export function useContact() {
     setErrorMsg("");
 
     try {
-      // Вернул твои оригинальные пути!
       await api.post("/auth/contact", { ...formData, userId: user?.id });
       setStatus("success");
       setFormData({ ...formData, subject: "", message: "" });
@@ -42,7 +40,6 @@ export function useContact() {
 
   useEffect(() => {
     if (view === "tickets" && user) {
-      // Вернул твой оригинальный путь для тикетов!
       api.get("/auth/support-tickets")
         .then(res => setTickets(res.data))
         .catch(err => console.error("Error loading tickets", err));

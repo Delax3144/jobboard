@@ -21,7 +21,6 @@ export default function PublicProfile() {
   return (
     <div className={styles.page}>
 
-      {/* Декоративные свечения */}
       <div className={styles.greenGlow} />
       <div className={styles.blueGlow} />
 
@@ -32,7 +31,6 @@ export default function PublicProfile() {
         </button>
 
         {profileData.isPrivate ? (
-          /* === ПРИВАТНЫЙ ПРОФИЛЬ === */
           <div className={styles.privateCard}>
             <div className={styles.lockIcon}>
               <Icons.Lock />
@@ -46,10 +44,8 @@ export default function PublicProfile() {
             </div>
           </div>
         ) : (
-          /* === ПУБЛИЧНЫЙ ПРОФИЛЬ === */
           <div className={styles.publicContent}>
 
-            {/* ШАПКА */}
             <div className={styles.hero}>
 
               <div className={styles.identity}>
@@ -83,7 +79,6 @@ export default function PublicProfile() {
                 </div>
               </div>
 
-              {/* Кнопки действий */}
               <div className={styles.actions}>
 
                 <Link to={`/messages/${candidate.id}`} className={styles.messageLink} >
@@ -92,7 +87,6 @@ export default function PublicProfile() {
               </div>
             </div>
 
-            {/* BENTO GRID ДЛЯ КОНТЕНТА */}
             <div className={styles.layout}>
 
               <div className={styles.mainColumn}>

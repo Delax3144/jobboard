@@ -1,4 +1,3 @@
-// src/components/candidate/ApplicationCard.tsx
 import { Link } from "react-router-dom";
 import type { Application } from '../../types/job';
 
@@ -38,14 +37,12 @@ export default function ApplicationCard({ app }: { app: Application }) {
       className={`${styles.card} app-card app-card-inner ${borderClass}`}
       style={{ border: isInvited ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(255,255,255,0.05)' }}
     >
-      {/* ИНДИКАТОР НОВЫХ СООБЩЕНИЙ */}
       {hasUpdate && (
         <div style={{ position: 'absolute', top: '-4px', right: '-4px', display: 'flex', alignItems: 'center' }}>
           <div style={{ width: '12px', height: '12px', background: '#10b981', border: '3px solid #050505', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }} />
         </div>
       )}
 
-      {/* ЛЕВАЯ ЧАСТЬ: ЛОГОТИП И ТЕКСТ */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1, minWidth: '0' }}>
         <div style={{ width: '52px', height: '52px', flexShrink: 0, borderRadius: '14px', background: '#111', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 900, color: '#555', overflow: 'hidden' }}>
           {app.job?.companyLogo ? <img src={app.job.companyLogo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Logo" /> : app.job?.companyName?.charAt(0).toUpperCase()}
@@ -60,7 +57,6 @@ export default function ApplicationCard({ app }: { app: Application }) {
         </div>
       </div>
 
-      {/* ПРАВАЯ ЧАСТЬ: СТАТУС, ДАТА, СТРЕЛКА */}
       <div className="app-card-right" style={{ display: 'flex', alignItems: 'center', gap: '30px', flexShrink: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', color: statusColor, background: statusBg, border: `1px solid ${statusBorder}`, padding: '4px 10px', borderRadius: '8px' }}>
@@ -72,7 +68,6 @@ export default function ApplicationCard({ app }: { app: Application }) {
           </div>
         </div>
 
-        {/* СТРЕЛКА ПЕРЕХОДА */}
         <div className="card-arrow" style={{ display: 'flex', alignItems: 'center', paddingLeft: '10px', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
           <Icons.ArrowRight />
         </div>

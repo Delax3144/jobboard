@@ -5,13 +5,11 @@ export default function NotFound() {
   return (
     <div className={styles.page}>
 
-      {/* Декоративные космические свечения */}
       <div className={styles.greenGlow} />
       <div className={styles.blueGlow} />
 
       <div className={styles.content}>
 
-        {/* Огромный неоновый 404 */}
         <h1 className={styles.code}>
           404
         </h1>
@@ -24,7 +22,6 @@ export default function NotFound() {
           This page doesn't exist. Return to the home page or browse available vacancies.
         </p>
 
-        {/* Красивые кнопки действий */}
         <div className={styles.actions}>
           <Link to="/" className={styles.homeLink}>
             ← Back to Home

@@ -1,5 +1,4 @@
 import type { User, Experience } from '../types/user';
-// src/hooks/useProfile.ts
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import api from "../lib/api";
@@ -44,7 +43,6 @@ export function useProfile() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  // General States
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [countryCode, setCountryCode] = useState(initialPhone.code);
@@ -52,20 +50,17 @@ export function useProfile() {
   const [status, setStatus] = useState(user?.status || "Open to work");
   const [location, setLocation] = useState(user?.location || "");
 
-  // Professional States
   const [bio, setBio] = useState(user?.bio || "");
   const [skills, setSkills] = useState(user?.skills || "");
   const [experience, setExperience] = useState<Experience[]>(user?.experience || []);
   const [resumeUrl, setResumeUrl] = useState<string | null>(user?.resumeUrl || null);
 
-  // Settings States
   const [isPublic, setIsPublic] = useState(user?.isPublic ?? true);
   const [showEmail, setShowEmail] = useState(user?.showEmail ?? false);
   const [soundEnabled, setSoundEnabled] = useState(user?.soundEnabled ?? true);
   const [toastsEnabled, setToastsEnabled] = useState(user?.toastsEnabled ?? true);
   const [notificationVolume, setNotificationVolume] = useState(user?.notificationVolume ?? 50);
 
-  // Security States
   const [twoFactor, setTwoFactor] = useState(user?.isTwoFactorEnabled || false);
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [qrCode, setQrCode] = useState("");
@@ -76,7 +71,6 @@ export function useProfile() {
   const [twoFactorModalMode, setTwoFactorModalMode] =
   useState<TwoFactorModalMode>("enable");
 
-  // Cropper States
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [openCropper, setOpenCropper] = useState(false);
 

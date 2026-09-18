@@ -1,5 +1,4 @@
 import type { User } from '../types/user';
-// src/hooks/usePublicProfile.ts
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../lib/api";
@@ -19,7 +18,6 @@ export function usePublicProfile() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Вычисляем производные данные только когда изменяется candidate
   const profileData = useMemo(() => {
     if (!candidate) return null;
 
@@ -27,7 +25,6 @@ export function usePublicProfile() {
       isPrivate: candidate.isPublic === false || candidate.status === "Hidden",
       skills: candidate.skills ? candidate.skills.split(',').map((s: string) => s.trim()) : [],
       bio: candidate.bio || "This candidate hasn't added a bio yet.",
-      // Безопасный парсинг JSON для опыта работы
       experience: (candidate.experience || [])
     };
   }, [candidate]);

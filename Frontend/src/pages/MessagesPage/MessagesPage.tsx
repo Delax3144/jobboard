@@ -16,7 +16,6 @@ export default function MessagesPage() {
       {chatLogic.error && <p role="alert" className={styles.error}>{chatLogic.error}</p>}
       <div className={styles.page}>
 
-        {/* Premium Dark Glow */}
         <div className={styles.glow} />
 
         <div className={styles.messenger} data-view={chatLogic.id ? "chat" : "list"}>

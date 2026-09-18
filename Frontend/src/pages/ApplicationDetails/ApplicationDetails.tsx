@@ -41,7 +41,6 @@ export default function ApplicationDetails() {
 
         <div className={styles.content}>
 
-          {/* HERO CARD */}
           <div className={styles.hero}>
 
             <div className={styles.header}>
@@ -85,7 +84,6 @@ export default function ApplicationDetails() {
             </div>
           </div>
 
-          {/* BENTO-GRID ДЛЯ ДЕТАЛЕЙ */}
           <div className={styles.detailsGrid}>
 
             <div className={styles.pitchCard}>

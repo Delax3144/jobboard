@@ -72,14 +72,11 @@ export default function SavedJobs() {
   return (
     <div className={styles.page}>
 
-      {/* Декоративные свечения */}
       <div className={styles.greenGlow} />
       <div className={styles.blueGlow} />
 
-      {/* Контейнер ленты */}
       <div className={`container ${styles.container}`}>
 
-        {/* === ШАПКА === */}
         <header className={styles.header}>
           <div className={styles.eyebrow}>
             Your Collection
@@ -103,7 +100,6 @@ export default function SavedJobs() {
             {savedJobs.map((job) => (
               <Link to={`/jobs/${job.id}`} key={job.id} className={styles.jobCard}>
 
-                {/* ЛЕВАЯ ЧАСТЬ: Логотип и Описание */}
                 <div className={styles.jobInfo}>
                   <div className={styles.logo}>
                     {job.companyLogo ? (
@@ -133,7 +129,6 @@ export default function SavedJobs() {
                   </div>
                 </div>
 
-                {/* ПРАВАЯ ЧАСТЬ: Зарплата и Кнопка */}
                 <div className={styles.rightSide}>
                   <div className={styles.salaryBlock} >
                     <div className={styles.salary}>
@@ -158,7 +153,6 @@ export default function SavedJobs() {
               </Link>
             ))}
 
-            {/* EMPTY STATE */}
             {savedJobs.length === 0 && (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}><Icons.BookmarkSlash /></div>

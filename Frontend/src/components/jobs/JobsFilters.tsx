@@ -1,5 +1,4 @@
 import type { useJobs } from '../../hooks/useJobs';
-// src/components/jobs/JobsFilters.tsx
 import { FILTER_LOCATIONS, FILTER_LEVELS, MAX_SALARY_LIMIT } from "../../hooks/useJobs";
 
 const Icons = {

@@ -47,7 +47,6 @@ export default function Profile() {
 
       <div className={styles.layout}>
 
-        {/* === ЛЕВАЯ ПАНЕЛЬ === */}
         <div className={styles.sidebar}>
           <div className={styles.identityCard}>
             <div className={styles.avatarWrapper}>
@@ -70,7 +69,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* === ПРАВАЯ ПАНЕЛЬ === */}
         <div className={styles.contentPanel}>
           <div className={styles.contentCard}>
 
@@ -276,7 +274,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* === МОДАЛЬНОЕ ОКНО 2FA === */}
       {p.security.show2FAModal && (
         <div
           className={styles.modalOverlay}
@@ -368,7 +365,6 @@ export default function Profile() {
         </div>
       )}
 
-      {/* === МОДАЛКА КРОППЕРА === */}
       <AvatarCropperModal
         open={p.cropper.openCropper}
         onClose={() => { p.cropper.setOpenCropper(false); p.cropper.setImageSrc(null); }}

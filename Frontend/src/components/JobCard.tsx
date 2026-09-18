@@ -1,11 +1,10 @@
 
-// Обновляем интерфейс, чтобы TS не ругался
 interface JobCardProps {
   title: string;
   company: string;
   location: string;
-  salary?: string; // Добавляем опционально
-  tags?: string[]; // Добавляем опционально
+  salary?: string;
+  tags?: string[];
 }
 
 const JobCard = ({ title, company, location, salary, tags }: JobCardProps) => {
@@ -23,7 +22,7 @@ const JobCard = ({ title, company, location, salary, tags }: JobCardProps) => {
           </div>
         )}
       </div>
-      
+
       {tags && tags.length > 0 && (
         <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
           {tags.map(tag => (

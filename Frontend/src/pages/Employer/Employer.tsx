@@ -28,7 +28,6 @@ export default function Employer() {
 
       <div className={styles.container}>
 
-        {/* HEADER & STATS */}
         <div className={styles.header}>
           <div>
             <div className={styles.eyebrow}>
@@ -54,7 +53,6 @@ export default function Employer() {
 
         <div className={styles.layout}>
 
-          {/* LEFT COLUMN: ACTIVE VACANCIES */}
           <div className={styles.vacancies}>
 
             <div className={styles.listHeader}>
@@ -88,7 +86,6 @@ export default function Employer() {
               </div>
             )}
 
-            {/* СПИСОК ВАКАНСИЙ */}
             {!data.error && list.currentJobs.map((job) => {
               const jobApps = data.applications.filter((a) => a.jobId === job.id);
               const newAppsCount = jobApps.filter((a) => a.status === 'new').length;
@@ -138,7 +135,6 @@ export default function Employer() {
               );
             })}
 
-            {/* ПАГИНАЦИЯ */}
             {!data.error && list.totalPages > 1 && (
               <div className={styles.pagination}>
                 <button onClick={() => list.setCurrentPage((p: number) => Math.max(1, p - 1))} disabled={list.currentPage === 1} className={styles.pageButton}>Prev</button>
@@ -148,7 +144,6 @@ export default function Employer() {
             )}
           </div>
 
-          {/* RIGHT COLUMN: POSTING FORM */}
           <JobForm form={form} />
         </div>
       </div>

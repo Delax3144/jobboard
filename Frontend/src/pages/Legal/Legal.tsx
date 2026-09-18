@@ -13,7 +13,6 @@ export default function Legal() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Определяем активную вкладку на основе URL
   const activeTab = location.pathname.includes("terms") ? "terms" : location.pathname.includes("cookies") ? "cookies" : "privacy";
 
   useEffect(() => {
@@ -29,7 +28,6 @@ export default function Legal() {
   return (
     <div className={styles.page}>
 
-      {/* Декоративные свечения */}
       <div className={styles.greenGlow} />
       <div className={styles.blueGlow} />
 
@@ -53,7 +51,6 @@ export default function Legal() {
 
         <div className={styles.layout}>
 
-          {/* === НАВИГАЦИЯ СЛЕВА === */}
           <div className={styles.sidebar}>
             <div className={styles.navigation}>
               <div className={styles.tabs}>
@@ -74,14 +71,12 @@ export default function Legal() {
             </div>
           </div>
 
-          {/* === КОНТЕНТ СПРАВА === */}
           <div className={styles.card}>
 
 
 
             <div className={styles.content}>
 
-              {/* --- PRIVACY POLICY --- */}
               {activeTab === "privacy" && (
                 <>
                   <h2>1. Information We Collect</h2>
@@ -110,7 +105,6 @@ export default function Legal() {
                 </>
               )}
 
-              {/* --- TERMS OF SERVICE --- */}
               {activeTab === "terms" && (
                 <>
                   <h2>1. Acceptance of Terms</h2>
@@ -141,7 +135,6 @@ export default function Legal() {
                 </>
               )}
 
-              {/* --- COOKIE SETTINGS --- */}
               {activeTab === "cookies" && (
                 <>
                   <h2>1. What Are Cookies?</h2>

@@ -1,4 +1,3 @@
-// src/App.tsx
 import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AuthProvider } from './context/AuthContext';
@@ -6,7 +5,6 @@ import { useAuth } from './context/useAuth';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'react-hot-toast';
 
-// Импорт страниц
 import Home from "./pages/Home/Home";
 const Jobs = lazy(() => import('./pages/Jobs/Jobs'));
 const JobDetails = lazy(() => import('./pages/JobDetails/JobDetails'));
@@ -29,13 +27,11 @@ const PublicProfile = lazy(() => import('./pages/PublicProfile/PublicProfile'));
 const Legal = lazy(() => import('./pages/Legal/Legal'));
 const Blog = lazy(() => import('./pages/Blog/Blog'));
 
-// Импорт компонентов
 import TopNav from "./components/TopNav";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import FloatingChatButton from "./components/FloatingChatButton";
 
-// Либы
 import { loadUserMode, saveUserMode, type UserMode } from "./lib/userMode";
 
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -47,7 +43,6 @@ const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
 function AppRoutes({ mode }: { mode: UserMode }) {
   const location = useLocation();
 
-  // Логика определения полноэкранных страниц
   const fullWidthPaths = [
     "/", "/profile", "/blog", "/jobs", "/employer", "/login", "/register",
     "/privacy", "/terms", "/cookies", "/about", "/contact", "/applications",

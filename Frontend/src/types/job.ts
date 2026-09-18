@@ -1,4 +1,3 @@
-// src/types/job.ts
 
 export type JobStatus = "published" | "draft" | "archived";
 

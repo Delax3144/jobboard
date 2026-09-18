@@ -1,5 +1,4 @@
 import type { Application } from '../types/job';
-// src/hooks/useApplications.ts
 import { useEffect, useState, useMemo, useCallback } from "react";
 import api from "../lib/api";
 
@@ -24,7 +23,6 @@ export function useApplications() {
     void fetchData();
   };
 
-  // useMemo гарантирует, что статистика пересчитывается только если изменился массив apps
   const stats = useMemo(() => {
     return {
       total: apps.length,

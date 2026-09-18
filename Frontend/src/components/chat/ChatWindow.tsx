@@ -34,7 +34,6 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
 
   return (
     <div className={`msg-chat-window ${styles.window}`}>
-      {/* HEADER */}
       <div className={styles.header}>
         <div className={styles.partner}>
 
@@ -101,7 +100,6 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
               );
             })}
           </div>
-          {/* INPUT AREA */}
           <div className={styles.composer}>
             <div className={styles.composerInner}>
               <textarea aria-label="Message" value={msg} onChange={(e) => setMsg(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }} placeholder="Type your message..." className={styles.messageInput} />

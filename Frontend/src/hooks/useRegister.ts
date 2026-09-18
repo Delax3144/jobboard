@@ -1,6 +1,5 @@
 import { apiErrorMessage } from '../lib/apiError';
 import { githubAuthorizationUrl } from '../lib/githubOAuth';
-// src/hooks/useRegister.ts
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";

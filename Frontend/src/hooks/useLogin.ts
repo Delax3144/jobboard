@@ -1,4 +1,3 @@
-// src/hooks/useLogin.ts
 import { useState, useEffect, useRef } from "react";
 import { githubAuthorizationUrl, consumeGithubState } from '../lib/githubOAuth';
 import { useNavigate, useLocation } from "react-router-dom";

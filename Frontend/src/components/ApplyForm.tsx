@@ -64,7 +64,6 @@ export default function ApplyForm({ jobId, jobTitle, onSuccess }: ApplyFormProps
         </div>
       )}
 
-      {/* ПОЛЕ: MOTIVATION PITCH */}
       <div>
         <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <span style={{ fontSize: '11px', color: '#888', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Motivation Pitch</span>
@@ -85,7 +84,6 @@ export default function ApplyForm({ jobId, jobTitle, onSuccess }: ApplyFormProps
         />
       </div>
 
-      {/* ПОЛЕ: UPLOAD CV */}
       <div>
         <label style={{ fontSize: '11px', color: '#888', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', display: 'block' }}>
           Resume / CV
@@ -135,7 +133,6 @@ export default function ApplyForm({ jobId, jobTitle, onSuccess }: ApplyFormProps
         />
       </div>
 
-      {/* КНОПКА ОТПРАВКИ */}
       <button 
         type="submit" 
         disabled={status === "submitting"}

@@ -15,7 +15,6 @@ export default function Footer() {
         
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '50px' }}>
           
-          {/* Логотип и оригинальное описание */}
           <div style={{ maxWidth: '320px' }}>
             <Link to="/" style={{ fontSize: '28px', fontWeight: 900, color: '#fff', textDecoration: 'none', letterSpacing: '-1px', display: 'inline-block', marginBottom: '15px' }}>
               Job<span style={{ color: '#10b981' }}>Board</span>
@@ -26,7 +25,6 @@ export default function Footer() {
             
           </div>
 
-          {/* Оригинальная навигация на тех же местах */}
           <div style={{ display: 'flex', gap: '80px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <b style={{ color: '#fff', fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>Platform</b>
@@ -51,7 +49,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Copyright */}
         <div style={{ 
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px',
           marginTop: '80px', paddingTop: '30px', borderTop: '1px solid rgba(255,255,255,0.04)' 

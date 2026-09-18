@@ -1,5 +1,4 @@
 import type { Application } from '../types/job';
-// src/hooks/useApplicationDetails.ts
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../lib/api";
