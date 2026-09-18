@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import styles from "./Modal.module.css";
 
 type ModalProps = {
   open: boolean;
@@ -24,58 +25,30 @@ export default function Modal({ open, title, onClose, children }: ModalProps) {
   return (
     <div
       onMouseDown={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.55)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 16,
-        zIndex: 50,
-      }}
+      className={styles.overlay}
     >
       <div
         onMouseDown={(e) => e.stopPropagation()}
-        style={{
-            width: "100%",
-            maxWidth: 560,
-            border: "1px solid rgba(233, 233, 234, 0.16)",
-            borderRadius: 16,
-            padding: 20,
-            background: "rgba(20, 20, 22, 0.95)",
-            boxSizing: "border-box",
-            }}
-        >
+        className={styles.panel}
+      >
         <div
-          style={{
-            display: "flex",
-            alignItems: "start",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
+          className={styles.header}
         >
           <div>
-            {title ? <h2 style={{ margin: 0 }}>{title}</h2> : null}
+            {title ? <h2 className={styles.title}>{title}</h2> : null}
           </div>
 
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close"
-            style={{
-              border: "1px solid #444",
-              borderRadius: 10,
-              padding: "6px 10px",
-              background: "transparent",
-              color: "inherit",
-              cursor: "pointer",
-            }}
+            className={styles.closeButton}
           >
             ✕
           </button>
         </div>
 
-        <div style={{ marginTop: 12 }}>{children}</div>
+        <div className={styles.content}>{children}</div>
       </div>
     </div>
   );
