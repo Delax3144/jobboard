@@ -102,25 +102,6 @@ a {
   border-color: var(--border-strong);
 }
 
-.btn {
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.btn:hover {
-  border-color: var(--border-strong);
-}
-
-.btnPrimary {
-  background: rgba(233, 233, 234, 0.08);
-  border-color: var(--border-strong);
-}
-
 .pill {
   border-radius: var(--r-pill);
 }
@@ -160,8 +141,4 @@ a {
   .job-apply-modal-inner { padding: 30px 20px !important; border-radius: 24px !important; }
   .hidden-mobile { display: none !important; }
   .premium-scroll input[type="range"] { margin: 15px 0 !important; }
-  .prof-cropper-modal-container { padding: 20px 15px !important; }
-  .prof-cropper-frame-view { height: 240px !important; }
-  .prof-cropper-actions { flex-direction: column !important; gap: 10px !important; }
-  .prof-cropper-actions button { width: 100% !important; }
 }

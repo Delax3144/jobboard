@@ -1,3 +1,4 @@
+import styles from "./AvatarCropperModal.module.css";
 import type { Area } from 'react-easy-crop';
 import type { User } from '../../types/user';
 import { useState, useCallback } from "react";
@@ -39,27 +40,27 @@ export default function AvatarCropperModal({ open, onClose, imageSrc, setUser, s
 
   return (
     <Modal open={open} title="Adjust your Profile Picture" onClose={onClose}>
-      <div className="prof-cropper-modal-container">
-        <p style={{ color: '#888', marginTop: 0, marginBottom: '25px', fontSize: '15px' }}>Drag to position, use the slider to zoom.</p>
-        <div className="prof-cropper-frame-view" style={{ position: 'relative', width: '100%', height: '350px', background: '#000', borderRadius: '20px', overflow: 'hidden', border: '1px solid #222', marginBottom: '25px' }}>
+      <div className={styles.container}>
+        <p className={styles.description}>Drag to position, use the slider to zoom.</p>
+        <div className={styles.frame}>
           {imageSrc && (
             <Cropper
               image={imageSrc} crop={crop} zoom={zoom} aspect={1} cropShape="round" showGrid={false}
               onCropChange={setCrop} onZoomChange={setZoom} onCropComplete={onCropComplete}
-              style={{ containerStyle: { background: '#000' }, cropAreaStyle: { border: '2px solid #10b981', boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.85)' } }}
+              classes={{ containerClassName: styles.cropper, cropAreaClassName: styles.cropArea }}
             />
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '0 10px', marginBottom: '35px' }}>
-          <span style={{ color: '#555' }}><Icons.ZoomOut /></span>
-          <input type="range" value={zoom} min={1} max={3} step={0.1} onChange={(e) => setZoom(Number(e.target.value))} style={{ flex: 1, cursor: 'pointer', accentColor: '#10b981', background: '#222', height: '4px', borderRadius: '2px', appearance: 'none', outline: 'none' }} />
-          <span style={{ color: '#555' }}><Icons.ZoomIn /></span>
+        <div className={styles.zoomControls}>
+          <span className={styles.zoomIcon}><Icons.ZoomOut /></span>
+          <input aria-label="Avatar zoom" type="range" value={zoom} min={1} max={3} step={0.1} onChange={(e) => setZoom(Number(e.target.value))} className={styles.slider} />
+          <span className={styles.zoomIcon}><Icons.ZoomIn /></span>
         </div>
-        <div className="prof-cropper-actions" style={{ display: 'flex', gap: '15px', borderTop: '1px solid #1a1a1a', paddingTop: '25px' }}>
-          <button onClick={handleSaveCroppedAvatar} disabled={isAvatarSaving} className="btn btnPrimary pill" style={{ flex: 1, padding: '16px', fontSize: '15px', fontWeight: 800 }}>
+        <div className={styles.actions}>
+          <button onClick={handleSaveCroppedAvatar} disabled={isAvatarSaving} className={styles.saveButton}>
             {isAvatarSaving ? "Saving..." : "Set as Profile Picture"}
           </button>
-          <button onClick={onClose} className="btn pill" style={{ padding: '16px 25px', background: '#111', color: '#888', border: '1px solid #333' }}>Cancel</button>
+          <button onClick={onClose} className={styles.cancelButton}>Cancel</button>
         </div>
       </div>
     </Modal>
