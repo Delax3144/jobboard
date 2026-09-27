@@ -136,7 +136,6 @@ a {
   z-index: 1;
 }
 @media (max-width: 768px) {
-  .m-grid-1 { grid-template-columns: 1fr !important; }
   .container { padding: 20px !important; }
   .hidden-mobile { display: none !important; }
 }

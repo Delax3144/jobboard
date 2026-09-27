@@ -1,0 +1,204 @@
+.root {
+  position: sticky;
+  top: 100px;
+  scroll-margin-top: 100px;
+}
+
+.card {
+  background: rgba(15, 15, 15, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 40px;
+  padding: 40px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 35px;
+}
+
+.icon {
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05));
+  color: #10b981;
+  border-radius: 12px;
+  border: 1px solid rgba(16,185,129,0.2);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 900;
+  margin: 0;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.fields {
+  display: grid;
+  gap: 25px;
+}
+
+.label {
+  font-size: 12px;
+  color: #888;
+  font-weight: 800;
+  margin-bottom: 10px;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.logoArea {
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.1);
+  padding: 25px;
+  border-radius: 20px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.logoInput {
+  font-size: 13px;
+  color: #888;
+}
+
+.input {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #fff;
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 16px;
+  transition: border-color 0.2s;
+  outline: none;
+  font-size: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.select {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #fff;
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 16px;
+  transition: border-color 0.2s;
+  outline: none;
+  font-size: 14px;
+  appearance: auto;
+}
+
+.option {
+  background: #111;
+}
+
+.actions {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.submit {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #000;
+  padding: 18px;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+}
+
+.cancel {
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #888;
+  background: transparent;
+  padding: 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.editor :global(.ql-toolbar) {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-bottom: none !important;
+  border-radius: 16px 16px 0 0;
+  padding: 12px;
+}
+
+.editor :global(.ql-container) {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 0 0 16px 16px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.editor :global(.ql-editor) {
+  min-height: 200px;
+  padding: 20px;
+}
+
+.editor :global(.ql-editor):global(.ql-blank)::before {
+  color: #666;
+  font-style: normal;
+}
+
+.editor :global(.ql-stroke) {
+  stroke: #aaa;
+}
+
+.editor :global(.ql-fill) {
+  fill: #aaa;
+}
+
+.editor :global(.ql-picker) {
+  color: #aaa;
+}
+
+.editor :global(.ql-picker-options) {
+  background: #111;
+  border: 1px solid #333;
+}
+
+.logoArea:hover {
+  border-color: rgba(16,185,129,0.4);
+}
+
+.input:focus, .select:focus {
+  border-color: rgba(16,185,129,0.5);
+}
+
+.submit:hover {
+  transform: translateY(-2px);
+}
+
+.cancel:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.05);
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .logoInput {
+    width: 100%;
+    min-width: 0;
+  }
+}

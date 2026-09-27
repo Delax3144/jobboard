@@ -537,11 +537,6 @@
     min-width: 0;
   }
 
-  .layout :global(#logoInput) {
-    width: 100%;
-    min-width: 0;
-  }
-
   .jobCard {
     padding: 25px 20px;
   }
