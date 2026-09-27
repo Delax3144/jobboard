@@ -1,3 +1,4 @@
+import styles from "./App.module.css";
 import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { AuthProvider } from './context/AuthContext';
@@ -36,7 +37,7 @@ import { loadUserMode, saveUserMode, type UserMode } from "./lib/userMode";
 
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
   const { user, isLoading } = useAuth();
-  if (isLoading) return <div className="container" style={{ color: '#fff', padding: '100px 0' }}>Loading...</div>;
+  if (isLoading) return <div className={`container ${styles.authLoading}`}>Loading...</div>;
   return user ? children : <Navigate to="/login" />;
 };
 
@@ -55,7 +56,7 @@ function AppRoutes({ mode }: { mode: UserMode }) {
 
   return (
     <main className={isFullWidth ? "" : "container"}>
-      <Suspense fallback={<div style={{ color: "#fff", padding: "80px", textAlign: "center" }}>Loading...</div>}>
+      <Suspense fallback={<div className={styles.routeLoading}>Loading...</div>}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/jobs" element={<Jobs />} />
@@ -102,7 +103,7 @@ export default function App() {
         <BrowserRouter>
           <ScrollToTop />
           <TopNav mode={mode} setMode={setMode} />
-          <div className="grid-canvas" style={{ minHeight: '80vh', position: 'relative' }}>
+          <div className={styles.canvas}>
             <AppRoutes mode={mode} />
           </div>
           <Footer />
@@ -112,14 +113,7 @@ export default function App() {
             position="bottom-right"
             toastOptions={{
               duration: 5000,
-              style: {
-                background: 'rgba(15, 15, 15, 0.9)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: '#fff',
-                borderRadius: '20px',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-              },
+              className: styles.toast,
             }}
           />
         </BrowserRouter>
