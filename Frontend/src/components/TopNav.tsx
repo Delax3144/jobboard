@@ -1,3 +1,4 @@
+import styles from "./TopNav.module.css";
 import { NavLink, Link } from "react-router-dom";
 import { useTopNav } from "../hooks/useTopNav";
 import { type UserMode } from "../lib/userMode";
@@ -14,121 +15,86 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
 
   const { t } = useTranslation();
 
-  const navLinkClass = ({ isActive }: { isActive: boolean }) => 
-    `top-nav-link ${isActive ? 'active' : ''}`;
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `${styles.navLink} ${isActive ? styles.active : ""}`;
 
   return (
     <>
-      <style>{`
-        .premium-header {
-          position: sticky; top: 0; z-index: 1000; background: rgba(5, 5, 5, 0.7); backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); height: 80px; display: flex; align-items: center; transition: all 0.3s ease;
-        }
-        .premium-header-inner { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; }
-        .center-nav-island { display: flex; align-items: center; gap: 5px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 24px; }
-        .top-nav-link { text-decoration: none; color: #888; font-weight: 600; font-size: 14px; padding: 10px 18px; border-radius: 16px; transition: all 0.2s ease; display: flex; align-items: center; position: relative; }
-        .top-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
-        .top-nav-link.active { color: #fff; background: rgba(255, 255, 255, 0.08); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        
-        .premium-badge { 
-          background: #10b981; color: #000; font-size: 11px; font-weight: 900; padding: 2px 6px; border-radius: 8px; margin-left: 8px; 
-          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); display: inline-flex; align-items: center; justify-content: center; min-width: 20px;
-          animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        @keyframes badgePop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-        
-        .animate-enter { animation: toastEnter 0.4s cubic-bezier(0.21, 1.02, 0.73, 1) forwards; }
-        .animate-leave { animation: toastLeave 0.4s forwards; }
-        @keyframes toastEnter { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes toastLeave { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9) translateY(20px); } }
 
-        .mobile-menu-btn { display: none; background: transparent; border: none; color: #fff; cursor: pointer; padding: 8px; }
-        @media (max-width: 950px) { .center-nav-island { display: none; } .desktop-actions { display: none !important; } .mobile-menu-btn { display: block; } }
-        
-        .mobile-dropdown { position: fixed; top: 80px; left: 0; width: 100vw; height: calc(100vh - 80px); background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px); z-index: 999; display: flex; flex-direction: column; padding: 30px 25px; gap: 15px; transform: translateY(-100%); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; overflow-y: auto; }
-        .mobile-dropdown.open { transform: translateY(0); opacity: 1; pointer-events: all; }
-        .mobile-link { font-size: 20px; font-weight: 800; color: #888; text-decoration: none; transition: color 0.2s; display: flex; align-items: center; padding: 10px 0; border-radius: 12px; }
-        .mobile-link:hover, .mobile-link.active { color: #fff; }
-      `}</style>
-
-      <header className="premium-header">
-        <div className="premium-header-inner">
-          <Link to="/" style={{ textDecoration: 'none', color: '#fff', fontWeight: 900, fontSize: '24px', letterSpacing: '-0.5px' }}>
-            Job<span style={{ color: '#10b981' }}>Board</span>
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+          <Link to="/" className={styles.logo}>
+            Job<span className={styles.accent}>Board</span>
           </Link>
 
-          <nav className="center-nav-island">
+          <nav className={styles.navigation}>
             <NavLink to="/jobs" className={navLinkClass}>{t('nav.explore_jobs', 'Explore Jobs')}</NavLink>
             {user?.role === 'candidate' && (
               <>
-                <NavLink to="/applications" className={navLinkClass}>{t('nav.my_applications', 'My Applications')} {unreadCount > 0 && <span className="premium-badge">{unreadCount}</span>}</NavLink>
+                <NavLink to="/applications" className={navLinkClass}>{t('nav.my_applications', 'My Applications')} {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}</NavLink>
                 <NavLink to="/saved" className={navLinkClass}>{t('nav.saved_jobs', 'Saved Jobs')}</NavLink>
               </>
             )}
             {user?.role === 'employer' && (
-              <NavLink to="/employer" className={navLinkClass}>{t('nav.employer_console', 'Employer Console')} {unreadCount > 0 && <span className="premium-badge">{unreadCount}</span>}</NavLink>
+              <NavLink to="/employer" className={navLinkClass}>{t('nav.employer_console', 'Employer Console')} {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}</NavLink>
             )}
             <NavLink to="/contact" className={navLinkClass}>{t('nav.support', 'Support')}</NavLink>
           </nav>
 
-          <div className="desktop-actions" style={{ display: "flex", gap: "15px", alignItems: "center" }}>
-            
-
+          <div className={styles.desktopActions}>
 
             {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Link to="/profile" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", cursor: "pointer", padding: "6px 16px 6px 6px", borderRadius: "24px", background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', transition: "all 0.2s" }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
-                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg, #10b981, #059669)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", color: "#000", overflow: "hidden", fontSize: '14px' }}>
-                    {user.avatarUrl ? <img src={user.avatarUrl?.startsWith('http') ? user.avatarUrl : `${apiUrl}${user.avatarUrl}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : user.email[0].toUpperCase()}
+              <div className={styles.account}>
+                <Link to="/profile" className={styles.profileLink} >
+                  <div className={styles.avatar}>
+                    {user.avatarUrl ? <img src={user.avatarUrl?.startsWith('http') ? user.avatarUrl : `${apiUrl}${user.avatarUrl}`} className={styles.avatarImage} /> : user.email[0].toUpperCase()}
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <span style={{ color: "#fff", fontWeight: "700", fontSize: '13px', lineHeight: '1.2' }}>{user.username || user.firstName || 'User'}</span>
-                    <span style={{ color: "#10b981", fontSize: '10px', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.5px' }}>{user.role}</span>
+                  <div className={styles.userInfo}>
+                    <span className={styles.username}>{user.username || user.firstName || 'User'}</span>
+                    <span className={styles.role}>{user.role}</span>
                   </div>
                 </Link>
-                <button onClick={logout} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex', transition: 'all 0.2s' }} title={t('nav.logout', 'Logout')} onMouseOver={e => e.currentTarget.style.color = '#ff4b4b'} onMouseOut={e => e.currentTarget.style.color = '#666'}><Icons.LogOut /></button>
+                <button onClick={logout} className={styles.logout} title={t('nav.logout', 'Logout')} ><Icons.LogOut /></button>
               </div>
             ) : (
-              <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <NavLink to="/login" style={{ color: '#aaa', textDecoration: 'none', fontWeight: 700, fontSize: '14px', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#fff'} onMouseOut={e => e.currentTarget.style.color = '#aaa'}>{t('nav.login', 'Log in')}</NavLink>
-                <NavLink to="/register" style={{ background: '#fff', color: '#000', padding: '10px 20px', borderRadius: '14px', textDecoration: 'none', fontWeight: 800, fontSize: '14px', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>{t('nav.sign_up', 'Sign Up')}</NavLink>
+              <div className={styles.guestActions}>
+                <NavLink to="/login" className={styles.login} >{t('nav.login', 'Log in')}</NavLink>
+                <NavLink to="/register" className={styles.register} >{t('nav.sign_up', 'Sign Up')}</NavLink>
               </div>
             )}
           </div>
 
-          <button aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"} aria-expanded={isMobileMenuOpen} aria-controls="mobile-navigation" className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <Icons.Close /> : <Icons.Menu />}</button>
+          <button aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"} aria-expanded={isMobileMenuOpen} aria-controls="mobile-navigation" className={styles.menuButton} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>{isMobileMenuOpen ? <Icons.Close /> : <Icons.Menu />}</button>
         </div>
       </header>
 
-      <div id="mobile-navigation" className={`mobile-dropdown ${isMobileMenuOpen ? 'open' : ''}`}>
-        <NavLink to="/jobs" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.explore_jobs', 'Explore Jobs')}</NavLink>
+      <div id="mobile-navigation" className={`${styles.dropdown} ${isMobileMenuOpen ? styles.open : ""}`}>
+        <NavLink to="/jobs" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `${styles.mobileLink} ${isActive ? styles.active : ""}`}>{t('nav.explore_jobs', 'Explore Jobs')}</NavLink>
         {user?.role === 'candidate' && (
           <>
-            <NavLink to="/applications" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.my_applications', 'My Applications')} {unreadCount > 0 && <span className="premium-badge" style={{ marginLeft: '12px' }}>{unreadCount}</span>}</NavLink>
-            <NavLink to="/saved" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.saved_jobs', 'Saved Jobs')}</NavLink>
+            <NavLink to="/applications" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `${styles.mobileLink} ${isActive ? styles.active : ""}`}>{t('nav.my_applications', 'My Applications')} {unreadCount > 0 && <span className={`${styles.badge} ${styles.mobileBadge}`}>{unreadCount}</span>}</NavLink>
+            <NavLink to="/saved" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `${styles.mobileLink} ${isActive ? styles.active : ""}`}>{t('nav.saved_jobs', 'Saved Jobs')}</NavLink>
           </>
         )}
         {user?.role === 'employer' && (
-          <NavLink to="/employer" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.employer_console', 'Employer Console')} {unreadCount > 0 && <span className="premium-badge" style={{ marginLeft: '12px' }}>{unreadCount}</span>}</NavLink>
+          <NavLink to="/employer" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `${styles.mobileLink} ${isActive ? styles.active : ""}`}>{t('nav.employer_console', 'Employer Console')} {unreadCount > 0 && <span className={`${styles.badge} ${styles.mobileBadge}`}>{unreadCount}</span>}</NavLink>
         )}
-        <NavLink to="/contact" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`}>{t('nav.support', 'Support')}</NavLink>
-        
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '15px 0' }} />
-        
+        <NavLink to="/contact" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `${styles.mobileLink} ${isActive ? styles.active : ""}`}>{t('nav.support', 'Support')}</NavLink>
 
+        <div className={styles.divider} />
 
         {user ? (
           <>
-            <NavLink to="/profile" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `mobile-link ${isActive ? 'active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, #10b981, #059669)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", color: "#000", overflow: "hidden" }}>{user.avatarUrl ? <img src={user.avatarUrl?.startsWith('http') ? user.avatarUrl : `${apiUrl}${user.avatarUrl}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : user.email[0].toUpperCase()}</div>
+            <NavLink to="/profile" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `${styles.mobileLink} ${styles.mobileProfile} ${isActive ? styles.active : ""}`}>
+              <div className={styles.mobileAvatar}>{user.avatarUrl ? <img src={user.avatarUrl?.startsWith('http') ? user.avatarUrl : `${apiUrl}${user.avatarUrl}`} className={styles.avatarImage} /> : user.email[0].toUpperCase()}</div>
               {t('nav.my_profile', 'My Profile')}
             </NavLink>
-            <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} style={{ background: 'transparent', border: 'none', color: '#ff4b4b', fontSize: '20px', fontWeight: 800, textAlign: 'left', padding: '10px 0', cursor: 'pointer' }}>{t('nav.logout', 'Logout')}</button>
+            <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} className={styles.mobileLogout}>{t('nav.logout', 'Logout')}</button>
           </>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '10px' }}>
-            <NavLink to="/register" onClick={() => setIsMobileMenuOpen(false)} style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#000', padding: '16px', borderRadius: '16px', textDecoration: 'none', fontWeight: 800, fontSize: '16px', textAlign: 'center', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)' }}>{t('nav.sign_up_free', 'Sign Up Free')}</NavLink>
-            <NavLink to="/login" onClick={() => setIsMobileMenuOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '16px', borderRadius: '16px', textDecoration: 'none', fontWeight: 700, fontSize: '16px', textAlign: 'center' }}>{t('nav.login', 'Log In')}</NavLink>
+          <div className={styles.mobileGuest}>
+            <NavLink to="/register" onClick={() => setIsMobileMenuOpen(false)} className={styles.mobileRegister}>{t('nav.sign_up_free', 'Sign Up Free')}</NavLink>
+            <NavLink to="/login" onClick={() => setIsMobileMenuOpen(false)} className={styles.mobileLogin}>{t('nav.login', 'Log In')}</NavLink>
           </div>
         )}
       </div>

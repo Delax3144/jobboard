@@ -1,0 +1,87 @@
+.toast {
+  background: rgba(15, 15, 15, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  padding: 20px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(59, 130, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.content {
+  flex: 1;
+}
+
+.title {
+  font-size: 13px;
+  color: #3b82f6;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.description {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.toast[data-visible="true"] {
+  animation: toastEnter 0.4s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+}
+
+.toast[data-visible="false"] {
+  animation: toastLeave 0.4s forwards;
+}
+
+@keyframes toastEnter {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastLeave {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+}
+
+.toast:hover {
+  background: rgba(25,25,25,0.9);
+}
+
+.toast[data-message="true"] .icon {
+  background: rgba(16,185,129,0.1);
+}
+
+.toast[data-message="true"] .title {
+  color: #10b981;
+}
