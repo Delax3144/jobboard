@@ -124,13 +124,6 @@ a {
   font-size: 13px;
   color: var(--muted);
 }
-
-.footer {
-  width: 100%;
-  padding: 60px 0 30px;
-  background-color: #0a0a0a;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
 .grid-canvas > * {
   position: relative;
   z-index: 1;
