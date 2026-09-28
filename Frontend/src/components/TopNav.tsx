@@ -68,7 +68,7 @@ export default function TopNav({ setMode }: { mode: UserMode; setMode: (m: UserM
         </div>
       </header>
 
-      <div id="mobile-navigation" className={`${styles.dropdown} ${isMobileMenuOpen ? styles.open : ""}`}>
+      <div id="mobile-navigation" inert={!isMobileMenuOpen} className={`${styles.dropdown} ${isMobileMenuOpen ? styles.open : ""}`}>
         <NavLink to="/jobs" onClick={() => setIsMobileMenuOpen(false)} className={({isActive}) => `${styles.mobileLink} ${isActive ? styles.active : ""}`}>{t('nav.explore_jobs', 'Explore Jobs')}</NavLink>
         {user?.role === 'candidate' && (
           <>

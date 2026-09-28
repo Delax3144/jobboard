@@ -10,6 +10,7 @@
 }
 
 .canvas {
+  overflow-x: clip;
   min-height: 80vh;
   position: relative;
 }
