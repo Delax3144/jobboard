@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useJobManagement } from "../../hooks/useJobManagement";
 import CandidateCard from "../../components/employer/CandidateCard";
+import LoadError from '../../components/LoadError';
 
 import styles from "./JobManagement.module.css";
 
@@ -10,11 +11,12 @@ const Icons = {
 
 export default function JobManagement() {
   const {
-    job, applications, loading, filter, setFilter, apiUrl,
+    job, applications, loading, error, retry, filter, setFilter, apiUrl,
     filteredApps, expandedAppId, toggleExpand, handleUpdateStatus
   } = useJobManagement();
 
   if (loading) return <div className={styles.loading}>Loading...</div>;
+  if (error) return <LoadError message={error.message} loading={loading} onRetry={error.retryable ? retry : undefined} />;
   if (!job) return <div className={styles.loading}>Job not found</div>;
 
   return (

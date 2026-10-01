@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useApplicationDetails } from "../../hooks/useApplicationDetails";
+import LoadError from '../../components/LoadError';
 
 import styles from "./ApplicationDetails.module.css";
 
@@ -14,9 +15,10 @@ const Icons = {
 };
 
 export default function ApplicationDetails() {
-  const { app, loading, navigate, apiUrl, isInvited, isRejected, canChat } = useApplicationDetails();
+  const { app, loading, error, retry, navigate, apiUrl, isInvited, isRejected, canChat } = useApplicationDetails();
 
   if (loading) return <div className={styles.loading}>Loading...</div>;
+  if (error) return <LoadError message={error.message} loading={loading} onRetry={error.retryable ? retry : undefined} />;
   if (!app) return <div className={styles.loading}>Application not found.</div>;
 
   let statusText = 'Under Review';

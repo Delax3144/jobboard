@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { usePublicProfile } from "../../hooks/usePublicProfile";
+import LoadError from '../../components/LoadError';
 import styles from "./PublicProfile.module.css";
 
 const Icons = {
@@ -13,9 +14,10 @@ const Icons = {
 };
 
 export default function PublicProfile() {
-  const { navigate, apiUrl, candidate, loading, profileData } = usePublicProfile();
+  const { navigate, apiUrl, candidate, loading, error, retry, profileData } = usePublicProfile();
 
   if (loading) return <div className={styles.state}>Loading Talent Profile...</div>;
+  if (error) return <LoadError message={error.message} loading={loading} onRetry={error.retryable ? retry : undefined} />;
   if (!candidate || !profileData) return <div className={styles.state}>Candidate not found.</div>;
 
   return (

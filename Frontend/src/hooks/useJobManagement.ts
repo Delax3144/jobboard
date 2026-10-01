@@ -1,43 +1,42 @@
 import type { Job, Application } from '../types/job';
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../lib/api";
+import { useRouteResource } from './useRouteResource';
 
 type FilterType = "all" | "new" | "reviewed" | "invited" | "rejected";
+
+const jobErrors = {
+  notFound: 'Job not found.',
+  forbidden: 'You do not have access to manage this vacancy.',
+  unavailable: 'Could not load the vacancy and applicants. Please try again.',
+};
 
 export function useJobManagement() {
   const { id } = useParams();
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-  const [job, setJob] = useState<Job | null>(null);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
+  const loadJob = useCallback(async (signal: AbortSignal) => {
+    const [jobResponse, applicationsResponse] = await Promise.all([
+      api.get<Job>(`/jobs/${id}`, { signal }),
+      api.get<Application[]>(`/applications/job/${id}`, { signal }),
+    ]);
+    return { job: jobResponse.data, applications: applicationsResponse.data };
+  }, [id]);
+  const { data, loading, error, retry, updateData } = useRouteResource(id, loadJob, jobErrors);
+  const job = data?.job ?? null;
+  const applications = data?.applications ?? [];
   
   const [filter, setFilter] = useState<FilterType>("all");
   const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [jobRes, appsRes] = await Promise.all([
-          api.get(`/jobs/${id}`),
-          api.get(`/applications/job/${id}`)
-        ]);
-        setJob(jobRes.data);
-        setApplications(appsRes.data);
-      } catch (err) {
-        console.error("Failed to load applicants", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [id]);
-
   const handleUpdateStatus = async (appId: string, newStatus: Exclude<Application['status'], 'new'>) => {
     try {
       await api.patch(`/applications/${appId}`, { status: newStatus });
-      setApplications(apps => apps.map(app => app.id === appId ? { ...app, status: newStatus } : app));
+      updateData(current => ({
+        ...current,
+        applications: current.applications.map(app => app.id === appId ? { ...app, status: newStatus } : app),
+      }));
     } catch {
       alert("Error updating status");
     }
@@ -51,7 +50,7 @@ export function useJobManagement() {
 
 
   return {
-    job, applications, loading, filter, setFilter, apiUrl,
+    job, applications, loading, error, retry, filter, setFilter, apiUrl,
     filteredApps, expandedAppId, toggleExpand, handleUpdateStatus
   };
 }

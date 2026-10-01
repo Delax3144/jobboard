@@ -24,7 +24,7 @@ it('loads public details and links to the candidate conversation', async () => {
   renderProfile();
   expect(screen.getByText('Loading Talent Profile...')).toBeTruthy();
   expect(await screen.findByRole('heading', { name: 'Alex Smith' })).toBeTruthy();
-  expect(api.get).toHaveBeenCalledWith('/auth/users/candidate-1');
+  expect(api.get).toHaveBeenCalledWith('/auth/users/candidate-1', expect.objectContaining({ signal: expect.any(AbortSignal) }));
   expect(screen.getByText('alex@example.com')).toBeTruthy();
   expect(screen.getByText('React')).toBeTruthy();
   expect(screen.getByText('Built web apps')).toBeTruthy();
