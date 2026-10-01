@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { randomBytes } from "node:crypto";
-import { OAuth2Client } from "google-auth-library";
+import { OAuth2Client, gaxios } from "google-auth-library";
 import { prisma } from "../prisma";
 import bcrypt from "bcrypt";
 
@@ -16,9 +16,13 @@ import { oauthRateLimit } from "../middleware/rateLimits";
 
 export const googleRouter = Router();
 
-const googleClient = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID
-);
+const googleClient = new OAuth2Client({
+  clientId: process.env.GOOGLE_CLIENT_ID,
+  transporterOptions: {
+    timeout: 5_000,
+    retryConfig: { retry: 0 },
+  },
+});
 
 googleRouter.post(
   "/google",
@@ -135,7 +139,19 @@ googleRouter.post(
         token,
       });
     } catch (error) {
-      console.error("Google OAuth failed:", error);
+      if (error instanceof gaxios.GaxiosError) {
+        console.error("Google OAuth request failed", {
+          code: error.code,
+          status: error.status,
+        });
+        const timedOut = ['TimeoutError', 'ETIMEDOUT', 'ECONNABORTED'].includes(String(error.code));
+        return res.status(timedOut ? 504 : 502).json({
+          message: timedOut
+            ? "Google took too long to respond. Please try again."
+            : "Google authentication is currently unavailable. Please try again.",
+        });
+      }
+      console.error("Google OAuth failed");
 
       return res.status(500).json({
         message: "Google authentication failed",
