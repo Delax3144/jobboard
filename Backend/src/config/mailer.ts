@@ -1,6 +1,8 @@
 import nodemailer from "nodemailer";
+import { mailTimeouts } from "./mailTimeouts";
 
 export const mailTransporter = nodemailer.createTransport({
+  ...mailTimeouts,
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
