@@ -63,6 +63,7 @@ githubRouter.post(
             code,
           },
           {
+            timeout: 5_000,
             headers: {
               Accept: "application/json",
             },
@@ -82,6 +83,7 @@ githubRouter.post(
         await axios.get<GitHubUser>(
           "https://api.github.com/user",
           {
+            timeout: 5_000,
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
@@ -94,6 +96,7 @@ githubRouter.post(
         await axios.get<GitHubEmail[]>(
           "https://api.github.com/user/emails",
           {
+            timeout: 5_000,
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },
@@ -198,6 +201,18 @@ githubRouter.post(
         token,
       });
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("GitHub OAuth request failed", {
+          code: error.code,
+          status: error.response?.status,
+        });
+        const timedOut = ['ECONNABORTED', 'ETIMEDOUT'].includes(error.code ?? '');
+        return res.status(timedOut ? 504 : 502).json({
+          message: timedOut
+            ? "GitHub took too long to respond. Please try again."
+            : "GitHub authentication is currently unavailable. Please try again.",
+        });
+      }
       console.error("GitHub OAuth failed:", error);
 
       return res.status(500).json({
