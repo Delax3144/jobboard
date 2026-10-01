@@ -37,6 +37,7 @@ The online npm audit after compatible dependency updates reports no backend advi
 
 ## Before showing the deployed demo
 
+- Allow at least 15 seconds for the backend to stop in the process manager (PM2 `kill_timeout: 15000`). SIGINT/SIGTERM close Socket.IO and drain HTTP requests before closing Prisma and mail resources; the application forces an exit after 10 seconds if shutdown stalls.
 - Apply committed migrations before starting the updated backend, then deploy both application builds.
 - Run the README demo walkthrough using two browser profiles on the deployed version.
 - Check live email delivery, Google/GitHub OAuth callbacks, Cloudinary uploads, and a real two-browser Socket.IO exchange with the deployment's credentials.

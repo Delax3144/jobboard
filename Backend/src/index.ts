@@ -5,6 +5,9 @@ import cors from "cors";
 import helmet from "helmet";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { prisma } from "./prisma";
+import { mailTransporter } from "./config/mailer";
+import { createShutdown } from "./lib/shutdown";
 
 import { authenticateSocket } from "./socket/authenticateSocket";
 import { verifyActiveAccessToken } from './lib/activeSession';
@@ -101,6 +104,15 @@ app.use((_req, res) => {
 app.use(errorHandler);
 
 const port = Number(process.env.PORT || 4000);
+
+const shutdown = createShutdown({
+  closeServer: () => io.close(),
+  disconnectDatabase: () => prisma.$disconnect(),
+  closeMailer: () => mailTransporter.close(),
+});
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 httpServer.listen(port, () => {
   console.log(
