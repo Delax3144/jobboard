@@ -37,6 +37,7 @@ The online npm audit after compatible dependency updates reports no backend advi
 
 ## Before showing the deployed demo
 
+- Deploy the backend and frontend job pagination changes together. Public `GET /jobs` returns up to 20 jobs plus `page`, `pageSize`, and `hasNextPage`; search, location, level, and salary filters are applied before pagination. The older frontend only reads the first page. Pagination tests use isolated persistence; the PostgreSQL integration scenario was not rerun for this change.
 - Allow at least 15 seconds for the backend to stop in the process manager (PM2 `kill_timeout: 15000`). SIGINT/SIGTERM close Socket.IO and drain HTTP requests before closing Prisma and mail resources; the application forces an exit after 10 seconds if shutdown stalls.
 - Apply committed migrations before starting the updated backend, then deploy both application builds.
 - Run the README demo walkthrough using two browser profiles on the deployed version.

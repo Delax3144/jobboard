@@ -9,10 +9,11 @@ export const MAX_SALARY_LIMIT = 50000;
 
 export function useJobs() {
   const { user } = useAuth();
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [result, setResult] = useState<{ key: string; jobs: Job[]; hasNextPage: boolean } | null>(null);
+  const [pageState, setPageState] = useState({ filterKey: '', page: 1 });
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [failure, setFailure] = useState<{ key: string; message: string } | null>(null);
   const userId = user?.id;
   const role = user?.role;
 
@@ -22,31 +23,54 @@ export function useJobs() {
   const [minSalary, setMinSalary] = useState<number>(0);
   const [maxSalary, setMaxSalary] = useState<number>(MAX_SALARY_LIMIT);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const jobsRes = await api.get("/jobs");
-      const data = Array.isArray(jobsRes.data) ? jobsRes.data : (jobsRes.data.jobs || []);
-      setJobs(data);
+  const params = useMemo(() => ({
+    search: searchTerm.trim(), locations: selectedLocations, levels: selectedLevels,
+    minSalary, maxSalary,
+  }), [searchTerm, selectedLocations, selectedLevels, minSalary, maxSalary]);
+  const filterKey = JSON.stringify(params);
+  const page = pageState.filterKey === filterKey ? pageState.page : 1;
+  const key = JSON.stringify([filterKey, page, userId, role]);
+  const error = failure?.key === key ? failure.message : '';
+  const [attempt, setAttempt] = useState(0);
 
+  const fetchData = useCallback(async (signal: AbortSignal) => {
+    setLoading(true);
+    try {
+      const query = new URLSearchParams({
+        page: String(page), search: params.search,
+        minSalary: String(params.minSalary), maxSalary: String(params.maxSalary),
+      });
+      params.locations.forEach(value => query.append('locations', value));
+      params.levels.forEach(value => query.append('levels', value));
+      const jobsRes = await api.get<{ jobs: Job[]; hasNextPage: boolean }>("/jobs", { params: query, signal });
+      if (signal.aborted) return;
+      let ids = new Set<string>();
       if (userId && role === 'candidate') {
-        const bookmarksRes = await api.get<Job[]>("/bookmarks");
-        const ids = new Set(bookmarksRes.data.map((job) => job.id));
-        setSavedJobIds(ids);
-      } else {
-        setSavedJobIds(new Set());
+        const bookmarksRes = await api.get<Job[]>("/bookmarks", { signal });
+        ids = new Set(bookmarksRes.data.map(job => job.id));
       }
-      setError('');
+      if (signal.aborted) return;
+      setResult({ key, jobs: jobsRes.data.jobs, hasNextPage: jobsRes.data.hasNextPage });
+      setSavedJobIds(ids);
+      setFailure(null);
     } catch {
-      setError('Could not load jobs or saved jobs. Please try again.');
+      if (!signal.aborted) setFailure({ key, message: 'Could not load jobs or saved jobs. Please try again.' });
     } finally {
-      setLoading(false);
+      if (!signal.aborted) setLoading(false);
     }
-  }, [userId, role]);
-  useEffect(() => { void fetchData(); }, [fetchData]);
+  }, [key, page, params, userId, role]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => { void fetchData(controller.signal); }, 250);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [fetchData, attempt]);
+  const currentResult = result?.key === key ? result : null;
+  const pending = loading || (!currentResult && !error);
   const retry = () => {
     if (loading) return;
     setLoading(true);
-    void fetchData();
+    setAttempt(value => value + 1);
   };
 
   const toggleBookmark = async (e: React.MouseEvent, jobId: string) => {
@@ -80,40 +104,21 @@ export function useJobs() {
     setMaxSalary(MAX_SALARY_LIMIT);
   };
 
-  const filteredJobs = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-    return jobs.filter(job => {
-      const matchesSearch = !query ||
-        job.title.toLowerCase().includes(query) ||
-        job.companyName.toLowerCase().includes(query) ||
-        job.tags?.toLowerCase().includes(query);
-      
-      const matchesLocation = selectedLocations.length === 0 || 
-        selectedLocations.some(loc => job.location?.toLowerCase().includes(loc.toLowerCase()));
-
-      const matchesLevel = selectedLevels.length === 0 || 
-        selectedLevels.some(lvl => {
-          const target = lvl.toLowerCase();
-          if (job.level) return job.level.toLowerCase() === target;
-          return job.title.toLowerCase().includes(target) || (job.tags && job.tags.toString().toLowerCase().includes(target));
-        });
-
-      const jobMin = job.salaryFrom || 0;
-      const jobMax = job.salaryTo || 0;
-      const matchesSalary = jobMax >= minSalary && jobMin <= maxSalary;
-
-      return matchesSearch && matchesLocation && matchesLevel && matchesSalary;
-    });
-  }, [jobs, searchTerm, selectedLocations, selectedLevels, minSalary, maxSalary]);
-
   return {
-    data: { loading, error, retry, savedJobIds, user },
-    list: { filteredJobs, toggleBookmark },
+    data: { loading: pending, error, retry, savedJobIds, user },
+    list: { filteredJobs: currentResult?.jobs ?? [], toggleBookmark },
+    pagination: {
+      page, hasNextPage: currentResult?.hasNextPage ?? false,
+      setPage: (nextPage: number) => setPageState({ filterKey, page: Math.max(1, nextPage) }),
+    },
     filters: {
       searchTerm, setSearchTerm,
       selectedLocations, setSelectedLocations,
       selectedLevels, setSelectedLevels,
-      minSalary, setMinSalary,
+      minSalary, setMinSalary: (value: number) => {
+        setMinSalary(value);
+        setMaxSalary(previous => Math.max(previous, value));
+      },
       maxSalary, setMaxSalary,
       toggleFilter, clearAllFilters
     }

@@ -26,7 +26,7 @@ function CompanyLogo({ src, name }: { src?: string; name: string }) {
 
 export default function Jobs() {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
-  const { data, list, filters } = useJobs();
+  const { data, list, filters, pagination } = useJobs();
 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [showTopBtn, setShowTopBtn] = useState(false);
@@ -56,13 +56,13 @@ export default function Jobs() {
             <h1 className={styles.title}>
               Explore <span className={styles.titleGradient}>Careers</span>
             </h1>
-            {!data.error && !data.loading && <p className={styles.summary}>Showing <span className={styles.count}>{list.filteredJobs.length}</span> opportunities</p>}
+            {!data.error && !data.loading && <p className={styles.summary}>Showing <span className={styles.count}>{list.filteredJobs.length}</span> opportunities on page {pagination.page}</p>}
           </div>
 
           <div className={styles.searchGroup}>
             <div className={styles.searchField}>
               <input
-                aria-label="Search jobs" placeholder="Search job title, skills, or company..." value={filters.searchTerm} onChange={(e) => filters.setSearchTerm(e.target.value)}
+                aria-label="Search jobs" maxLength={120} placeholder="Search job title, skills, or company..." value={filters.searchTerm} onChange={(e) => filters.setSearchTerm(e.target.value)}
                 className={styles.searchInput}
 
               />
@@ -88,7 +88,7 @@ export default function Jobs() {
               </div>
             )}
 
-            {!data.error && list.filteredJobs.map((job) => {
+            {!data.error && !data.loading && list.filteredJobs.map((job) => {
               const isSaved = data.savedJobIds.has(job.id);
 
               return (
@@ -115,7 +115,7 @@ export default function Jobs() {
                         <span className={`hidden-mobile ${styles.separator}`} />
                         <span className={styles.location}><Icons.Location /> {job.location || 'Remote'}</span>
                         <span className={`hidden-mobile ${styles.separator}`} />
-                        <span className={styles.salary}>{job.salaryFrom.toLocaleString()} - {job.salaryTo.toLocaleString()} PLN</span>
+                        <span className={styles.salary}>{(job.salaryFrom ?? 0).toLocaleString()} - {(job.salaryTo ?? 0).toLocaleString()} PLN</span>
                       </div>
 
                       <div className={styles.tags}>
@@ -138,6 +138,11 @@ export default function Jobs() {
                 </Link>
               );
             })}
+            <nav aria-label="Job pages" className={styles.pagination}>
+              <button disabled={data.loading || pagination.page === 1} onClick={() => pagination.setPage(pagination.page - 1)}>Previous</button>
+              <span aria-live="polite">Page {pagination.page}</span>
+              <button disabled={data.loading || Boolean(data.error) || !pagination.hasNextPage} onClick={() => pagination.setPage(pagination.page + 1)}>Next</button>
+            </nav>
           </main>
         </div>
       </div>
@@ -153,7 +158,7 @@ export default function Jobs() {
           </div>
           <div className={styles.modalContent}><JobsFilters filters={filters} /></div>
           <button onClick={() => setIsFilterModalOpen(false)} className={styles.applyFilters}>
-            Apply Filters ({list.filteredJobs.length} Jobs)
+            Show Results
           </button>
         </div>,
         document.body

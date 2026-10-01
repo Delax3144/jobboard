@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
+import type { Prisma } from "@prisma/client";
 import {
   authMiddleware,
   getAuthenticatedUser,
@@ -15,6 +16,7 @@ import { sanitizeRichText } from "../lib/sanitizeHtml";
 import {
   createJobSchema,
   jobIdSchema,
+  jobListSchema,
   updateJobSchema,
 } from "../validation/jobs";
 import { optionalAuthMiddleware } from "../middleware/optionalAuth";
@@ -22,13 +24,39 @@ import { jobUploadRateLimit } from "../middleware/rateLimits";
 
 export const jobsRouter = Router();
 
-jobsRouter.get("/", async (_req, res) => {
+jobsRouter.get("/", async (req, res) => {
+  const parsed = jobListSchema.safeParse(req.query);
+  if (!parsed.success) {
+    return res.status(400).json({ message: "Invalid job filters" });
+  }
+  const { page, search, locations, levels, minSalary, maxSalary } = parsed.data;
+  const pageSize = 20;
+  const conditions: Prisma.JobWhereInput[] = [];
+  conditions.push({ OR: [
+    { salaryFrom: { lte: maxSalary } }, { salaryFrom: null },
+  ] });
+  conditions.push(minSalary === 0 ? { OR: [
+    { salaryTo: { gte: minSalary } }, { salaryTo: null },
+  ] } : { salaryTo: { gte: minSalary } });
+  if (search) conditions.push({ OR: [
+    { title: { contains: search, mode: "insensitive" } },
+    { companyName: { contains: search, mode: "insensitive" } },
+    { tags: { contains: search, mode: "insensitive" } },
+  ] });
+  if (locations.length) conditions.push({ OR: locations.map(location => ({
+    location: { contains: location, mode: "insensitive" },
+  })) });
+  if (levels.length) conditions.push({ OR: levels.map(level => ({
+    level: { equals: level, mode: "insensitive" },
+  })) });
   const jobs = await prisma.job.findMany({
-    where: { status: "published" },
-    orderBy: { createdAt: "desc" },
+    where: { status: "published", AND: conditions },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    skip: (page - 1) * pageSize,
+    take: pageSize + 1,
   });
 
-  res.json({ jobs });
+  res.json({ jobs: jobs.slice(0, pageSize), page, pageSize, hasNextPage: jobs.length > pageSize });
 });
 
 jobsRouter.get("/mine", authMiddleware, async (req, res) => {

@@ -428,6 +428,11 @@
 }
 .jobLink:hover .highlight { opacity: 1; }
 
+.pagination { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 24px; }
+.pagination button { padding: 10px 16px; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; color: inherit; background: transparent; cursor: pointer; }
+.pagination button:disabled { opacity: 0.45; cursor: default; }
+.pagination button:focus-visible { outline: 2px solid #10b981; outline-offset: 3px; }
+
 @media (max-width: 768px) {
   .layout { grid-template-columns: 1fr; gap: 30px; }
   .sidebar { display: none; }

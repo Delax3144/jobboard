@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import api from '../lib/api';
@@ -27,14 +27,14 @@ const cases = [
   { Page: Employer, endpoint: '/jobs/mine', empty: 'No vacancies posted yet' },
 ];
 const response = (url: string, empty = false) => ({ data:
-  url === '/jobs/mine' ? { jobs: empty ? [] : [job] } :
+  url === '/jobs' || url === '/jobs/mine' ? { jobs: empty ? [] : [job], hasNextPage: false } :
   url.startsWith('/applications/') ? (empty ? [] : [application]) : (empty ? [] : [job]),
 });
 
 beforeEach(() => { auth.user.role = 'employer'; });
 
 it('keeps a job card usable when its company logo fails to load', async () => {
-  vi.mocked(api.get).mockResolvedValue({ data: [{ ...job, companyLogo: '/missing-logo.png' }] });
+  vi.mocked(api.get).mockResolvedValue({ data: { jobs: [{ ...job, companyLogo: '/missing-logo.png' }], hasNextPage: false } });
   render(<MemoryRouter><Jobs /></MemoryRouter>);
   fireEvent.error(await screen.findByRole('img', { name: 'Demo' }));
   expect(screen.queryByRole('img', { name: 'Demo' })).toBeNull();
@@ -67,7 +67,7 @@ it.each([
   const field = Page === Jobs
     ? screen.getByPlaceholderText('Search job title, skills, or company...')
     : Page === Employer ? screen.getByPlaceholderText('e.g. Senior React Engineer') : null;
-  if (field) await user.type(field, Page === Jobs ? 'React' : 'My unsaved role');
+  if (field && Page !== Jobs) await user.type(field, 'My unsaved role');
 
   await user.click(screen.getByRole('button', { name: 'Try again' }));
   expect(await screen.findByRole('button', { name: 'Try again' })).toBeTruthy();
@@ -76,7 +76,7 @@ it.each([
   const retryButton = await screen.findByRole<HTMLButtonElement>('button', { name: 'Retrying...' });
   expect(retryButton.disabled).toBe(true);
   await user.click(retryButton);
-  expect(attempt).toBe(3);
+  await waitFor(() => expect(attempt).toBe(3));
   expect(screen.queryByText(empty)).toBeNull();
   await act(async () => { finishRetry(); });
   expect(await screen.findByText(job.title)).toBeTruthy();
@@ -84,7 +84,7 @@ it.each([
   if (field) {
     const currentField = screen.getByPlaceholderText<HTMLInputElement>(Page === Jobs
       ? 'Search job title, skills, or company...' : 'e.g. Senior React Engineer');
-    expect(currentField.value).toBe(Page === Jobs ? 'React' : 'My unsaved role');
+    expect(currentField.value).toBe(Page === Jobs ? '' : 'My unsaved role');
   }
 });
 

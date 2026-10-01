@@ -22,6 +22,22 @@ const salarySchema = z.coerce
 
 export const jobIdSchema = z.string().uuid("Invalid job id");
 
+const queryList = z.preprocess(
+  value => typeof value === "string" ? [value] : value,
+  z.array(z.string().trim().min(1).max(100)).max(10).default([]),
+);
+
+export const jobListSchema = z.strictObject({
+  page: z.coerce.number().int().min(1).max(100_000).default(1),
+  search: z.string().trim().max(120).default(""),
+  locations: queryList,
+  levels: queryList,
+  minSalary: salarySchema.default(0),
+  maxSalary: salarySchema.default(50_000),
+}).refine(value => value.minSalary <= value.maxSalary, {
+  message: "Minimum salary cannot exceed maximum salary",
+});
+
 const jobFieldsSchema = z.object({
   title: z
     .string()
