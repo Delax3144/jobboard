@@ -1,27 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { githubAuthorizationUrl, consumeGithubState } from '../lib/githubOAuth';
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import { apiErrorMessage } from '../lib/apiError';
 import type { CredentialResponse } from "@react-oauth/google";
 import { useAuth } from "../context/useAuth";
 import api from "../lib/api";
-
-type ApiErrorResponse = {
-  message?: string;
-};
 
 type LoginLocationState = {
   requires2FA?: boolean;
   challengeToken?: string;
 };
-
-function getApiErrorMessage(error: unknown, fallback: string) {
-  if (axios.isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.message ?? fallback;
-  }
-
-  return fallback;
-}
 
 export function useLogin() {
   const processedCode = useRef<string | null>(null);
@@ -98,7 +86,7 @@ export function useLogin() {
         window.location.href = "/"; 
       }
     } catch (error) {
-      alert(getApiErrorMessage(error, "Invalid credentials"));
+      alert(apiErrorMessage(error, "Invalid credentials"));
     }
   };
 
@@ -116,7 +104,7 @@ export function useLogin() {
       if (rememberMe) localStorage.setItem('remembered_email', email);
       window.location.href = "/"; 
     } catch (error) {
-      alert(getApiErrorMessage(error, "Invalid 2FA code"));
+      alert(apiErrorMessage(error, "Invalid 2FA code"));
     } finally {
       setIsVerifying(false);
     }
@@ -143,7 +131,7 @@ export function useLogin() {
 
       navigate("/");
     } catch (error) {
-      alert(getApiErrorMessage(error, "Google login failed"));
+      alert(apiErrorMessage(error, "Google login failed"));
     }
   };
 
