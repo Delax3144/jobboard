@@ -1,5 +1,4 @@
 import NotificationToast from "../components/NotificationToast";
-import type { Socket } from 'socket.io-client';
 import type { NotificationEvent } from '../types/events';
 import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -29,12 +28,12 @@ export function useTopNav(setMode: (m: UserMode) => void) {
   const navigate = useNavigate();
   const { user, logout, isLoading } = useAuth();
 
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unread, setUnread] = useState({ userId: '', count: 0 });
+  const unreadCount = unread.userId === user?.id ? unread.count : 0;
   const [menuPath, setMenuPath] = useState<string | null>(null);
   const isMobileMenuOpen = menuPath === location.key;
   const setIsMobileMenuOpen = (open: boolean) => setMenuPath(open ? location.key : null);
 
-  const socketRef = useRef<Socket | null>(null);
   const pathnameRef = useRef(location.pathname);
 
   const userRef = useRef(user);
@@ -60,14 +59,23 @@ export function useTopNav(setMode: (m: UserMode) => void) {
       setMode(currentUser.role === 'employer' ? 'employer' : 'candidate');
     }
 
+    let active = true;
+    let pendingRequest: AbortController | undefined;
     const checkUpdates = async () => {
+      pendingRequest?.abort();
+      const controller = new AbortController();
+      pendingRequest = controller;
       try {
         const currentRole = userRef.current?.role;
         const endpoint = currentRole === 'employer' ? '/applications/owner' : '/applications/my';
-        const res = await api.get<Application[]>(endpoint);
-        setUnreadCount(res.data.filter(app => app.hasUpdate).length);
+        const res = await api.get<Application[]>(endpoint, { signal: controller.signal });
+        if (active && !controller.signal.aborted) {
+          setUnread({ userId, count: res.data.filter(app => app.hasUpdate).length });
+        }
       } catch (err) {
-        console.error("Error checking updates", err);
+        if (active && !controller.signal.aborted) {
+          console.error("Error checking updates", err);
+        }
       }
     };
 
@@ -78,12 +86,14 @@ export function useTopNav(setMode: (m: UserMode) => void) {
     checkUpdates();
     window.addEventListener("update_unread", checkUpdates);
 
-    socketRef.current = io(apiUrl, {
+    const socket = io(apiUrl, {
       auth: { token },
       withCredentials: true,
     });
 
-    socketRef.current.on("new_notification", (data: NotificationEvent) => {
+    socket.on("connect", checkUpdates);
+    socket.on("new_notification", (data: NotificationEvent) => {
+      if (!active) return;
       if (data.applicationId && pathnameRef.current === `/messages/${data.applicationId}`) return;
 
       checkUpdates();
@@ -115,7 +125,10 @@ export function useTopNav(setMode: (m: UserMode) => void) {
     });
 
     return () => {
-      if (socketRef.current) socketRef.current.disconnect();
+      active = false;
+      pendingRequest?.abort();
+      socket.off("connect", checkUpdates);
+      socket.disconnect();
       window.removeEventListener('update_unread', checkUpdates);
     };
   }, [userId, apiUrl, setMode, navigate]);
