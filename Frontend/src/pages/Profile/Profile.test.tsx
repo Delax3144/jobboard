@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, it, vi } from 'vitest';
 import api from '../../lib/api';
@@ -41,7 +41,7 @@ it('supports editing, cancellation and pending profile saves', async () => {
 
 it('edits professional experience and toggles privacy using the keyboard', async () => {
   const user = userEvent.setup();
-  vi.mocked(api.put).mockResolvedValue({ data: { user: auth.user } });
+  vi.mocked(api.put).mockResolvedValue({ data: { user: { ...auth.user, isPublic: false } } });
   render(<Profile />);
   await user.click(screen.getByRole('button', { name: 'Professional Profile' }));
   await user.click(screen.getByRole('button', { name: 'Edit Profile' }));
@@ -55,7 +55,50 @@ it('edits professional experience and toggles privacy using the keyboard', async
   toggle.focus();
   await user.keyboard(' ');
   expect(toggle.getAttribute('aria-checked')).toBe('false');
-  expect(api.put).toHaveBeenCalledWith('/auth/profile', { isPublic: false, showEmail: false });
+  expect(api.put).toHaveBeenCalledWith('/auth/profile', { isPublic: false });
+});
+
+it('rolls back a failed privacy save and allows a retry without overlapping requests', async () => {
+  const user = userEvent.setup();
+  let rejectSave!: () => void;
+  vi.mocked(api.put).mockImplementationOnce(() => new Promise((_resolve, reject) => {
+    rejectSave = () => reject(new Error('Offline'));
+  }));
+  render(<Profile />);
+  await user.click(screen.getByRole('button', { name: 'Privacy' }));
+  const toggle = screen.getByRole<HTMLButtonElement>('switch', { name: 'Public Profile' });
+  await user.click(toggle);
+  expect(toggle.getAttribute('aria-checked')).toBe('false');
+  expect(toggle.disabled).toBe(true);
+  await user.click(toggle);
+  expect(api.put).toHaveBeenCalledTimes(1);
+  await act(async () => { rejectSave(); });
+  expect(toggle.getAttribute('aria-checked')).toBe('true');
+  expect(toggle.disabled).toBe(false);
+  expect(screen.getByRole('alert').textContent).toBe('Could not save settings. Please try again.');
+  vi.mocked(api.put).mockResolvedValueOnce({ data: { user: { ...auth.user, isPublic: false } } });
+  await user.click(toggle);
+  expect(toggle.getAttribute('aria-checked')).toBe('false');
+  expect(screen.queryByRole('alert')).toBeNull();
+});
+
+it('saves keyboard volume changes once and restores the last saved volume after failure', async () => {
+  const user = userEvent.setup();
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+  vi.mocked(api.put).mockResolvedValueOnce({ data: { user: { ...auth.user, notificationVolume: 55 } } });
+  render(<Profile />);
+  await user.click(screen.getByRole('button', { name: 'Notifications' }));
+  const slider = screen.getByRole<HTMLInputElement>('slider', { name: 'Alert Volume' });
+  fireEvent.change(slider, { target: { value: '55' } });
+  await act(async () => { fireEvent.keyUp(slider, { key: 'ArrowRight' }); });
+  expect(api.put).toHaveBeenCalledWith('/auth/profile', { notificationVolume: 55 });
+  fireEvent.blur(slider);
+  expect(api.put).toHaveBeenCalledTimes(1);
+  vi.mocked(api.put).mockRejectedValueOnce(new Error('Offline'));
+  fireEvent.change(slider, { target: { value: '60' } });
+  await act(async () => { fireEvent.keyUp(slider, { key: 'ArrowRight' }); });
+  expect(slider.value).toBe('55');
+  expect(screen.getByRole('alert')).toBeTruthy();
 });
 
 it('validates the 2FA code and prevents repeated verification while pending', async () => {

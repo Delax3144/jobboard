@@ -188,6 +188,15 @@ export default function Profile() {
               )}
             </form>
 
+            {(p.activeTab === 'privacy' || p.activeTab === 'notifications') &&
+              (p.settings.isSaving || p.settings.error || p.settings.message) && (
+              <div className={styles.settingsFeedback}>
+                {p.settings.error ? <p role="alert" className={styles.settingsError}>{p.settings.error}</p> : (
+                  <p role="status">{p.settings.isSaving ? 'Saving settings...' : p.settings.message}</p>
+                )}
+              </div>
+            )}
+
             {p.activeTab === 'privacy' && (
               <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>Privacy Settings</h2>
@@ -195,11 +204,11 @@ export default function Profile() {
                 <div className={styles.settingsList}>
                   <div className={`${styles.settingsRow} ${styles.responsiveSettings}`}>
                     <div><div className={styles.settingTitle}>Public Profile</div><div className={styles.settingDescription}>Allow verified employers to find you in search results.</div></div>
-                    <Toggle label="Public Profile" active={p.settings.isPublic} onClick={() => { const nextVal = !p.settings.isPublic; p.settings.setIsPublic(nextVal); p.settings.handleSaveSettings({ isPublic: nextVal, showEmail: p.settings.showEmail }); }} />
+                    <Toggle label="Public Profile" active={p.settings.isPublic} disabled={p.settings.isSaving} onClick={() => p.settings.toggleSetting("isPublic")} />
                   </div>
                   <div className={`${styles.settingsRow} ${styles.responsiveSettings}`}>
                     <div><div className={styles.settingTitle}>Show Email Address</div><div className={styles.settingDescription}>Visible only to companies you've explicitly applied to.</div></div>
-                    <Toggle label="Show Email Address" active={p.settings.showEmail} onClick={() => { const nextVal = !p.settings.showEmail; p.settings.setShowEmail(nextVal); p.settings.handleSaveSettings({ isPublic: p.settings.isPublic, showEmail: nextVal }); }} />
+                    <Toggle label="Show Email Address" active={p.settings.showEmail} disabled={p.settings.isSaving} onClick={() => p.settings.toggleSetting("showEmail")} />
                   </div>
                 </div>
               </div>
@@ -212,11 +221,11 @@ export default function Profile() {
                 <div className={styles.settingsList}>
                   <div className={`${styles.settingsRow} ${styles.responsiveSettings}`}>
                     <div><div className={styles.settingTitle}>In-App Push Notifications</div><div className={styles.settingDescription}>Show real-time alerts in the bottom right corner of your screen.</div></div>
-                    <Toggle label="In-App Push Notifications" active={p.settings.toastsEnabled} onClick={() => { const nextVal = !p.settings.toastsEnabled; p.settings.setToastsEnabled(nextVal); p.settings.handleSaveSettings({ soundEnabled: p.settings.soundEnabled, toastsEnabled: nextVal, notificationVolume: p.settings.notificationVolume }); }} />
+                    <Toggle label="In-App Push Notifications" active={p.settings.toastsEnabled} disabled={p.settings.isSaving} onClick={() => p.settings.toggleSetting("toastsEnabled")} />
                   </div>
                   <div className={`${styles.settingsRow} ${styles.responsiveSettings}`}>
                     <div><div className={styles.settingTitle}>Sound Alerts</div><div className={styles.settingDescription}>Play a soft notification sound when a new message arrives.</div></div>
-                    <Toggle label="Sound Alerts" active={p.settings.soundEnabled} onClick={() => { const nextVal = !p.settings.soundEnabled; p.settings.setSoundEnabled(nextVal); p.settings.handleSaveSettings({ soundEnabled: nextVal, toastsEnabled: p.settings.toastsEnabled, notificationVolume: p.settings.notificationVolume }); }} />
+                    <Toggle label="Sound Alerts" active={p.settings.soundEnabled} disabled={p.settings.isSaving} onClick={() => p.settings.toggleSetting("soundEnabled")} />
                   </div>
                   {p.settings.soundEnabled && (
                     <div className={`${styles.volumeRow} ${styles.responsiveSettings}`}>
@@ -225,7 +234,19 @@ export default function Profile() {
                         <span className={styles.volumeValue}>{p.settings.notificationVolume}%</span>
                       </div>
                       <div className={styles.volumeControls}>
-                        <input type="range" min={0} max={100} step={5} value={p.settings.notificationVolume} onChange={(e) => p.settings.setNotificationVolume(Number(e.target.value))} onMouseUp={() => { p.settings.handleSaveSettings({ soundEnabled: p.settings.soundEnabled, toastsEnabled: p.settings.toastsEnabled, notificationVolume: p.settings.notificationVolume }); const testAudio = new Audio('/notify.mp3'); testAudio.volume = p.settings.notificationVolume / 100; testAudio.play().catch(() => {}); }} onTouchEnd={() => { p.settings.handleSaveSettings({ soundEnabled: p.settings.soundEnabled, toastsEnabled: p.settings.toastsEnabled, notificationVolume: p.settings.notificationVolume }); const testAudio = new Audio('/notify.mp3'); testAudio.volume = p.settings.notificationVolume / 100; testAudio.play().catch(() => {}); }} className={styles.volumeInput} />
+                        <input
+                          type="range" aria-label="Alert Volume" min={0} max={100} step={5}
+                          value={p.settings.notificationVolume} disabled={p.settings.isSaving}
+                          onChange={event => p.settings.setNotificationVolume(Number(event.target.value))}
+                          onPointerUp={event => void p.settings.commitVolume(Number(event.currentTarget.value))}
+                          onBlur={event => void p.settings.commitVolume(Number(event.currentTarget.value))}
+                          onKeyUp={event => {
+                            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(event.key)) {
+                              void p.settings.commitVolume(Number(event.currentTarget.value));
+                            }
+                          }}
+                          className={styles.volumeInput}
+                        />
                       </div>
                     </div>
                   )}

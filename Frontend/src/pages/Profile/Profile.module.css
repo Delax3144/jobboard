@@ -1,3 +1,16 @@
+.settingsFeedback {
+  color: #34d399;
+}
+
+.settingsError {
+  color: #f87171;
+}
+
+.volumeInput:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .input,
 .select,
 .emailInput,

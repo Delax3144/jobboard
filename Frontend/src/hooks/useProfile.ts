@@ -1,7 +1,8 @@
-import type { User, Experience } from '../types/user';
+import type { Experience } from '../types/user';
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import api from "../lib/api";
+import { useProfileSettings } from './useProfileSettings';
 
 export type TabType = "general" | "professional" | "privacy" | "notifications" | "security";
 
@@ -55,11 +56,7 @@ export function useProfile() {
   const [experience, setExperience] = useState<Experience[]>(user?.experience || []);
   const [resumeUrl, setResumeUrl] = useState<string | null>(user?.resumeUrl || null);
 
-  const [isPublic, setIsPublic] = useState(user?.isPublic ?? true);
-  const [showEmail, setShowEmail] = useState(user?.showEmail ?? false);
-  const [soundEnabled, setSoundEnabled] = useState(user?.soundEnabled ?? true);
-  const [toastsEnabled, setToastsEnabled] = useState(user?.toastsEnabled ?? true);
-  const [notificationVolume, setNotificationVolume] = useState(user?.notificationVolume ?? 50);
+  const settings = useProfileSettings();
 
   const [twoFactor, setTwoFactor] = useState(user?.isTwoFactorEnabled || false);
   const [show2FAModal, setShow2FAModal] = useState(false);
@@ -102,15 +99,6 @@ export function useProfile() {
       setTimeout(() => setMessage(""), 3000);
     } catch { alert("Failed to update profile"); }
     finally { setIsSaving(false); }
-  };
-
-  const handleSaveSettings = async (fieldsToUpdate: Partial<Pick<User, 'isPublic' | 'showEmail' | 'soundEnabled' | 'toastsEnabled' | 'notificationVolume'>>) => {
-    try {
-      const res = await api.put("/auth/profile", fieldsToUpdate);
-      setUser(res.data.user);
-      setMessage("Settings saved successfully! ⚙️");
-      setTimeout(() => setMessage(""), 3000);
-    } catch { alert("Failed to save settings."); }
   };
 
   const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -217,7 +205,7 @@ export function useProfile() {
     user, setUser, apiUrl,
     activeTab, setActiveTab, isEditing, setIsEditing, isSaving, message, setMessage,
     form: { firstName, setFirstName, lastName, setLastName, countryCode, setCountryCode, phoneNumber, handlePhoneChange, status, setStatus, location, setLocation, bio, setBio, skills, setSkills, experience, resumeUrl, addExperience, updateExperience, removeExperience },
-    settings: { isPublic, setIsPublic, showEmail, setShowEmail, soundEnabled, setSoundEnabled, toastsEnabled, setToastsEnabled, notificationVolume, setNotificationVolume, handleSaveSettings },
+    settings,
     security: { twoFactor, show2FAModal, setShow2FAModal, qrCode, twoFactorCode, setTwoFactorCode, isVerifying2FA, handleToggle2FA, handleVerify2FA, twoFactorModalMode, isResetting, resetMsg, handlePasswordResetRequest },
     handlers: { handleCancel, handleSave, handleResumeUpload, handleFileChange },
     cropper: { imageSrc, setImageSrc, openCropper, setOpenCropper }
