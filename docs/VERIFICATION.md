@@ -31,6 +31,8 @@ For integration tests, create a dedicated PostgreSQL database named `jobboard_te
 
 ## Dependency audit
 
+Rechecked on 2026-10-01 with Node.js 22.15.0 after updating Nodemailer to 10.0.13, Multer to 2.4.0, DOMPurify to 3.4.16, and affected transitive dependencies. All 102 frontend tests and 15 isolated backend tests passed, along with frontend lint, TypeScript, and both production builds. New checks cover multipart upload types and size limits, cleanup of partial uploads, mail generation without SMTP, and sanitization of rendered job descriptions. Cloudinary is replaced in upload tests; these checks do not verify live delivery or uploads. PostgreSQL integration tests were not rerun for this dependency update.
+
 The online npm audit after compatible dependency updates reports no backend advisories and no high or moderate frontend advisories. Two low-severity frontend entries remain for Quill and its React wrapper, referring to the same [HTML export advisory](https://github.com/advisories/GHSA-v3m3-f69x-jf25). The advisory lists no patched Quill version. JobBoard does not call `getSemanticHTML`; job descriptions are sanitized on the backend and with DOMPurify before display. This is a documented dependency limitation, not a claim that the upstream issue is fixed. No forced downgrade of the editor was applied.
 
 ## Before showing the deployed demo
