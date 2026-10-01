@@ -13,7 +13,7 @@ const Icons = {
 };
 
 export default function Applications() {
-  const { apps, isLoading, error, retry, stats } = useApplications();
+  const { apps, isLoading, error, retry, stats, pagination } = useApplications();
 
   if (isLoading && !error) return <div role="status" className={styles.loading}>Loading Dashboard...</div>;
 
@@ -34,7 +34,7 @@ export default function Applications() {
           </h1>
         </header>
 
-        {!error && apps.length > 0 && (
+        {!error && stats.total > 0 && (
           <div className={styles.statsGrid}>
             <div className={styles.totalCard}>
               <div className={styles.totalIcon}><Icons.Briefcase /></div>
@@ -59,8 +59,10 @@ export default function Applications() {
         {error ? <LoadError message={error} loading={isLoading} onRetry={retry} /> : apps.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}><Icons.Search /></div>
-            <h3 className={styles.emptyTitle}>No applications yet</h3>
-            <p className={styles.emptyDescription}>You haven't applied to any jobs. Start exploring opportunities and make your next career move.</p>
+            <h3 className={styles.emptyTitle}>{pagination.page === 1 ? 'No applications yet' : 'No applications on this page'}</h3>
+            <p className={styles.emptyDescription}>{pagination.page === 1
+              ? "You haven't applied to any jobs. Start exploring opportunities and make your next career move."
+              : 'Go back to the previous page to see your applications.'}</p>
             <Link to="/jobs" className={styles.exploreLink} >
               Explore Jobs
             </Link>
@@ -73,6 +75,11 @@ export default function Applications() {
           </div>
         )}
 
+        <nav aria-label="Application pages" className={styles.pagination}>
+          <button disabled={isLoading || pagination.page === 1} onClick={() => pagination.setPage(pagination.page - 1)}>Previous</button>
+          <span aria-live="polite">Page {pagination.page}</span>
+          <button disabled={isLoading || Boolean(error) || !pagination.hasNextPage} onClick={() => pagination.setPage(pagination.page + 1)}>Next</button>
+        </nav>
       </div>
     </div>
   );

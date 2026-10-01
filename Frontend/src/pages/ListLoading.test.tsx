@@ -28,6 +28,7 @@ const cases = [
 ];
 const response = (url: string, empty = false) => ({ data:
   url === '/jobs' || url === '/jobs/mine' ? { jobs: empty ? [] : [job], hasNextPage: false } :
+  url === '/applications/my' ? { applications: empty ? [] : [application], stats: { total: empty ? 0 : 1, invited: 0, pending: empty ? 0 : 1 }, hasNextPage: false } :
   url.startsWith('/applications/') ? (empty ? [] : [application]) : (empty ? [] : [job]),
 });
 

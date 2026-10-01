@@ -14,6 +14,7 @@ import { applicationCandidateSelect } from "../selects/user";
 import { mailTransporter } from "../config/mailer";
 import {
   applicationIdSchema,
+  applicationListSchema,
   createApplicationSchema,
   jobIdSchema,
   sendMessageSchema
@@ -331,6 +332,11 @@ applicationsRouter.get(
       });
     }
 
+    const parsed = applicationListSchema.safeParse(req.query);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid application page" });
+    const page = parsed.data.page;
+    const pageSize = 20;
+
     try {
       const apps =
         await prisma.application.findMany({
@@ -359,9 +365,8 @@ applicationsRouter.get(
               take: 1,
             },
           },
-          orderBy: {
-            createdAt: "desc",
-          },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          ...(page ? { skip: (page - 1) * pageSize, take: pageSize + 1 } : {}),
         });
 
       const enrichedApps = apps.map((app) => {
@@ -386,7 +391,17 @@ applicationsRouter.get(
         };
       });
 
-      return res.json(enrichedApps);
+      if (!page) return res.json(enrichedApps);
+      const grouped = await prisma.application.groupBy({
+        by: ["status"], where: { candidateId: user.id }, _count: { _all: true },
+      });
+      const stats = grouped.reduce((result, group) => {
+        result.total += group._count._all;
+        if (group.status === "invited") result.invited += group._count._all;
+        if (group.status === "new" || group.status === "reviewed") result.pending += group._count._all;
+        return result;
+      }, { total: 0, invited: 0, pending: 0 });
+      return res.json({ applications: enrichedApps.slice(0, pageSize), stats, page, pageSize, hasNextPage: apps.length > pageSize });
     } catch (error) {
       console.error(
         "Failed to load candidate applications:",

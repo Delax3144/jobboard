@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+export const applicationListSchema = z.strictObject({
+  page: z.coerce.number().int().min(1).max(100_000).optional(),
+});
+
 export const updateApplicationStatusSchema = z.object({
   status: z.enum(["reviewed", "invited", "rejected"]),
 }).strict();

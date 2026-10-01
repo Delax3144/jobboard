@@ -1,7 +1,7 @@
 // Stub external I/O before importing routes. Unexpected database calls fail closed.
 const unexpected = async () => { throw new Error('Unexpected database call in isolated API test'); };
 const prisma = Object.fromEntries(['user', 'job', 'application', 'message', 'savedJob'].map(model => [model,
-  Object.fromEntries(['findUnique', 'findFirst', 'findMany', 'create', 'update', 'updateMany', 'delete'].map(method => [method, unexpected])),
+  Object.fromEntries(['findUnique', 'findFirst', 'findMany', 'groupBy', 'create', 'update', 'updateMany', 'delete'].map(method => [method, unexpected])),
 ]));
 const mailTransporter = { sendMail: unexpected };
 for (const [path, exports] of [
