@@ -23,7 +23,8 @@ const chats: Application[] = ['Frontend', 'Backend'].map((title, index) => ({
 function Conversations({ role }: { role: UserRole }) {
   const { id } = useParams();
   return <ChatSidebar filteredChats={chats} searchQuery="" setSearchQuery={vi.fn()}
-    activeId={id} user={{ id: 'user', role, email: 'user@example.com' }} checkIsOnline={() => false} apiUrl="" />;
+    activeId={id} user={{ id: 'user', role, email: 'user@example.com' }} checkIsOnline={() => false} apiUrl=""
+    loading={false} error="" conversationPagination={{ page: 1, hasNextPage: false, setPage: vi.fn() }} retryConversations={vi.fn()} />;
 }
 
 it.each(['employer', 'candidate'] as const)('opens the correct conversation by keyboard for a %s', async role => {

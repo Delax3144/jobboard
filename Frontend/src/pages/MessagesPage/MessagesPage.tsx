@@ -7,10 +7,6 @@ import styles from "./MessagesPage.module.css";
 export default function MessagesPage() {
   const chatLogic = useChat();
 
-  if (chatLogic.loading) {
-    return <div className={styles.loading}>Loading Communications...</div>;
-  }
-
   return (
     <>
       {chatLogic.error && <p role="alert" className={styles.error}>{chatLogic.error}</p>}
@@ -21,6 +17,10 @@ export default function MessagesPage() {
         <div className={styles.messenger} data-view={chatLogic.id ? "chat" : "list"}>
 
           <ChatSidebar
+            loading={chatLogic.loading}
+            error={chatLogic.error}
+            conversationPagination={chatLogic.conversationPagination}
+            retryConversations={chatLogic.retryConversations}
             filteredChats={chatLogic.filteredChats}
             searchQuery={chatLogic.searchQuery}
             setSearchQuery={chatLogic.setSearchQuery}

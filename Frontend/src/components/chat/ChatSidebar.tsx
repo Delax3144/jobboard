@@ -16,7 +16,7 @@ const formatChatTime = (dateString: string) => {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 };
 
-export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery, activeId, user, checkIsOnline, apiUrl }: Pick<ReturnType<typeof useChat>, 'filteredChats' | 'searchQuery' | 'setSearchQuery' | 'user' | 'checkIsOnline' | 'apiUrl'> & { activeId?: string }) {
+export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery, activeId, user, checkIsOnline, apiUrl, loading, error, conversationPagination, retryConversations }: Pick<ReturnType<typeof useChat>, 'filteredChats' | 'searchQuery' | 'setSearchQuery' | 'user' | 'checkIsOnline' | 'apiUrl' | 'loading' | 'error' | 'conversationPagination' | 'retryConversations'> & { activeId?: string }) {
 
   return (
     <div className={`msg-sidebar-panel ${styles.panel}`}>
@@ -25,6 +25,7 @@ export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery
         <div className={styles.searchField}>
           <input
             aria-label="Search conversations"
+            maxLength={120}
             placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
             className={styles.searchInput}
 
@@ -34,6 +35,7 @@ export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery
       </div>
 
       <div className={`premium-scroll ${styles.list}`}>
+        {loading && <p role="status">Loading conversations...</p>}
         {filteredChats.map((chat) => {
           const isActive = activeId === chat.id;
           const isEmployer = user?.role === 'employer';
@@ -69,10 +71,16 @@ export default function ChatSidebar({ filteredChats, searchQuery, setSearchQuery
             </Link>
           );
         })}
-        {filteredChats.length === 0 && (
+        {filteredChats.length === 0 && !loading && !error && (
           <div className={styles.emptyState}><div className={styles.emptyLabel}>No active chats found</div></div>
         )}
       </div>
+      <nav aria-label="Conversation pages" className={styles.pagination}>
+        <button disabled={loading || conversationPagination.page === 1} onClick={() => conversationPagination.setPage(conversationPagination.page - 1)}>Previous</button>
+        <span>Page {conversationPagination.page}</span>
+        <button disabled={loading || !conversationPagination.hasNextPage} onClick={() => conversationPagination.setPage(conversationPagination.page + 1)}>Next</button>
+        <button disabled={loading} onClick={() => void retryConversations()} aria-label="Refresh conversations">↻</button>
+      </nav>
     </div>
   );
 }

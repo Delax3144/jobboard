@@ -10,6 +10,10 @@ export const jobApplicationListSchema = applicationListSchema.extend({
 
 export const conversationQuerySchema = z.strictObject({ history: z.literal('recent').optional() });
 export const messageHistorySchema = z.strictObject({ before: z.string().uuid() });
+export const conversationListSchema = z.strictObject({
+  page: z.coerce.number().int().min(1).max(100_000).default(1),
+  search: z.string().trim().max(120).default(''),
+});
 
 export const updateApplicationStatusSchema = z.object({
   status: z.enum(["reviewed", "invited", "rejected"]),

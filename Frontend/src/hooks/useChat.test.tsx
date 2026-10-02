@@ -15,6 +15,16 @@ vi.mock('socket.io-client', () => ({ io: () => socket }));
 beforeEach(() => { authState.user = { id: 'owner', role: 'employer' }; });
 const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter>{children}</MemoryRouter>;
 
+function mockResponses(load: (url: string) => Promise<{ data: unknown }>) {
+  vi.mocked(api.get).mockImplementation(async url => {
+    const response = await load(url);
+    if (url !== '/applications/conversations') return response;
+    const items = Array.isArray(response.data) ? response.data : [];
+    const conversations = items.filter(item => authState.user.role !== 'candidate' || item.status !== 'new' || item.messages?.length);
+    return { data: { conversations, hasNextPage: false } };
+  });
+}
+
 describe('Message history pagination', () => {
   const message = (id: string) => ({ id, applicationId: 'app-a', senderId: 'owner', text: id, createdAt: `2026-10-02T10:00:0${id.slice(1)}.000Z` });
   const latest = { id: 'app-a', status: 'reviewed', messages: [message('m2'), message('m3')], hasEarlierMessages: true };
@@ -23,7 +33,7 @@ describe('Message history pagination', () => {
   </MemoryRouter>;
   beforeEach(() => {
     vi.mocked(api.post).mockResolvedValue({ data: {} });
-    vi.mocked(api.get).mockImplementation(async url => ({ data: url === '/applications/owner' ? []
+    mockResponses(async url => ({ data: url === '/applications/conversations' ? []
       : url.endsWith('/messages') ? { messages: [message('m1'), message('m2')], hasEarlierMessages: false } : latest,
     }));
   });
@@ -34,7 +44,7 @@ describe('Message history pagination', () => {
     await act(async () => { await result.current.loadEarlierMessages(); });
     expect(result.current.currentApp?.messages.map(item => item.id)).toEqual(['m1', 'm2', 'm3']);
     expect(result.current.currentApp?.hasEarlierMessages).toBe(false);
-    vi.mocked(api.get).mockImplementation(async url => ({ data: url === '/applications/owner' ? [] : { ...latest, messages: [...latest.messages, message('m4')] } }));
+    mockResponses(async url => ({ data: url === '/applications/conversations' ? [] : { ...latest, messages: [...latest.messages, message('m4')] } }));
     act(() => result.current.setMsg('New message'));
     await act(async () => { await result.current.sendMsg(); });
     expect(result.current.currentApp?.messages.map(item => item.id)).toEqual(['m1', 'm2', 'm3', 'm4']);
@@ -59,11 +69,11 @@ describe('Message history pagination', () => {
 describe('Conversation list', () => {
   beforeEach(() => { vi.mocked(api.post).mockResolvedValue({ data: {} }); });
   it('keeps both applications from the same candidate accessible', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: ['job-a', 'job-b'].map((jobId, index) => ({
+    mockResponses(async () => ({ data: ['job-a', 'job-b'].map((jobId, index) => ({
       id: `app-${index}`, createdAt: '2026-09-01', messages: [], status: 'new',
       candidate: { id: 'same-person', firstName: 'Alex' },
       job: { id: jobId, title: jobId, companyName: 'Demo' },
-    })) });
+    })) }));
     const { result } = renderHook(useChat, { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.filteredChats.map(app => app.id)).toEqual(['app-0', 'app-1']);
@@ -101,7 +111,7 @@ describe('Conversation notifications', () => {
   it.each(['invited', 'rejected'])('refreshes the open candidate conversation after a status change to %s', async status => {
     authState.user = { id: 'candidate', role: 'candidate' };
     let current = application;
-    vi.mocked(api.get).mockImplementation(async url => ({ data: url === '/applications/my' ? [current] : current }));
+    mockResponses(async url => ({ data: url === '/applications/conversations' ? [current] : current }));
     const { result, unmount } = renderHook(useChat, { wrapper: chatWrapper });
     await waitFor(() => expect(result.current.currentApp?.status).toBe('new'));
     expect(result.current.isCurrentLockedForCandidate).toBe(true);
@@ -117,22 +127,22 @@ describe('Conversation notifications', () => {
 
   it('adds a newly received application to the employer list without an application id in the notification', async () => {
     let received = false;
-    vi.mocked(api.get).mockImplementation(async () => ({ data: received ? [application] : [] }));
+    mockResponses(async () => ({ data: received ? [application] : [] }));
     const { result } = renderHook(useChat, { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
     received = true;
     await notify({ type: 'new_application' });
     expect(result.current.filteredChats.map(app => app.id)).toEqual(['app-a']);
-    expect(api.get).toHaveBeenLastCalledWith('/applications/owner');
+    expect(api.get).toHaveBeenLastCalledWith('/applications/conversations', expect.any(Object));
   });
 
   it('refreshes another conversation in the list without opening it or fetching messages twice', async () => {
-    vi.mocked(api.get).mockImplementation(async url => ({ data: url === '/applications/owner' ? [application] : application }));
+    mockResponses(async url => ({ data: url === '/applications/conversations' ? [application] : application }));
     const { result } = renderHook(useChat, { wrapper: chatWrapper });
     await waitFor(() => expect(result.current.currentApp?.id).toBe('app-a'));
     vi.mocked(api.get).mockClear();
     await notify({ type: 'status_update', applicationId: 'app-b' });
-    expect(api.get).toHaveBeenCalledExactlyOnceWith('/applications/owner');
+    expect(api.get).toHaveBeenCalledExactlyOnceWith('/applications/conversations', expect.any(Object));
     expect(result.current.currentApp?.id).toBe('app-a');
     vi.mocked(api.get).mockClear();
     await notify({ type: 'new_message', applicationId: 'app-a' });
@@ -150,7 +160,7 @@ describe('Conversation drafts', () => {
 
   beforeEach(() => {
     vi.mocked(api.post).mockResolvedValue({ data: {} });
-    vi.mocked(api.get).mockImplementation(async url => ({ data: url === '/applications/owner' ? [] : {
+    mockResponses(async url => ({ data: url === '/applications/conversations' ? [] : {
       id: String(url).split('/').pop(), messages: [], status: 'reviewed',
     } }));
   });

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react
 import { useParams } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../context/useAuth';
+import { useConversations } from './useConversations';
 import { io } from 'socket.io-client';
 import type { Application, Message } from '../types/job';
 
@@ -15,7 +16,6 @@ function mergeMessages(first: Message[], second: Message[]) {
 export function useChat() {
   const { id } = useParams();
   const { user } = useAuth();
-  const [chats, setChats] = useState<Application[]>([]);
   const [loadedApp, setLoadedApp] = useState<Conversation | null>(null);
   const [historyState, setHistoryState] = useState({ id: '', loading: false, error: '' });
   const historyRequestRef = useRef<AbortController | null>(null);
@@ -26,8 +26,6 @@ export function useChat() {
   const setMsg = (text: string) => {
     if (id) setDrafts(items => ({ ...items, [id]: { text } }));
   };
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeChatIdRef = useRef(id);
@@ -37,17 +35,15 @@ export function useChat() {
   const userId = user?.id;
   const currentApp = loadedApp?.id === id ? loadedApp : null;
 
-  const fetchChats = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const res = await api.get<Application[]>(role === 'employer' ? '/applications/owner' : '/applications/my');
-      setChats(res.data.sort((a, b) =>
-        new Date(b.messages?.[0]?.createdAt || b.createdAt).getTime() -
-        new Date(a.messages?.[0]?.createdAt || a.createdAt).getTime()));
-      setError('');
-    } catch { setError('Could not load conversations. Please try again.'); }
-    finally { setLoading(false); }
-  }, [role, userId]);
+  const conversationList = useConversations(userId, role);
+  const { chats, searchQuery, setSearchQuery, loading } = conversationList;
+  const refreshListRef = useRef(conversationList.refresh);
+  const markReadRef = useRef(conversationList.markRead);
+  useEffect(() => {
+    refreshListRef.current = conversationList.refresh;
+    markReadRef.current = conversationList.markRead;
+  }, [conversationList.refresh, conversationList.markRead]);
+  const fetchChats = useCallback(() => refreshListRef.current(), []);
 
   const fetchCurrentChat = useCallback(async (applicationId: string) => {
     conversationRequestRef.current?.abort();
@@ -66,7 +62,7 @@ export function useChat() {
           hasEarlierMessages: previous.hasEarlierMessages,
         } : res.data;
       });
-      setChats(items => items.map(app => app.id === applicationId ? { ...app, hasUpdate: false } : app));
+      markReadRef.current(applicationId);
       window.dispatchEvent(new Event('update_unread'));
     } catch {
       if (!controller.signal.aborted) setError('Could not load this conversation. Please try again.');
@@ -168,17 +164,15 @@ export function useChat() {
     finally { sendingRef.current.delete(id); }
   };
 
-  const filteredChats = chats.filter(chat => {
-    const name = role === 'employer' ? `${chat.candidate?.firstName} ${chat.candidate?.lastName}` : chat.job.companyName;
-    const matches = `${name} ${chat.job.title}`.toLowerCase().includes(searchQuery.toLowerCase());
-    return matches && !(role === 'candidate' && chat.status === 'new' && !chat.messages?.length);
-  });
+  const filteredChats = chats;
   const isCurrentLockedForCandidate = role === 'candidate' && currentApp?.status === 'new' && !currentApp.messages.length;
   const checkIsOnline = (lastActiveDate?: string) => Boolean(lastActiveDate && Date.now() - new Date(lastActiveDate).getTime() < 60000);
 
-  return { id, user, apiUrl, loading, error, msg, setMsg, searchQuery, setSearchQuery,
+  return { id, user, apiUrl, loading, error: error || conversationList.error, msg, setMsg, searchQuery, setSearchQuery,
     filteredChats, currentApp, isCurrentLockedForCandidate, scrollContainerRef, sendMsg, checkIsOnline,
     loadEarlierMessages,
+    conversationPagination: conversationList.pagination,
+    retryConversations: fetchChats,
     historyLoading: historyState.id === id && historyState.loading,
     historyError: historyState.id === id ? historyState.error : '',
   };

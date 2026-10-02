@@ -199,3 +199,7 @@
 .searchInput:focus {
   border-color: #10b981;
 }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; font-size: 13px; }
+.pagination button { padding: 6px 8px; background: transparent; color: inherit; border: 1px solid rgba(255,255,255,0.15); border-radius: 7px; cursor: pointer; }
+.pagination button:disabled { opacity: 0.45; cursor: default; }
+.pagination button:focus-visible { outline: 2px solid #10b981; outline-offset: 2px; }

@@ -18,6 +18,7 @@ import {
   jobApplicationListSchema,
   conversationQuerySchema,
   messageHistorySchema,
+  conversationListSchema,
   createApplicationSchema,
   jobIdSchema,
   sendMessageSchema
@@ -26,6 +27,7 @@ import { updateApplicationStatusSchema } from "../validation/applications";
 import { escapeHtml } from "../lib/escapeHtml";
 import { sanitizeEmailHeader } from "../lib/sanitizeEmailHeader";
 import { countUnreadApplications } from "../lib/unreadApplications";
+import { listConversations } from "../lib/conversations";
 import {
   applicationUploadRateLimit,
   messageRateLimit,
@@ -456,6 +458,17 @@ applicationsRouter.get("/owner", authMiddleware, async (req, res) => {
     })));
   } catch (error) {
     res.status(500).json({ message: "Could not load applications" });
+  }
+});
+
+applicationsRouter.get("/conversations", authMiddleware, async (req, res) => {
+  const user = getAuthenticatedUser(req);
+  const parsed = conversationListSchema.safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ message: "Invalid conversation filters" });
+  try {
+    res.json(await listConversations(user.id, user.role, parsed.data.page, parsed.data.search));
+  } catch {
+    res.status(500).json({ message: "Could not load conversations" });
   }
 });
 
