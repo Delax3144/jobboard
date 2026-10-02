@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useRef } from "react";
 import { useSavedJobs } from "../../hooks/useSavedJobs";
 import LoadError from "../../components/LoadError";
 import styles from "./SavedJobs.module.css";
@@ -13,9 +14,15 @@ const Icons = {
 };
 
 export default function SavedJobs() {
+  const headerRef = useRef<HTMLElement>(null);
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
   const { user, savedJobs, total, loading, error, retry, removalError, removingIds,
     removeBookmark, pagination } = useSavedJobs();
+
+  const changePage = (page: number) => {
+    pagination.setPage(page);
+    headerRef.current?.scrollIntoView?.({ block: 'start' });
+  };
 
   if (!user || user.role !== 'candidate') {
     return <div className={styles.denied}>Access Denied</div>;
@@ -29,7 +36,7 @@ export default function SavedJobs() {
 
       <div className={`container ${styles.container}`}>
 
-        <header className={styles.header}>
+        <header ref={headerRef} className={styles.header}>
           <div className={styles.eyebrow}>
             Your Collection
           </div>
@@ -50,9 +57,9 @@ export default function SavedJobs() {
           <div className={styles.list}>
 
             {savedJobs.map((job) => (
-              <Link to={`/jobs/${job.id}`} key={job.id} className={styles.jobCard}>
+              <article key={job.id} className={styles.jobCard}>
 
-                <div className={styles.jobInfo}>
+                <Link to={`/jobs/${job.id}`} className={styles.jobInfo}>
                   <div className={styles.logo}>
                     {job.companyLogo ? (
                       <img
@@ -79,7 +86,7 @@ export default function SavedJobs() {
                       </span>
                     </div>
                   </div>
-                </div>
+                </Link>
 
                 <div className={styles.rightSide}>
                   <div className={styles.salaryBlock} >
@@ -90,7 +97,7 @@ export default function SavedJobs() {
 
                   <div className={styles.actions}>
                     <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); void removeBookmark(job.id); }}
+                      onClick={() => void removeBookmark(job.id)}
                       className={styles.removeButton}
                       disabled={removingIds.has(job.id)}
                       aria-label={`Remove ${job.title} from Saved`}
@@ -102,7 +109,7 @@ export default function SavedJobs() {
                   </div>
                 </div>
 
-              </Link>
+              </article>
             ))}
 
             {savedJobs.length === 0 && (
@@ -119,9 +126,9 @@ export default function SavedJobs() {
         )}
         {!error && !loading && (pagination.page > 1 || pagination.hasNextPage) && (
           <nav aria-label="Saved job pages" className={styles.pagination}>
-            <button disabled={pagination.page === 1} onClick={() => pagination.setPage(pagination.page - 1)}>Previous</button>
+            <button disabled={pagination.page === 1} onClick={() => changePage(pagination.page - 1)}>Previous</button>
             <span>Page {pagination.page}</span>
-            <button disabled={!pagination.hasNextPage} onClick={() => pagination.setPage(pagination.page + 1)}>Next</button>
+            <button disabled={!pagination.hasNextPage} onClick={() => changePage(pagination.page + 1)}>Next</button>
           </nav>
         )}
       </div>

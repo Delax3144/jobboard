@@ -41,12 +41,12 @@ describe('Employer application management', () => {
     await waitFor(() => expect(api.patch).toHaveBeenCalledWith('/applications/application-1', { status: 'reviewed' }));
     await user.click(await screen.findByRole('button', { name: 'Invite to Interview' }));
     await waitFor(() => expect(api.patch).toHaveBeenLastCalledWith('/applications/application-1', { status: 'invited' }));
-    expect(await screen.findByText('Interview')).toBeTruthy();
+    await waitFor(() => expect(screen.getByText('Alex Demo').closest('[data-status]')?.getAttribute('data-status')).toBe('invited'));
     expect(screen.queryByRole('button', { name: 'Invite to Interview' })).toBeNull();
-    await user.click(screen.getByRole('button', { name: 'rejected' }));
-    expect((await screen.findByRole('button', { name: 'rejected' })).getAttribute('aria-pressed')).toBe('true');
+    await user.click(screen.getByRole('button', { name: 'Declined' }));
+    expect((await screen.findByRole('button', { name: 'Declined' })).getAttribute('aria-pressed')).toBe('true');
     expect(await screen.findByText('No candidates found for this filter.')).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: 'invited' }));
+    await user.click(screen.getByRole('button', { name: 'Interview' }));
     expect(await screen.findByText('Alex Demo')).toBeTruthy();
   });
 });
@@ -66,7 +66,7 @@ it('loads another applicant page and resets to page one when the status filter c
   expect(api.get).toHaveBeenCalledWith('/applications/job/job-1', {
     params: { page: 2, status: 'all' }, signal: expect.any(AbortSignal),
   });
-  await user.click(screen.getByRole('button', { name: 'new' }));
+  await user.click(screen.getByRole('button', { name: 'New' }));
   expect(await screen.findByText('Page 1')).toBeTruthy();
   expect(api.get).toHaveBeenCalledWith('/applications/job/job-1', {
     params: { page: 1, status: 'new' }, signal: expect.any(AbortSignal),

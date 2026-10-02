@@ -51,4 +51,8 @@ The online npm audit after compatible dependency updates reports no backend advi
 - Run the README demo walkthrough using two browser profiles on the deployed version.
 - Check live email delivery, Google/GitHub OAuth callbacks, Cloudinary uploads, and a real two-browser Socket.IO exchange with the deployment's credentials.
 
-These local checks do not establish that the published website has been updated. They do not constitute a load test or a complete security audit. CI configuration was added locally; an actual GitHub Actions run requires pushing the changes.
+## Browser layout checks
+
+On 2026-10-02, the employer dashboard, vacancy candidate list and saved jobs were checked in an isolated local demo with desktop and 390-pixel mobile viewports. Test data included long candidate names and email addresses, all application stages, 24 saved jobs, a long vacancy title and a vacancy without salary information. Candidate filters wrap on mobile; stage labels match the dashboard; empty previews have no zero-count link. Saved-job titles wrap, removal buttons are separate from vacancy links, and changing pages returns to the list heading. These checks cover selected views, not every page or a physical mobile device.
+
+These local checks do not establish that the published website has been updated. They do not constitute a load test or a complete security audit. GitHub Actions has also passed for the preceding saved-job pagination changes.

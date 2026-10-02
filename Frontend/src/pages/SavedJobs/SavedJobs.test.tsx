@@ -21,6 +21,25 @@ it('retries failed loading without presenting a false empty state', async () => 
   expect(screen.queryByRole('alert')).toBeNull();
 });
 
+it('loads the next page and returns the viewport to the list heading', async () => {
+  const scroll = vi.fn();
+  const originalScroll = HTMLElement.prototype.scrollIntoView;
+  HTMLElement.prototype.scrollIntoView = scroll;
+  try {
+    vi.mocked(api.get).mockImplementation(async (_url, config) => ({ data: {
+      jobs: [job], total: 21, hasNextPage: (config?.params as { page: number }).page === 1,
+    } }));
+    render(<MemoryRouter><SavedJobs /></MemoryRouter>);
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Next' }));
+    expect(await screen.findByText('Page 2')).toBeTruthy();
+    expect(api.get).toHaveBeenLastCalledWith('/bookmarks', { params: { page: 2 }, signal: expect.any(AbortSignal) });
+    expect(scroll).toHaveBeenCalledWith({ block: 'start' });
+    expect((screen.getByRole('button', { name: 'Next' }) as HTMLButtonElement).disabled).toBe(true);
+  } finally {
+    HTMLElement.prototype.scrollIntoView = originalScroll;
+  }
+});
+
 it('blocks duplicate removal, keeps the job on failure and removes it after a successful retry', async () => {
   const user = userEvent.setup();
   let failRemoval!: () => void;
@@ -33,6 +52,8 @@ it('blocks duplicate removal, keeps the job on failure and removes it after a su
   })).mockImplementationOnce(async () => { deleted = true; return { data: null }; });
   render(<MemoryRouter><SavedJobs /></MemoryRouter>);
   const remove = await screen.findByRole('button', { name: 'Remove Developer from Saved' }) as HTMLButtonElement;
+  expect(remove.closest('a')).toBeNull();
+  expect(screen.getByRole('link', { name: /Developer Demo Remote/ }).getAttribute('href')).toBe('/jobs/job-1');
   await user.click(remove);
   expect(remove.disabled).toBe(true);
   await user.click(remove);

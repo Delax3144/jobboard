@@ -114,11 +114,14 @@
 
   .filters {
     padding-bottom: 10px;
+    flex-wrap: wrap;
+    overflow-x: visible;
+    gap: 6px;
   }
 
   .filterButton {
-    padding: 8px 16px;
-    font-size: 13px;
+    padding: 8px 12px;
+    font-size: 12px;
   }
 }
 .pagination { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 24px; }

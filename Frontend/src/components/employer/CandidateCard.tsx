@@ -3,6 +3,7 @@ import styles from "./CandidateCard.module.css";
 import type { useJobManagement } from '../../hooks/useJobManagement';
 import type { Application } from '../../types/job';
 import { Link } from "react-router-dom";
+import { applicationStatusLabels } from '../../lib/applicationStatus';
 
 const Icons = {
   Mail: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>,
@@ -18,7 +19,6 @@ export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpd
 
   const detailsId = useId();
   const name = `${app.candidate.firstName ?? ""} ${app.candidate.lastName ?? ""}`.trim() || app.candidate.email;
-  const statusLabels = { new: "New", reviewed: "Reviewed", invited: "Interview", rejected: "Declined" };
 
   return (
     <div className={styles.card} data-status={app.status} data-expanded={isExpanded}>
@@ -40,7 +40,7 @@ export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpd
                 {name}
               </h3>
               <span className={styles.status}>
-                {statusLabels[app.status]}
+                {applicationStatusLabels[app.status]}
               </span>
             </div>
             <div className={styles.metadata}>

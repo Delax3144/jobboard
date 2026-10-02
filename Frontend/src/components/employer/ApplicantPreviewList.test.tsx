@@ -24,4 +24,5 @@ it('shows a clear empty state instead of placeholder candidates', () => {
   render(<MemoryRouter><ApplicantPreviewList job={{ ...job, totalApplicants: 0, applicantPreviews: [] }} /></MemoryRouter>);
   expect(screen.getByText('Applications will appear here when candidates apply.')).toBeTruthy();
   expect(screen.queryByRole('list')).toBeNull();
+  expect(screen.queryByRole('link', { name: 'View all 0' })).toBeNull();
 });

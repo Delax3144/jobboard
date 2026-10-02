@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useJobManagement } from "../../hooks/useJobManagement";
 import CandidateCard from "../../components/employer/CandidateCard";
 import LoadError from '../../components/LoadError';
+import { applicationStatusLabels } from '../../lib/applicationStatus';
 
 import styles from "./JobManagement.module.css";
 
@@ -47,7 +48,7 @@ export default function JobManagement() {
             onClick={() => setFilter(f)}
             className={styles.filterButton} aria-pressed={filter === f}
           >
-            {f}
+            {f === 'all' ? 'All' : applicationStatusLabels[f]}
           </button>
         ))}
       </div>
