@@ -40,6 +40,9 @@ export default function MessagesPage() {
             sendMsg={chatLogic.sendMsg}
             scrollContainerRef={chatLogic.scrollContainerRef}
             checkIsOnline={chatLogic.checkIsOnline}
+            loadEarlierMessages={chatLogic.loadEarlierMessages}
+            historyLoading={chatLogic.historyLoading}
+            historyError={chatLogic.historyError}
           />
 
         </div>

@@ -16,6 +16,8 @@ import {
   applicationIdSchema,
   applicationListSchema,
   jobApplicationListSchema,
+  conversationQuerySchema,
+  messageHistorySchema,
   createApplicationSchema,
   jobIdSchema,
   sendMessageSchema
@@ -456,6 +458,37 @@ applicationsRouter.get("/owner", authMiddleware, async (req, res) => {
   }
 });
 
+applicationsRouter.get("/:id/messages", authMiddleware, async (req, res) => {
+  const user = getAuthenticatedUser(req);
+  const parsedId = applicationIdSchema.safeParse(req.params.id);
+  const parsedQuery = messageHistorySchema.safeParse(req.query);
+  if (!parsedId.success || !parsedQuery.success) return res.status(400).json({ message: "Invalid message cursor" });
+  const applicationId = parsedId.data;
+  try {
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId }, select: { candidateId: true, job: { select: { ownerId: true } } },
+    });
+    if (!application) return res.status(404).json({ message: "Application not found" });
+    if (application.candidateId !== user.id && application.job.ownerId !== user.id) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    const cursor = await prisma.message.findFirst({
+      where: { id: parsedQuery.data.before, applicationId }, select: { id: true, createdAt: true },
+    });
+    if (!cursor) return res.status(404).json({ message: "Message cursor not found" });
+    const messages = await prisma.message.findMany({
+      where: { applicationId, OR: [
+        { createdAt: { lt: cursor.createdAt } },
+        { createdAt: cursor.createdAt, id: { lt: cursor.id } },
+      ] },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 51,
+    });
+    res.json({ messages: messages.slice(0, 50).reverse(), hasEarlierMessages: messages.length > 50 });
+  } catch {
+    res.status(500).json({ message: "Could not load message history" });
+  }
+});
+
 applicationsRouter.get("/:id", authMiddleware, async (req, res) => {
   const user = getAuthenticatedUser(req);
   try {
@@ -468,6 +501,9 @@ applicationsRouter.get("/:id", authMiddleware, async (req, res) => {
     }
 
     const id = parsedId.data;
+    const parsedQuery = conversationQuerySchema.safeParse(req.query);
+    if (!parsedQuery.success) return res.status(400).json({ message: "Invalid conversation query" });
+    const recent = parsedQuery.data.history === 'recent';
 
     const existingApp = await prisma.application.findUnique({
       where: { id },
@@ -512,12 +548,15 @@ applicationsRouter.get("/:id", authMiddleware, async (req, res) => {
           select: applicationCandidateSelect,
         },
         messages: {
-          orderBy: { createdAt: "asc" },
+          orderBy: recent ? [{ createdAt: "desc" }, { id: "desc" }] : [{ createdAt: "asc" }, { id: "asc" }],
+          ...(recent ? { take: 51 } : {}),
         },
       },
     });
 
-    res.json(app);
+    res.json(recent ? {
+      ...app, messages: app.messages.slice(0, 50).reverse(), hasEarlierMessages: app.messages.length > 50,
+    } : app);
   } catch (error) {
     console.error("Error fetching application:", error);
     res.status(500).json({ message: "Server error" });

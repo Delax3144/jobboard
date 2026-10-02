@@ -18,14 +18,27 @@ const application: Application = {
   messages: [],
 };
 const send = vi.fn();
+const loadHistory = vi.fn();
 
-function Conversation({ locked = false, empty = false }) {
+function Conversation({ locked = false, empty = false, earlier = false, historyLoading = false }) {
   const [msg, setMsg] = useState('');
-  return <MemoryRouter><ChatWindow currentApp={empty ? null : application}
+  return <MemoryRouter><ChatWindow currentApp={empty ? null : { ...application, hasEarlierMessages: earlier }}
     isCurrentLockedForCandidate={locked} user={{ id: 'candidate', role: 'candidate', email: 'candidate@example.com' }}
     apiUrl="" msg={msg} setMsg={setMsg} sendMsg={send}
-    scrollContainerRef={createRef<HTMLDivElement>()} checkIsOnline={() => false} /></MemoryRouter>;
+    scrollContainerRef={createRef<HTMLDivElement>()} checkIsOnline={() => false}
+    loadEarlierMessages={loadHistory} historyLoading={historyLoading} historyError="" /></MemoryRouter>;
 }
+
+it('offers earlier history and disables the button while it is loading', async () => {
+  const user = userEvent.setup();
+  const { rerender } = render(<Conversation earlier />);
+  await user.click(screen.getByRole('button', { name: 'Load earlier messages' }));
+  expect(loadHistory).toHaveBeenCalledTimes(1);
+  rerender(<Conversation earlier historyLoading />);
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Loading earlier messages...' }).disabled).toBe(true);
+  rerender(<Conversation />);
+  expect(screen.queryByRole('button', { name: 'Load earlier messages' })).toBeNull();
+});
 
 it('keeps empty and locked conversations without a message composer', () => {
   const { rerender } = render(<Conversation empty />);

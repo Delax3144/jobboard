@@ -12,7 +12,7 @@ const Icons = {
   ArrowLeft: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
 };
 
-export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, user, apiUrl, msg, setMsg, sendMsg, scrollContainerRef, checkIsOnline }: Pick<ReturnType<typeof useChat>, 'currentApp' | 'isCurrentLockedForCandidate' | 'user' | 'apiUrl' | 'msg' | 'setMsg' | 'sendMsg' | 'scrollContainerRef' | 'checkIsOnline'>) {
+export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, user, apiUrl, msg, setMsg, sendMsg, scrollContainerRef, checkIsOnline, loadEarlierMessages, historyLoading, historyError }: Pick<ReturnType<typeof useChat>, 'currentApp' | 'isCurrentLockedForCandidate' | 'user' | 'apiUrl' | 'msg' | 'setMsg' | 'sendMsg' | 'scrollContainerRef' | 'checkIsOnline' | 'loadEarlierMessages' | 'historyLoading' | 'historyError'>) {
   const navigate = useNavigate();
 
   if (!currentApp) {
@@ -70,6 +70,10 @@ export default function ChatWindow({ currentApp, isCurrentLockedForCandidate, us
       ) : (
         <>
           <div ref={scrollContainerRef} className={`premium-scroll ${styles.messages}`}>
+            {historyError && <p role="alert">{historyError}</p>}
+            {currentApp.hasEarlierMessages && <button className={styles.loadHistory} disabled={historyLoading} onClick={() => void loadEarlierMessages()}>
+              {historyLoading ? 'Loading earlier messages...' : 'Load earlier messages'}
+            </button>}
             <div className={styles.startDate}>
               Application started {new Date(currentApp.createdAt).toLocaleDateString()}
             </div>

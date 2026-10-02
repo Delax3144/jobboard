@@ -15,6 +15,47 @@ vi.mock('socket.io-client', () => ({ io: () => socket }));
 beforeEach(() => { authState.user = { id: 'owner', role: 'employer' }; });
 const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter>{children}</MemoryRouter>;
 
+describe('Message history pagination', () => {
+  const message = (id: string) => ({ id, applicationId: 'app-a', senderId: 'owner', text: id, createdAt: `2026-10-02T10:00:0${id.slice(1)}.000Z` });
+  const latest = { id: 'app-a', status: 'reviewed', messages: [message('m2'), message('m3')], hasEarlierMessages: true };
+  const historyWrapper = ({ children }: { children: ReactNode }) => <MemoryRouter initialEntries={['/messages/app-a']}>
+    <Routes><Route path="/messages/:id" element={children} /></Routes>
+  </MemoryRouter>;
+  beforeEach(() => {
+    vi.mocked(api.post).mockResolvedValue({ data: {} });
+    vi.mocked(api.get).mockImplementation(async url => ({ data: url === '/applications/owner' ? []
+      : url.endsWith('/messages') ? { messages: [message('m1'), message('m2')], hasEarlierMessages: false } : latest,
+    }));
+  });
+
+  it('prepends earlier history once and preserves it when new messages refresh the chat', async () => {
+    const { result } = renderHook(useChat, { wrapper: historyWrapper });
+    await waitFor(() => expect(result.current.currentApp?.id).toBe('app-a'));
+    await act(async () => { await result.current.loadEarlierMessages(); });
+    expect(result.current.currentApp?.messages.map(item => item.id)).toEqual(['m1', 'm2', 'm3']);
+    expect(result.current.currentApp?.hasEarlierMessages).toBe(false);
+    vi.mocked(api.get).mockImplementation(async url => ({ data: url === '/applications/owner' ? [] : { ...latest, messages: [...latest.messages, message('m4')] } }));
+    act(() => result.current.setMsg('New message'));
+    await act(async () => { await result.current.sendMsg(); });
+    expect(result.current.currentApp?.messages.map(item => item.id)).toEqual(['m1', 'm2', 'm3', 'm4']);
+  });
+
+  it('cancels a pending history lookup when navigating to another conversation', async () => {
+    const { result } = renderHook(() => ({ ...useChat(), navigate: useNavigate() }), { wrapper: historyWrapper });
+    await waitFor(() => expect(result.current.currentApp?.id).toBe('app-a'));
+    let finish!: (value: { data: { messages: ReturnType<typeof message>[]; hasEarlierMessages: boolean } }) => void;
+    vi.mocked(api.get).mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    let pending!: Promise<void>;
+    act(() => { pending = result.current.loadEarlierMessages(); });
+    const signal = vi.mocked(api.get).mock.lastCall?.[1]?.signal;
+    await act(async () => { await result.current.loadEarlierMessages(); });
+    act(() => result.current.navigate('/messages/app-b'));
+    expect(signal?.aborted).toBe(true);
+    await act(async () => { finish({ data: { messages: [message('m1')], hasEarlierMessages: false } }); await pending; });
+    expect(result.current.currentApp).toBeNull();
+  });
+});
+
 describe('Conversation list', () => {
   beforeEach(() => { vi.mocked(api.post).mockResolvedValue({ data: {} }); });
   it('keeps both applications from the same candidate accessible', async () => {
