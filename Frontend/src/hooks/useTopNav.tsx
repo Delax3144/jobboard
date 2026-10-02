@@ -5,7 +5,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import toast from 'react-hot-toast';
 import { io } from "socket.io-client";
 import api from "../lib/api";
-import type { Application } from '../types/job';
 import { useAuth } from "../context/useAuth";
 import { type UserMode } from "../lib/userMode";
 
@@ -66,11 +65,9 @@ export function useTopNav(setMode: (m: UserMode) => void) {
       const controller = new AbortController();
       pendingRequest = controller;
       try {
-        const currentRole = userRef.current?.role;
-        const endpoint = currentRole === 'employer' ? '/applications/owner' : '/applications/my';
-        const res = await api.get<Application[]>(endpoint, { signal: controller.signal });
+        const res = await api.get<{ count: number }>('/applications/unread-count', { signal: controller.signal });
         if (active && !controller.signal.aborted) {
-          setUnread({ userId, count: res.data.filter(app => app.hasUpdate).length });
+          setUnread({ userId, count: res.data.count });
         }
       } catch (err) {
         if (active && !controller.signal.aborted) {

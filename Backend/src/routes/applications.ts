@@ -25,6 +25,7 @@ import {
 import { updateApplicationStatusSchema } from "../validation/applications";
 import { escapeHtml } from "../lib/escapeHtml";
 import { sanitizeEmailHeader } from "../lib/sanitizeEmailHeader";
+import { countUnreadApplications } from "../lib/unreadApplications";
 import {
   applicationUploadRateLimit,
   messageRateLimit,
@@ -455,6 +456,16 @@ applicationsRouter.get("/owner", authMiddleware, async (req, res) => {
     })));
   } catch (error) {
     res.status(500).json({ message: "Could not load applications" });
+  }
+});
+
+applicationsRouter.get("/unread-count", authMiddleware, async (req, res) => {
+  const user = getAuthenticatedUser(req);
+  try {
+    const count = await countUnreadApplications(user.id, user.role);
+    res.json({ count });
+  } catch {
+    res.status(500).json({ message: "Could not load unread count" });
   }
 });
 

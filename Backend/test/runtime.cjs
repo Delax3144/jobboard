@@ -4,6 +4,7 @@ const prisma = Object.fromEntries(['user', 'job', 'application', 'message', 'sav
   Object.fromEntries(['findUnique', 'findFirst', 'findMany', 'groupBy', 'create', 'update', 'updateMany', 'delete'].map(method => [method, unexpected])),
 ]));
 const mailTransporter = { sendMail: unexpected };
+prisma.$queryRaw = unexpected;
 for (const [path, exports] of [
   ['../dist/prisma', { prisma }],
   ['../dist/config/mailer', { mailTransporter }],

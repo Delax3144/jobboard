@@ -40,6 +40,10 @@ test('hiring flow against PostgreSQL', async () => {
     const applied = await request(candidate, '/applications', 'POST', { jobId: job.id, coverLetter: 'Test application' });
     assert.equal(applied.status, 201);
     const application = await applied.json();
+    const unreadCount = async user => (await (await request(user, '/applications/unread-count')).json()).count;
+    assert.equal(await unreadCount(owner), 1);
+    assert.equal(await unreadCount(candidate), 0);
+    assert.equal(await unreadCount(outsider), 0);
     assert.equal((await request(candidate, '/applications', 'POST', { jobId: job.id })).status, 400);
     assert.equal((await request(outsider, `/applications/${application.id}`, 'PATCH', { status: 'invited' })).status, 403);
     assert.equal((await request(candidate, `/applications/${application.id}/messages`, 'POST', { text: 'Too soon' })).status, 403);
@@ -48,12 +52,20 @@ test('hiring flow against PostgreSQL', async () => {
     }
     let mine = await (await request(candidate, '/applications/my')).json();
     assert.equal(mine[0].hasUpdate, true);
+    assert.equal(await unreadCount(candidate), 1);
     assert.equal((await request(candidate, `/applications/${application.id}`)).status, 200);
     mine = await (await request(candidate, '/applications/my')).json();
     assert.equal(mine[0].hasUpdate, false);
+    assert.equal(await unreadCount(candidate), 0);
+    assert.equal((await request(owner, `/applications/${application.id}`)).status, 200);
+    assert.equal(await unreadCount(owner), 0);
     assert.equal((await request(candidate, `/applications/${application.id}/messages`, 'POST', { text: 'Thank you!' })).status, 201);
     const ownerApps = await (await request(owner, '/applications/owner')).json();
     assert.equal(ownerApps[0].hasUpdate, true);
+    assert.equal(await unreadCount(owner), 1);
+    assert.equal(await unreadCount(candidate), 0);
+    assert.equal((await request(candidate, `/applications/${application.id}/messages`, 'POST', { text: 'One more detail' })).status, 201);
+    assert.equal(await unreadCount(owner), 1);
     assert.equal((await request(outsider, `/applications/${application.id}`)).status, 403);
     assert.equal((await request(owner, `/jobs/${job.id}`, 'DELETE')).status, 204);
     assert.equal(await prisma.message.count({ where: { applicationId: application.id } }), 0);

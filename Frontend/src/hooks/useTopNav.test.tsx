@@ -22,42 +22,43 @@ beforeEach(() => {
   state.listeners.clear();
   state.socket.on.mockImplementation((event, listener) => state.listeners.set(event, listener));
   localStorage.setItem('token', 'test-token');
-  vi.mocked(api.get).mockResolvedValue({ data: [] });
+  vi.mocked(api.get).mockResolvedValue({ data: { count: 0 } });
 });
 
 it('refreshes missed updates on connection and reconnection', async () => {
   const { result } = renderNav();
   await waitFor(() => expect(api.get).toHaveBeenCalledTimes(1));
-  vi.mocked(api.get).mockResolvedValue({ data: [{ hasUpdate: true }, { hasUpdate: false }] });
+  expect(api.get).toHaveBeenCalledWith('/applications/unread-count', { signal: expect.any(AbortSignal) });
+  vi.mocked(api.get).mockResolvedValue({ data: { count: 1 } });
   await act(async () => { await state.listeners.get('connect')?.(); });
   expect(result.current.unreadCount).toBe(1);
-  vi.mocked(api.get).mockResolvedValue({ data: [{ hasUpdate: true }, { hasUpdate: true }] });
+  vi.mocked(api.get).mockResolvedValue({ data: { count: 2 } });
   await act(async () => { await state.listeners.get('connect')?.(); });
   expect(result.current.unreadCount).toBe(2);
 });
 
 it('ignores an older response when a reconnect starts a new lookup', async () => {
-  let resolveOld!: (value: { data: { hasUpdate: boolean }[] }) => void;
+  let resolveOld!: (value: { data: { count: number } }) => void;
   vi.mocked(api.get).mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve; }));
   const { result } = renderNav();
   const signal = vi.mocked(api.get).mock.calls[0][1]?.signal;
   await act(async () => { await state.listeners.get('connect')?.(); });
   expect(signal?.aborted).toBe(true);
-  await act(async () => { resolveOld({ data: [{ hasUpdate: true }] }); });
+  await act(async () => { resolveOld({ data: { count: 1 } }); });
   expect(result.current.unreadCount).toBe(0);
 });
 
 it('clears the previous user count immediately and ignores their pending request', async () => {
-  vi.mocked(api.get).mockResolvedValueOnce({ data: [{ hasUpdate: true }] });
+  vi.mocked(api.get).mockResolvedValueOnce({ data: { count: 1 } });
   const { result, rerender } = renderNav();
   await waitFor(() => expect(result.current.unreadCount).toBe(1));
-  let resolveOld!: (value: { data: { hasUpdate: boolean }[] }) => void;
+  let resolveOld!: (value: { data: { count: number } }) => void;
   vi.mocked(api.get).mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve; }));
   act(() => { void state.listeners.get('connect')?.(); });
   state.user = { id: 'candidate-b', role: 'candidate' };
   rerender();
   expect(result.current.unreadCount).toBe(0);
-  await act(async () => { resolveOld({ data: [{ hasUpdate: true }, { hasUpdate: true }] }); });
+  await act(async () => { resolveOld({ data: { count: 2 } }); });
   expect(result.current.unreadCount).toBe(0);
   expect(state.socket.disconnect).toHaveBeenCalled();
 });
