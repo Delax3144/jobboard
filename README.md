@@ -4,7 +4,7 @@
 
 JobBoard brings job discovery, applications, candidate profiles, and employer communication into one workflow. Candidates can find roles and track responses; employers can publish vacancies, review applications, and continue the conversation through an application-linked chat.
 
-[Website](https://www.jobboard.com.pl) · [Repository](https://github.com/Delax3144/jobboard) · [Local setup](#local-setup) · [Demo walkthrough](#demo-walkthrough)
+[Live website](https://www.jobboard.com.pl/) · [Quality checks](https://github.com/Delax3144/jobboard/actions/workflows/ci.yml) · [Local setup](#local-setup) · [Demo walkthrough](#demo-walkthrough)
 
 ![JobBoard banner](Frontend/public/og.png)
 
@@ -12,9 +12,9 @@ JobBoard brings job discovery, applications, candidate profiles, and employer co
 
 | Candidates | Employers |
 | --- | --- |
-| Search by job title or company; filter by location, seniority, and salary range | Create, edit, publish, archive, and delete vacancies; save drafts |
+| Search by job title, company, or tags; filter by location, seniority, and salary range | Create, edit, publish, archive, and delete vacancies; save drafts |
 | Bookmark jobs and submit applications with a cover letter and optional CV | Review applications and candidate profiles for their own vacancies |
-| Track application statuses: `new`, `reviewed`, `invited`, and `rejected` | Review, invite, or reject candidates, with email notifications for invitations and rejections |
+| Track applications through New, Reviewed, Interview, and Declined stages | Review, invite, or reject candidates, with email notifications for invitations and rejections |
 | Maintain a profile with skills, experience, location, avatar, and resume | Add company logos, salary ranges, tags, and rich-text job descriptions |
 | Follow up through an application-linked chat | Start conversations with applicants and receive new-application notifications |
 
@@ -22,27 +22,29 @@ Shared account features include email verification, password recovery, Google an
 
 ## Engineering highlights
 
+- **Server-side search and pagination.** Vacancy search, saved jobs, candidate applications, employer vacancies, applicant lists, and conversations load in bounded pages. Chat loads the latest 50 messages and retrieves older history on demand. Navigation requests an aggregate unread count instead of downloading conversations.
 - **Authorization at the API boundary.** JWT authentication, candidate/employer role checks, and ownership checks restrict job management, application details, and conversations to the relevant users.
 - **Persistent chat with real-time delivery.** Messages are validated and stored through REST endpoints. Socket.IO authenticates each connection and delivers message and notification events to a room associated with the recipient's user ID.
 - **Relational data integrity.** Prisma models users, jobs, applications, messages, bookmarks, and support tickets. Composite unique constraints prevent duplicate applications and bookmarks; migrations add query indexes and cascade deletion of dependent records.
 - **Account protection.** Passwords are hashed with bcrypt. Email verification and password reset tokens are stored as SHA-256 hashes with expiration timestamps. Two-factor login uses a separate, short-lived challenge token.
 - **Session revocation.** Password resets increment a database-backed token version, invalidating existing access tokens and pending two-factor challenges. Connected chat sessions are closed; new HTTP requests and socket connections check the current version.
 - **Input and upload handling.** Zod validates request data, rich-text content is sanitized, and sensitive routes have rate limits. Uploads use file type and size restrictions, with Cloudinary asset cleanup on failed operations and supported replacement/deletion flows.
-- **Separate UI and interaction logic.** React pages compose reusable components, while feature hooks handle API calls, filtering, forms, and chat state.
+- **Separate UI and interaction logic.** Each page keeps its component and CSS Module in one folder. Feature hooks handle API calls and interaction state; shared loading logic cancels obsolete requests when routes, filters, or accounts change.
 - **Regression checks.** Vitest and Testing Library cover frontend behavior; Node's test runner checks API authorization and session revocation. A PostgreSQL integration test exercises the hiring workflow. GitHub Actions runs these checks, migrations, lint, and builds.
 
 ## Tech stack
 
 | Layer | Technologies |
 | --- | --- |
-| Frontend | React 19, TypeScript, Vite 7, React Router, Axios, CSS |
+| Frontend | React 19, TypeScript, Vite 7, React Router, Axios, CSS Modules |
 | UI features | i18next, React Quill, React Easy Crop, React Hot Toast |
 | Backend | Node.js, Express 5, TypeScript, Zod |
-| Database | PostgreSQL 16, Prisma 5, versioned SQL migrations |
+| Database | PostgreSQL, Prisma 5, versioned SQL migrations; PostgreSQL 16 in local setup and CI |
 | Real-time events | Socket.IO |
 | Authentication | JWT, bcrypt, Google and GitHub OAuth, Speakeasy TOTP |
 | Files and email | Cloudinary, Multer, Nodemailer with Gmail transport |
 | Local infrastructure | Docker Compose for PostgreSQL |
+| Published backend | Hetzner, PM2; PostgreSQL hosted on Neon |
 
 ## Architecture
 
@@ -51,7 +53,7 @@ The React client calls the Express REST API through Axios and receives live even
 ```text
 Frontend/
   src/
-    pages/          Application screens
+    pages/          Screen folders containing TSX and CSS Modules
     components/     Shared UI and feature components
     hooks/          Feature state and API interactions
     context/        Authentication state
@@ -63,13 +65,17 @@ Backend/
     routes/         Authentication, jobs, applications, profiles, bookmarks
     middleware/     Authentication, authorization, rate limits, errors
     validation/     Zod request schemas
-    lib/            Tokens, uploads, sanitization, and shared helpers
+    lib/            Dashboard and conversation queries, tokens, uploads, helpers
+    selects/        Reusable Prisma field selections
     socket/         Socket.IO authentication
     config/         CORS and email transport
   prisma/
     schema.prisma   Data model
     migrations/     Database migration history
   docker-compose.yml
+  test/             Isolated API tests and PostgreSQL integration tests
+docs/               Verification details and portfolio notes
+.github/workflows/  Automated tests, lint, migrations, and builds
 ```
 
 An application connects one candidate to one job and owns the conversation history. A candidate cannot send the first message while the application is still `new`; the employer must send a message or change its status first.
@@ -204,17 +210,19 @@ Run these commands from the repository root:
 
 The frontend build checks TypeScript before bundling. Secondary pages load on demand. ESLint runs with its configured rules; the frontend source uses explicit domain and component types rather than explicit `any`.
 
-The default tests isolate database and email I/O. The integration test requires an empty database named **`jobboard_test`**: set `DATABASE_URL` to it, run `npx prisma migrate deploy` from `Backend/`, then run `npm run test:integration`. It exercises real database operations while replacing email delivery. It deletes only its own generated test records. CI provisions PostgreSQL 16 for this workflow. See [verification details](docs/VERIFICATION.md) and [portfolio notes](docs/PORTFOLIO.md).
+The default tests isolate database and email I/O. Integration tests require a dedicated database named **`jobboard_test`**: set `DATABASE_URL` to it, run `npx prisma migrate deploy` from `Backend/`, then run `npm run test:integration`. They exercise the hiring workflow, account isolation, conversation search, read markers, employer dashboard queries, and saved-job pagination against real PostgreSQL while replacing email delivery. They delete only their own generated test records. CI provisions PostgreSQL 16 for this workflow. See [verification details](docs/VERIFICATION.md) and [portfolio notes](docs/PORTFOLIO.md).
 
 For deployment, build the frontend with its public environment variables set and serve `Frontend/dist`. The included Vercel configuration rewrites SPA routes to `index.html`. Deploy the backend to a Node.js host that supports persistent Socket.IO connections, generate the Prisma client, apply committed migrations with `npx prisma migrate deploy` from `Backend/`, and run the backend build and start commands. Set `NODE_ENV=production` and `FRONTEND_URL` to the exact frontend origin; update the frontend API URL and OAuth configuration for the deployed domains.
 
 Apply the `20260913090000_revoke_sessions_on_password_reset` migration before starting this backend version: authentication now reads `User.tokenVersion`. The migration preserves existing users and initializes their version to zero. Demo seeding is not part of deployment.
 
+For PM2, allow 15 seconds for shutdown (`kill_timeout: 15000`). The backend stops accepting connections and drains requests before closing database and email resources. The frontend is available at [www.jobboard.com.pl](https://www.jobboard.com.pl/), with its API at `https://api.jobboard.com.pl`.
+
 ## Current scope
 
-- Job filtering runs in the browser after fetching published jobs; server-side search and pagination are not implemented.
 - Docker Compose provisions the database; application containers are not included.
 - Translation coverage is partial, and live email, OAuth, and upload flows depend on external services.
 - Real-time rooms and forced disconnection currently assume one backend instance. Multiple instances require a shared Socket.IO adapter and shared rate-limit storage.
+- Automated checks cover isolated frontend/API behavior and PostgreSQL integration scenarios. Browser checks cover selected desktop and mobile views; full browser end-to-end automation and load testing are not included.
 
-Future work includes server-side search and pagination, complete translations, and browser end-to-end coverage for live service integrations.
+Further improvements include complete translations, browser end-to-end coverage, and support for running multiple backend instances.
