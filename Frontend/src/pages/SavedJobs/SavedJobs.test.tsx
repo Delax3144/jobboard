@@ -5,14 +5,14 @@ import { expect, it, vi } from 'vitest';
 import api from '../../lib/api';
 import SavedJobs from './SavedJobs';
 
-vi.mock('../../lib/api', () => ({ default: { get: vi.fn(), post: vi.fn() } }));
+vi.mock('../../lib/api', () => ({ default: { get: vi.fn(), delete: vi.fn() } }));
 const auth = vi.hoisted(() => ({ user: { id: 'candidate', role: 'candidate' } }));
 vi.mock('../../context/useAuth', () => ({ useAuth: () => auth }));
 const job = { id: 'job-1', title: 'Developer', companyName: 'Demo', location: 'Remote', salaryFrom: 6000, salaryTo: 9000 };
 
 it('retries failed loading without presenting a false empty state', async () => {
   const user = userEvent.setup();
-  vi.mocked(api.get).mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({ data: [job] });
+  vi.mocked(api.get).mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({ data: { jobs: [job], total: 1, hasNextPage: false } });
   render(<MemoryRouter><SavedJobs /></MemoryRouter>);
   expect(await screen.findByRole('alert')).toBeTruthy();
   expect(screen.queryByText('No saved jobs yet')).toBeNull();
@@ -24,17 +24,20 @@ it('retries failed loading without presenting a false empty state', async () => 
 it('blocks duplicate removal, keeps the job on failure and removes it after a successful retry', async () => {
   const user = userEvent.setup();
   let failRemoval!: () => void;
-  vi.mocked(api.get).mockResolvedValue({ data: [job] });
-  vi.mocked(api.post).mockImplementationOnce(() => new Promise((_, reject) => {
+  let deleted = false;
+  vi.mocked(api.get).mockImplementation(async () => ({ data: {
+    jobs: deleted ? [] : [job], total: deleted ? 0 : 1, hasNextPage: false,
+  } }));
+  vi.mocked(api.delete).mockImplementationOnce(() => new Promise((_, reject) => {
     failRemoval = () => reject(new Error('offline'));
-  })).mockResolvedValueOnce({ data: { saved: false } });
+  })).mockImplementationOnce(async () => { deleted = true; return { data: null }; });
   render(<MemoryRouter><SavedJobs /></MemoryRouter>);
   const remove = await screen.findByRole('button', { name: 'Remove Developer from Saved' }) as HTMLButtonElement;
   await user.click(remove);
   expect(remove.disabled).toBe(true);
   await user.click(remove);
-  expect(api.post).toHaveBeenCalledTimes(1);
-  expect(api.post).toHaveBeenCalledWith('/bookmarks/job-1');
+  expect(api.delete).toHaveBeenCalledTimes(1);
+  expect(api.delete).toHaveBeenCalledWith('/bookmarks/job-1', { signal: expect.any(AbortSignal) });
   await act(async () => { failRemoval(); });
   expect(screen.getByRole('alert')).toBeTruthy();
   expect(screen.getByText('Developer')).toBeTruthy();

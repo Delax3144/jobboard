@@ -50,7 +50,7 @@ export function useRouteResource<T>(
     loading: Boolean(key) && current === null,
     error: key ? current?.error ?? (retainErrorOnRetry && result?.key === key ? result.error : null)
       : { message: messages.notFound, retryable: false },
-    retry: () => setAttempt(attempt + 1),
+    retry: () => setAttempt(previous => previous + 1),
     updateData,
   };
 }

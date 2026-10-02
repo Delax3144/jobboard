@@ -319,6 +319,11 @@
   color: #ff6b6b;
 }
 
+.pagination { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 24px; }
+.pagination button { padding: 10px 16px; border: 1px solid #ffffff25; border-radius: 10px; background: transparent; color: inherit; cursor: pointer; }
+.pagination button:disabled { opacity: 0.45; cursor: default; }
+.pagination button:focus-visible { outline: 2px solid #10b981; outline-offset: 3px; }
+
 @media (max-width: 768px) {
   .jobCard {
     flex-direction: column;

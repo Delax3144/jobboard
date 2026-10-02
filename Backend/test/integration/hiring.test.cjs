@@ -13,11 +13,13 @@ test('hiring flow against PostgreSQL', async t => {
   const { prisma } = require('../../dist/prisma');
   const { jobsRouter } = require('../../dist/routes/jobs');
   const { applicationsRouter } = require('../../dist/routes/applications');
+  const { bookmarksRouter } = require('../../dist/routes/bookmarks');
   const { signAccessToken } = require('../../dist/lib/authTokens');
   const app = express();
   app.use(express.json());
   app.use('/jobs', jobsRouter);
   app.use('/applications', applicationsRouter);
+  app.use('/bookmarks', bookmarksRouter);
   let server;
   const ids = [randomUUID(), randomUUID(), randomUUID(), randomUUID()];
   try {
@@ -159,6 +161,38 @@ test('hiring flow against PostgreSQL', async t => {
         assert.deepEqual(Object.keys(many.jobs[0].applicantPreviews[0].candidate).sort(), ['email', 'firstName', 'id', 'lastName']);
         assert.equal(many.jobs[0].applicantPreviews[0].status, 'new');
       });
+    });
+    await t.test('saved jobs paginate by account, hide drafts, and support repeatable removal', async () => {
+      const jobs = await prisma.job.findMany({ where: { ownerId: owner.id } });
+      await prisma.savedJob.createMany({ data: jobs.map(job => ({ userId: candidate.id, jobId: job.id,
+        createdAt: new Date('2025-01-01T00:00:00Z') })) });
+      const visible = jobs.filter(job => job.status === 'published');
+      await prisma.savedJob.create({ data: { userId: otherCandidate.id, jobId: visible[0].id } });
+      const bookmarks = async (user, query) => {
+        const response = await request(user, `/bookmarks${query}`);
+        assert.equal(response.status, 200);
+        return response.json();
+      };
+      const first = await bookmarks(candidate, '?page=1');
+      const second = await bookmarks(candidate, '?page=2');
+      assert.equal(first.jobs.length, 20);
+      assert.equal(first.total, 21);
+      assert.equal(first.hasNextPage, true);
+      assert.equal(second.jobs.length, 1);
+      assert.equal(second.hasNextPage, false);
+      assert.equal(new Set([...first.jobs, ...second.jobs].map(job => job.id)).size, 21);
+      assert.equal((await bookmarks(otherCandidate, '?page=1')).total, 1);
+      assert.equal((await bookmarks(outsider, '?page=1')).total, 0);
+      assert.equal((await bookmarks(candidate, '')).length, 21);
+      const selected = await bookmarks(candidate, `?jobIds=${visible[0].id}&jobIds=${visible[1].id}`);
+      assert.deepEqual(selected.map(job => job.id).sort(), [visible[0].id, visible[1].id].sort());
+      assert.equal((await request(candidate, '/bookmarks?page=0')).status, 400);
+      assert.equal((await request(candidate, '/bookmarks?jobIds=invalid')).status, 400);
+      for (let index = 0; index < 2; index++) {
+        assert.equal((await request(candidate, `/bookmarks/${visible[0].id}`, 'DELETE')).status, 204);
+      }
+      assert.equal((await bookmarks(candidate, '?page=1')).total, 20);
+      assert.equal((await bookmarks(otherCandidate, '?page=1')).total, 1);
     });
   } finally {
     if (server) await new Promise(resolve => server.close(resolve));

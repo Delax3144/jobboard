@@ -1,10 +1,6 @@
-import type { Job } from '../../types/job';
-import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../../lib/api";
-import { useAuth } from "../../context/useAuth";
+import { useSavedJobs } from "../../hooks/useSavedJobs";
 import LoadError from "../../components/LoadError";
-
 import styles from "./SavedJobs.module.css";
 
 const Icons = {
@@ -18,52 +14,8 @@ const Icons = {
 
 export default function SavedJobs() {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
-  const { user } = useAuth();
-  const [savedJobs, setSavedJobs] = useState<(Job & { savedAt: string })[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [removalError, setRemovalError] = useState<string | null>(null);
-  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
-  const pendingRemovals = useRef(new Set<string>());
-
-  const fetchSavedJobs = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get("/bookmarks");
-      setSavedJobs(res.data);
-      setError(null);
-    } catch {
-      setError("Couldn't load your saved jobs. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user?.role === 'candidate') {
-      fetchSavedJobs();
-    }
-  }, [user]);
-
-  const removeBookmark = async (e: React.MouseEvent, jobId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (pendingRemovals.current.has(jobId)) return;
-    pendingRemovals.current.add(jobId);
-    setRemovingIds(new Set(pendingRemovals.current));
-    setRemovalError(null);
-
-    try {
-      await api.post(`/bookmarks/${jobId}`);
-      setSavedJobs(prev => prev.filter(job => job.id !== jobId));
-    } catch {
-      setRemovalError("Couldn't remove this job. Please try again.");
-    } finally {
-      pendingRemovals.current.delete(jobId);
-      setRemovingIds(new Set(pendingRemovals.current));
-    }
-  };
+  const { user, savedJobs, total, loading, error, retry, removalError, removingIds,
+    removeBookmark, pagination } = useSavedJobs();
 
   if (!user || user.role !== 'candidate') {
     return <div className={styles.denied}>Access Denied</div>;
@@ -85,15 +37,15 @@ export default function SavedJobs() {
             Saved <span className={styles.titleGradient}>Opportunities</span>
           </h1>
           <p className={styles.subtitle}>
-            {savedJobs.length > 0
-              ? `You have ${savedJobs.length} bookmarked ${savedJobs.length === 1 ? 'job' : 'jobs'} saved for later.`
+            {total > 0
+              ? `You have ${total} bookmarked ${total === 1 ? 'job' : 'jobs'} saved for later.`
               : "Keep track of the jobs you're interested in."}
           </p>
         </header>
 
         {removalError && <p role="alert" className={styles.removalError}>{removalError}</p>}
-        {error ? <LoadError message={error} loading={loading} onRetry={fetchSavedJobs} /> : loading ? (
-          <div className={styles.loading}>Loading your bookmarks...</div>
+        {error ? <LoadError message={error} loading={loading} onRetry={retry} /> : loading ? (
+          <div role="status" className={styles.loading}>Loading your bookmarks...</div>
         ) : (
           <div className={styles.list}>
 
@@ -132,13 +84,13 @@ export default function SavedJobs() {
                 <div className={styles.rightSide}>
                   <div className={styles.salaryBlock} >
                     <div className={styles.salary}>
-                      <Icons.Wallet /> {job.salaryFrom.toLocaleString()} - {job.salaryTo.toLocaleString()} PLN
+                      <Icons.Wallet /> {job.salaryFrom == null || job.salaryTo == null ? "Salary not specified" : `${job.salaryFrom.toLocaleString()} - ${job.salaryTo.toLocaleString()} PLN`}
                     </div>
                   </div>
 
                   <div className={styles.actions}>
                     <button
-                      onClick={(e) => removeBookmark(e, job.id)}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); void removeBookmark(job.id); }}
                       className={styles.removeButton}
                       disabled={removingIds.has(job.id)}
                       aria-label={`Remove ${job.title} from Saved`}
@@ -164,6 +116,13 @@ export default function SavedJobs() {
               </div>
             )}
           </div>
+        )}
+        {!error && !loading && (pagination.page > 1 || pagination.hasNextPage) && (
+          <nav aria-label="Saved job pages" className={styles.pagination}>
+            <button disabled={pagination.page === 1} onClick={() => pagination.setPage(pagination.page - 1)}>Previous</button>
+            <span>Page {pagination.page}</span>
+            <button disabled={!pagination.hasNextPage} onClick={() => pagination.setPage(pagination.page + 1)}>Next</button>
+          </nav>
         )}
       </div>
     </div>

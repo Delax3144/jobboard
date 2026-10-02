@@ -45,8 +45,10 @@ export function useJobs() {
       const jobsRes = await api.get<{ jobs: Job[]; hasNextPage: boolean }>("/jobs", { params: query, signal });
       if (signal.aborted) return;
       let ids = new Set<string>();
-      if (userId && role === 'candidate') {
-        const bookmarksRes = await api.get<Job[]>("/bookmarks", { signal });
+      if (userId && role === 'candidate' && jobsRes.data.jobs.length > 0) {
+        const bookmarksRes = await api.get<Job[]>("/bookmarks", {
+          signal, params: { jobIds: jobsRes.data.jobs.map(job => job.id) }, paramsSerializer: { indexes: null },
+        });
         ids = new Set(bookmarksRes.data.map(job => job.id));
       }
       if (signal.aborted) return;
