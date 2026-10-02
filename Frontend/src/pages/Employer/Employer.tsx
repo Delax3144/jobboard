@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEmployer } from "../../hooks/useEmployer";
+import ApplicantPreviewList from "../../components/employer/ApplicantPreviewList";
 import JobForm from "../../components/employer/JobForm";
 import LoadError from "../../components/LoadError";
 
@@ -112,7 +113,7 @@ export default function Employer() {
                     <div className={styles.actions}>
                       <button onClick={() => list.fillForm(job)} className={styles.editButton}   title="Edit"><Icons.Edit /></button>
                       <button onClick={() => list.handleDelete(job.id)} className={styles.deleteButton}   title="Delete"><Icons.Trash /></button>
-                      <Link to={`/employer/job/${job.id}`} className={styles.manageLink} >Manage <Icons.Settings /></Link>
+                      <Link to={`/employer/job/${job.id}`} className={styles.manageLink} >View candidates <Icons.Settings /></Link>
                     </div>
                   </div>
                   <div className={styles.cardFooter}>
@@ -120,14 +121,9 @@ export default function Employer() {
                       <span className={styles.muted}><Icons.Users /></span>
                       <span className={styles.applicantCount}>Total Applicants: <b className={styles.white}>{job.totalApplicants}</b> {newAppsCount > 0 && <span className={styles.newCount}>{newAppsCount} New</span>}</span>
                     </div>
-                    <div className={styles.avatars}>
-                      {job.applicantPreviews.map((app) => (
-                          <div key={app.id} className={styles.avatar}>
-                              {app.candidate.email[0].toUpperCase()}
-                          </div>
-                      ))}
-                    </div>
+
                   </div>
+                  <ApplicantPreviewList job={job} />
                 </div>
               );
             })}

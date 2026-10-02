@@ -1,13 +1,15 @@
 import { useCallback, useState } from 'react';
 import type { SetStateAction } from 'react';
 import api from '../lib/api';
-import type { Job } from '../types/job';
+import type { Application, Job } from '../types/job';
 import { useRouteResource } from './useRouteResource';
 
 export type EmployerJob = Job & {
   totalApplicants: number;
   newApplicants: number;
-  applicantPreviews: Array<{ id: string; candidate: { email: string } }>;
+  applicantPreviews: Array<Pick<Application, 'id' | 'status' | 'createdAt'> & {
+    candidate: Pick<Application['candidate'], 'id' | 'firstName' | 'lastName' | 'email'>;
+  }>;
 };
 type Dashboard = { jobs: EmployerJob[]; total: number; totalPages: number;
   stats: { active: number; newApps: number; totalApps: number } };

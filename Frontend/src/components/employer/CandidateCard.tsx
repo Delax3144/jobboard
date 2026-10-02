@@ -1,3 +1,4 @@
+import { useId } from "react";
 import styles from "./CandidateCard.module.css";
 import type { useJobManagement } from '../../hooks/useJobManagement';
 import type { Application } from '../../types/job';
@@ -15,6 +16,9 @@ const Icons = {
 
 export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpdateStatus, apiUrl }: Pick<ReturnType<typeof useJobManagement>, 'toggleExpand' | 'handleUpdateStatus' | 'apiUrl'> & { app: Application; isExpanded: boolean }) {
 
+  const detailsId = useId();
+  const name = `${app.candidate.firstName ?? ""} ${app.candidate.lastName ?? ""}`.trim() || app.candidate.email;
+  const statusLabels = { new: "New", reviewed: "Reviewed", invited: "Interview", rejected: "Declined" };
 
   return (
     <div className={styles.card} data-status={app.status} data-expanded={isExpanded}>
@@ -33,7 +37,7 @@ export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpd
           <div className={styles.info}>
             <div className={styles.nameRow}>
               <h3 className={styles.name}>
-                {app.candidate.firstName} {app.candidate.lastName}
+                {name}
               </h3>
               <span className={styles.status}>
                 {app.status}
@@ -42,7 +46,8 @@ export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpd
             <div className={styles.metadata}>
               <span className={styles.email}><Icons.Mail /> {app.candidate.email}</span>
               <span className="hidden-mobile">•</span>
-              <span>Applied: {new Date(app.createdAt).toLocaleDateString()}</span>
+              <time dateTime={app.createdAt}>Applied {new Date(app.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</time>
+              <span className={styles.documentStatus}>{app.cvUrl ? "CV attached" : "No CV"}</span>
             </div>
           </div>
         </div>
@@ -53,38 +58,20 @@ export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpd
             <Icons.User /> Profile
           </Link>
 
-          <button aria-expanded={isExpanded} onClick={() => toggleExpand(app.id)} className={styles.expandButton} >
-            {isExpanded ? "Hide Details" : "View CV"}
+          <button aria-expanded={isExpanded} aria-controls={isExpanded ? detailsId : undefined} onClick={() => toggleExpand(app.id)} className={styles.expandButton} >
+            {isExpanded ? "Hide Details" : "View application"}
             {isExpanded ? <Icons.ChevronUp /> : <Icons.ChevronDown />}
           </button>
 
-          {app.status !== 'rejected' && app.status !== 'invited' && (
-             <>
-               {app.status === 'new' && (
-                 <button onClick={() => handleUpdateStatus(app.id, 'reviewed')} className={styles.reviewButton} title="Mark as Reviewed">
-                   <Icons.Check /> Review
-                 </button>
-               )}
-               <button onClick={() => handleUpdateStatus(app.id, 'rejected')} className={styles.declineButton} title="Decline Candidate">
-                 <Icons.X /> Decline
-               </button>
-             </>
-          )}
-
-          {app.status === 'reviewed' && (
-            <button onClick={() => handleUpdateStatus(app.id, 'invited')} className={styles.inviteButton}>
-              Invite to Interview
-            </button>
-          )}
         </div>
       </div>
 
       {isExpanded && (
-        <div className={styles.expandedContent}>
+        <div id={detailsId} className={styles.expandedContent}>
           <div className={styles.details}>
 
             <div>
-              <h4 className={styles.sectionTitle}>Motivation Letter</h4>
+              <h4 className={styles.sectionTitle}>Cover letter</h4>
               {app.coverLetter ? (
                 <div className={styles.letter}>
                   {app.coverLetter}
@@ -98,10 +85,9 @@ export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpd
               <h4 className={styles.sectionTitle}>Documents & Contact</h4>
               <div className={styles.documents}>
                 <button
-                  onClick={() => window.open(app.cvUrl?.startsWith('http') ? app.cvUrl : `${apiUrl}${app.cvUrl}`, '_blank')}
+                  onClick={() => window.open(app.cvUrl?.startsWith('http') ? app.cvUrl : `${apiUrl}${app.cvUrl}`, '_blank', 'noopener,noreferrer')}
                   disabled={!app.cvUrl}
                   className={styles.resumeButton}
-
 
                 >
                   <Icons.File /> {app.cvUrl ? "View Resume / CV" : "No CV Uploaded"}
@@ -114,6 +100,30 @@ export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpd
               </div>
             </div>
 
+          </div>
+          <div className={styles.decisionBar}>
+            <span className={styles.decisionLabel}>Next step</span>
+            <div className={styles.actions}>
+              {app.status !== 'rejected' && app.status !== 'invited' && (
+                 <>
+                   {app.status === 'new' && (
+                     <button onClick={() => handleUpdateStatus(app.id, 'reviewed')} className={styles.reviewButton} title="Mark as Reviewed">
+                       <Icons.Check /> Review
+                     </button>
+                   )}
+                   <button onClick={() => handleUpdateStatus(app.id, 'rejected')} className={styles.declineButton} title="Decline Candidate">
+                     <Icons.X /> Decline
+                   </button>
+                 </>
+              )}
+
+              {app.status === 'reviewed' && (
+                <button onClick={() => handleUpdateStatus(app.id, 'invited')} className={styles.inviteButton}>
+                  Invite to Interview
+                </button>
+              )}
+              <Link to={`/messages/${app.id}`} className={styles.profileLink}>Open conversation</Link>
+            </div>
           </div>
         </div>
       )}

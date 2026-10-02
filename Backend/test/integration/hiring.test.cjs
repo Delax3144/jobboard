@@ -156,7 +156,8 @@ test('hiring flow against PostgreSQL', async t => {
         assert.equal(many.jobs[0].totalApplicants, 7);
         assert.equal(many.jobs[0].newApplicants, 6);
         assert.equal(many.jobs[0].applicantPreviews.length, 5);
-        assert.deepEqual(Object.keys(many.jobs[0].applicantPreviews[0].candidate), ['email']);
+        assert.deepEqual(Object.keys(many.jobs[0].applicantPreviews[0].candidate).sort(), ['email', 'firstName', 'id', 'lastName']);
+        assert.equal(many.jobs[0].applicantPreviews[0].status, 'new');
       });
     });
   } finally {
