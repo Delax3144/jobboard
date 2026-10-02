@@ -18,7 +18,6 @@ export default function Employer() {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
   const { data, list, form } = useEmployer();
 
-  if (data.isLoading && !data.error) return <div role="status" className={styles.loading}>Loading Admin Console...</div>;
 
   return (
     <div className={styles.page}>
@@ -42,11 +41,11 @@ export default function Employer() {
           <div className={styles.stats}>
               <div className={styles.activeStat}>
                   <div className={styles.activeLabel}>Active Ads</div>
-                  <div className={styles.statValue}>{data.error ? '—' : data.dashboardStats.active}</div>
+                  <div className={styles.statValue}>{data.error || data.isLoading ? '—' : data.dashboardStats.active}</div>
               </div>
               <div className={styles.applicationsStat}>
                   <div className={styles.applicationsLabel}>New Apps</div>
-                  <div className={styles.statValue}>{data.error ? '—' : data.dashboardStats.newApps}</div>
+                  <div className={styles.statValue}>{data.error || data.isLoading ? '—' : data.dashboardStats.newApps}</div>
               </div>
           </div>
         </div>
@@ -61,24 +60,23 @@ export default function Employer() {
                 <h2 className={styles.sectionTitle}>Your Vacancies</h2>
               </div>
 
-              {data.jobs.length > 0 && (
                 <div className={styles.searchField}>
                   <div className={styles.searchIcon}><Icons.Search /></div>
                   <input
-                    type="text" placeholder="Search by title..." value={list.searchQuery}
-                    onChange={(e) => { list.setSearchQuery(e.target.value); list.setCurrentPage(1); }}
+                    type="text" aria-label="Search your vacancies" maxLength={120} placeholder="Search by title..." value={list.searchQuery}
+                    onChange={(e) => list.setSearchQuery(e.target.value)}
                     className={styles.searchInput}
                   />
                 </div>
-              )}
             </div>
 
+            {data.isLoading && !data.error && <div role="status" className={styles.loading}>Loading vacancies...</div>}
             {data.error && <LoadError message={data.error} loading={data.isLoading} onRetry={data.retry} />}
-            {!data.error && list.filteredJobs.length === 0 && data.jobs.length > 0 && (
+            {!data.error && !data.isLoading && data.jobs.length === 0 && Boolean(list.searchQuery.trim()) && (
               <div className={styles.noMatches}>No vacancies match your search.</div>
             )}
 
-            {!data.error && data.jobs.length === 0 && (
+            {!data.error && !data.isLoading && data.jobs.length === 0 && !list.searchQuery.trim() && (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>📋</div>
                 <h3 className={styles.emptyTitle}>No vacancies posted yet</h3>
@@ -87,8 +85,7 @@ export default function Employer() {
             )}
 
             {!data.error && list.currentJobs.map((job) => {
-              const jobApps = data.applications.filter((a) => a.jobId === job.id);
-              const newAppsCount = jobApps.filter((a) => a.status === 'new').length;
+              const newAppsCount = job.newApplicants;
 
               return (
                 <div key={job.id} className={styles.jobCard} >
@@ -121,10 +118,10 @@ export default function Employer() {
                   <div className={styles.cardFooter}>
                     <div className={styles.applicants}>
                       <span className={styles.muted}><Icons.Users /></span>
-                      <span className={styles.applicantCount}>Total Applicants: <b className={styles.white}>{jobApps.length}</b> {newAppsCount > 0 && <span className={styles.newCount}>{newAppsCount} New</span>}</span>
+                      <span className={styles.applicantCount}>Total Applicants: <b className={styles.white}>{job.totalApplicants}</b> {newAppsCount > 0 && <span className={styles.newCount}>{newAppsCount} New</span>}</span>
                     </div>
                     <div className={styles.avatars}>
-                      {jobApps.slice(0, 5).map((app) => (
+                      {job.applicantPreviews.map((app) => (
                           <div key={app.id} className={styles.avatar}>
                               {app.candidate.email[0].toUpperCase()}
                           </div>

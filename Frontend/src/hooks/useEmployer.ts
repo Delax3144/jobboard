@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useState, useRef } from "react";
 import axios from 'axios';
 import api from "../lib/api";
 import { apiErrorMessage } from '../lib/apiError';
 import { useAuth } from "../context/useAuth";
-import type { Job, Application, JobStatus } from "../types/job";
+import type { Job, JobStatus } from "../types/job";
+
+import { useEmployerJobs } from "./useEmployerJobs";
 
 export const LOCATIONS = ["Remote", "Poland", "Ukraine", "Germany", "UK", "USA"];
 export const LEVELS = ["Intern", "Junior", "Middle", "Senior", "Lead"];
@@ -14,15 +16,11 @@ type JobFormErrors = Partial<Record<JobFormField, string>>;
 
 export function useEmployer() {
   const { user } = useAuth();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const userId = user?.id;
-  
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const jobsPerPage = 5;
+  const dashboard = useEmployerJobs(user?.id);
+  const { jobs, isLoading, error, retry, dashboardStats, searchQuery, setSearchQuery,
+    currentPage, setCurrentPage, totalPages } = dashboard;
+  const currentJobs = jobs;
+  const fetchData = retry;
 
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -39,48 +37,6 @@ export function useEmployer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<JobFormErrors>({});
-
-  const fetchData = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const [jobsRes, appsRes] = await Promise.all([
-        api.get<{ jobs: Job[] }>("/jobs/mine"),
-        api.get<Application[]>('/applications/owner')
-      ]);
-      setJobs(jobsRes.data.jobs);
-      setApplications(appsRes.data);
-      setError('');
-    } catch { setError('Could not load your vacancies and applications. Please try again.'); }
-    finally { setIsLoading(false); }
-  }, [userId]);
-
-  useEffect(() => { void fetchData(); }, [fetchData]);
-  const retry = () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    void fetchData();
-  };
-
-  const dashboardStats = useMemo(() => ({
-    active: jobs.filter(j => j.status === "published").length,
-    newApps: applications.filter(a => a.status === "new").length,
-    totalApps: applications.length
-  }), [jobs, applications]);
-
-  const filteredJobs = useMemo(() => {
-    return jobs.filter(job => 
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      job.companyName.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [jobs, searchQuery]);
-
-  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
-  
-  const currentJobs = useMemo(() => {
-    const indexOfLastJob = currentPage * jobsPerPage;
-    const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-    return filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
-  }, [filteredJobs, currentPage]);
 
   async function handleSubmit() {
     if (submittingRef.current) return;
@@ -128,8 +84,8 @@ export function useEmployer() {
     if (window.confirm("Are you sure you want to delete this vacancy permanently?")) {
       try {
         await api.delete(`/jobs/${id}`);
-        fetchData();
         if (currentJobs.length === 1 && currentPage > 1) setCurrentPage(currentPage - 1);
+        else fetchData();
       } catch { alert("Delete failed"); }
     }
   }
@@ -165,8 +121,8 @@ export function useEmployer() {
   }
 
   return {
-    data: { jobs, applications, isLoading, error, retry, dashboardStats },
-    list: { searchQuery, setSearchQuery, currentJobs, filteredJobs, currentPage, setCurrentPage, totalPages, handleDelete, fillForm },
+    data: { jobs, total: dashboard.total, isLoading, error, retry, dashboardStats },
+    list: { searchQuery, setSearchQuery, currentJobs, currentPage, setCurrentPage, totalPages, handleDelete, fillForm },
     form: { title, setTitle, companyName, setCompanyName, location, setLocation, salaryFrom, setSalaryFrom, salaryTo, setSalaryTo, level, setLevel, tags, setTags, description, setDescription, status, setJobStatus, setLogoFile, editingJobId, handleSubmit, resetForm, isSubmitting, submitError, fieldErrors }
   };
 }

@@ -22,6 +22,11 @@ const salarySchema = z.coerce
 
 export const jobIdSchema = z.string().uuid("Invalid job id");
 
+export const employerJobListSchema = z.strictObject({
+  page: z.coerce.number().int().min(1).max(100_000).optional(),
+  search: z.string().trim().max(120).default(''),
+});
+
 const queryList = z.preprocess(
   value => typeof value === "string" ? [value] : value,
   z.array(z.string().trim().min(1).max(100)).max(10).default([]),

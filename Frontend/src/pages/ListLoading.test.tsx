@@ -27,7 +27,8 @@ const cases = [
   { Page: Employer, endpoint: '/jobs/mine', empty: 'No vacancies posted yet' },
 ];
 const response = (url: string, empty = false) => ({ data:
-  url === '/jobs' || url === '/jobs/mine' ? { jobs: empty ? [] : [job], hasNextPage: false } :
+  url === '/jobs/mine' ? { jobs: empty ? [] : [{ ...job, totalApplicants: 1, newApplicants: 1, applicantPreviews: [] }], total: empty ? 0 : 1, totalPages: empty ? 0 : 1, stats: { active: empty ? 0 : 1, newApps: empty ? 0 : 1, totalApps: empty ? 0 : 1 } } :
+  url === '/jobs' ? { jobs: empty ? [] : [job], hasNextPage: false } :
   url === '/applications/my' ? { applications: empty ? [] : [application], stats: { total: empty ? 0 : 1, invited: 0, pending: empty ? 0 : 1 }, hasNextPage: false } :
   url.startsWith('/applications/') ? (empty ? [] : [application]) : (empty ? [] : [job]),
 });
@@ -45,7 +46,6 @@ it('keeps a job card usable when its company logo fails to load', async () => {
 
 it.each([
   ...cases,
-  { ...cases[2], endpoint: '/applications/owner' },
   { ...cases[0], endpoint: '/bookmarks' },
 ])('recovers $endpoint after failures without claiming the list is empty', async ({ Page, endpoint, empty }) => {
   if (endpoint === '/bookmarks') auth.user.role = 'candidate';

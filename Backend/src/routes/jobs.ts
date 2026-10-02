@@ -17,10 +17,12 @@ import {
   createJobSchema,
   jobIdSchema,
   jobListSchema,
+  employerJobListSchema,
   updateJobSchema,
 } from "../validation/jobs";
 import { optionalAuthMiddleware } from "../middleware/optionalAuth";
 import { jobUploadRateLimit } from "../middleware/rateLimits";
+import { loadEmployerDashboard } from '../lib/employerDashboard';
 
 export const jobsRouter = Router();
 
@@ -65,6 +67,15 @@ jobsRouter.get("/mine", authMiddleware, async (req, res) => {
     return res.status(403).json({ message: "Employers only" });
   }
 
+  const parsed = employerJobListSchema.safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid vacancy filters' });
+  if (parsed.data.page) {
+    try {
+      return res.json(await loadEmployerDashboard(user.id, parsed.data.page, parsed.data.search));
+    } catch {
+      return res.status(500).json({ message: 'Could not load your vacancies and applications' });
+    }
+  }
   const jobs = await prisma.job.findMany({
     where: { ownerId: user.id },
     orderBy: { createdAt: "desc" },

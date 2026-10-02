@@ -5,7 +5,7 @@ import api from '../lib/api';
 import { useEmployer } from './useEmployer';
 import type { Job } from '../types/job';
 
-vi.mock('../lib/api', () => ({ default: { get: vi.fn(), patch: vi.fn(), post: vi.fn() } }));
+vi.mock('../lib/api', () => ({ default: { get: vi.fn(), patch: vi.fn(), post: vi.fn(), delete: vi.fn() } }));
 vi.mock('../context/useAuth', () => {
   const user = { id: 'owner', role: 'employer' };
   return { useAuth: () => ({ user }) };
@@ -37,6 +37,29 @@ beforeEach(() => {
   }));
   vi.mocked(api.patch).mockResolvedValue({ data: secondJob });
   vi.mocked(api.post).mockResolvedValue({ data: firstJob });
+});
+
+it('returns to the previous page after deleting its last vacancy and keeps the form draft', async () => {
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+  vi.mocked(api.delete).mockResolvedValue({ data: null });
+  vi.mocked(api.get).mockImplementation(async (_url, config) => ({ data: {
+    jobs: (config?.params as { page?: number } | undefined)?.page === 2 ? [secondJob] : [firstJob],
+    total: 6, totalPages: 2, stats: { active: 6, newApps: 0, totalApps: 0 },
+  } }));
+  try {
+    const { result } = renderHook(useEmployer);
+    await waitFor(() => expect(result.current.data.isLoading).toBe(false));
+    act(() => {
+      result.current.form.setTitle('Unsaved role');
+      result.current.list.setCurrentPage(2);
+    });
+    await waitFor(() => expect(result.current.list.currentJobs[0]?.id).toBe(secondJob.id));
+    await act(async () => result.current.list.handleDelete(secondJob.id));
+    await waitFor(() => expect(result.current.list.currentJobs[0]?.id).toBe(firstJob.id));
+    expect(result.current.list.currentPage).toBe(1);
+    expect(result.current.form.title).toBe('Unsaved role');
+    expect(api.delete).toHaveBeenCalledWith(`/jobs/${secondJob.id}`);
+  } finally { confirm.mockRestore(); }
 });
 
 it.each([false, true])('clears a previous vacancy logo and accepts a new selection: %s', async replaceLogo => {

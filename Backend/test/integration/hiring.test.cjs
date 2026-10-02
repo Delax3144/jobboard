@@ -84,7 +84,7 @@ test('hiring flow against PostgreSQL', async t => {
     assert.equal((await request(outsider, `/applications/${application.id}`)).status, 403);
     assert.equal((await request(owner, `/jobs/${job.id}`, 'DELETE')).status, 204);
     assert.equal(await prisma.message.count({ where: { applicationId: application.id } }), 0);
-    await t.test('conversation pages, literal search, activity ordering and account isolation', async () => {
+    await t.test('conversation pages, literal search, activity ordering and account isolation', async t => {
       const createdAt = new Date('2024-01-01T00:00:00Z');
       const jobs = Array.from({ length: 22 }, (_, index) => ({
         id: randomUUID(), ownerId: owner.id, title: `Pagination Developer ${index}`,
@@ -121,6 +121,43 @@ test('hiring flow against PostgreSQL', async t => {
         assert.equal(latest.id, applications[0].id);
         assert.equal(latest.messages[0].text, 'Latest own message');
       }
+      await t.test('employer dashboard pages and totals include only owned vacancies', async () => {
+        const dashboard = async (user, query = '?page=1') => {
+          const response = await request(user, `/jobs/mine${query}`);
+          assert.equal(response.status, 200);
+          return response.json();
+        };
+        const first = await dashboard(owner);
+        const order = jobs.map(job => job.id).sort().reverse();
+        assert.deepEqual(first.jobs.map(job => job.id), order.slice(0, 5));
+        assert.equal(first.total, 22);
+        assert.equal(first.totalPages, 5);
+        assert.deepEqual(first.stats, { active: 22, newApps: 1, totalApps: 22 });
+        assert.deepEqual((await dashboard(owner, '?page=2')).jobs.map(job => job.id), order.slice(5, 10));
+        const unique = await dashboard(owner, '?page=1&search=unique');
+        assert.equal(unique.jobs.length, 1);
+        assert.equal(unique.total, 1);
+        assert.equal(unique.jobs[0].totalApplicants, 1);
+        assert.deepEqual(unique.stats, first.stats);
+        const empty = await dashboard(outsider);
+        assert.deepEqual(empty.jobs, []);
+        assert.deepEqual(empty.stats, { active: 0, newApps: 0, totalApps: 0 });
+        assert.equal((await request(candidate, '/jobs/mine?page=1')).status, 403);
+        assert.equal((await request(owner, '/jobs/mine?page=0')).status, 400);
+        assert.equal((await dashboard(owner, '?page=10')).jobs.length, 0);
+        const extraIds = Array.from({ length: 6 }, () => randomUUID());
+        ids.push(...extraIds);
+        await prisma.user.createMany({ data: extraIds.map(id => ({ id, email: `${id}@integration.test`,
+          username: id, firstName: 'Preview', lastName: 'Test', passwordHash: 'unused', role: 'candidate' })) });
+        await prisma.application.createMany({ data: extraIds.map(candidateId => ({ jobId: jobs[0].id, candidateId })) });
+        await prisma.job.update({ where: { id: jobs[0].id }, data: { companyName: 'Many Applicants Co', status: 'draft' } });
+        const many = await dashboard(owner, '?page=1&search=Many%20Applicants');
+        assert.deepEqual(many.stats, { active: 21, newApps: 7, totalApps: 28 });
+        assert.equal(many.jobs[0].totalApplicants, 7);
+        assert.equal(many.jobs[0].newApplicants, 6);
+        assert.equal(many.jobs[0].applicantPreviews.length, 5);
+        assert.deepEqual(Object.keys(many.jobs[0].applicantPreviews[0].candidate), ['email']);
+      });
     });
   } finally {
     if (server) await new Promise(resolve => server.close(resolve));

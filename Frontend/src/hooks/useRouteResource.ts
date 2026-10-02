@@ -22,6 +22,7 @@ export function useRouteResource<T>(
   key: string | undefined,
   load: (signal: AbortSignal) => Promise<T>,
   messages: ErrorMessages,
+  retainErrorOnRetry = false,
 ) {
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<ResourceResult<T> | null>(null);
@@ -47,7 +48,8 @@ export function useRouteResource<T>(
   return {
     data: current?.data ?? null,
     loading: Boolean(key) && current === null,
-    error: key ? current?.error ?? null : { message: messages.notFound, retryable: false },
+    error: key ? current?.error ?? (retainErrorOnRetry && result?.key === key ? result.error : null)
+      : { message: messages.notFound, retryable: false },
     retry: () => setAttempt(attempt + 1),
     updateData,
   };
