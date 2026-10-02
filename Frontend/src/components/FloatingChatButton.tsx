@@ -1,32 +1,43 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../lib/api";
-import type { Application } from '../types/job';
 import { useAuth } from "../context/useAuth";
 import styles from "./FloatingChatButton.module.css";
 
 export default function FloatingChatButton() {
   const { user } = useAuth();
   const location = useLocation();
-  const [hasNewMsg, setHasNewMsg] = useState(false);
+  const userId = user?.id;
+  const [unread, setUnread] = useState({ userId: '', count: 0 });
+  const hasNewMsg = unread.userId === userId && unread.count > 0;
 
   useEffect(() => {
-    if (!user || location.pathname.startsWith("/messages")) {
+    if (!userId || location.pathname.startsWith("/messages")) {
       return;
     }
 
-    const checkUpdates = () => {
-      const endpoint = user.role === 'employer' ? '/applications/owner' : '/applications/my';
-      api.get<Application[]>(endpoint).then((res) => {
-        const unread = res.data.some(app => app.hasUpdate);
-        setHasNewMsg(unread);
-      }).catch(() => {});
+    let active = true;
+    let pendingRequest: AbortController | undefined;
+    const checkUpdates = async () => {
+      pendingRequest?.abort();
+      const controller = new AbortController();
+      pendingRequest = controller;
+      try {
+        const response = await api.get<{ count: number }>('/applications/unread-count', { signal: controller.signal });
+        if (active && !controller.signal.aborted) setUnread({ userId, count: response.data.count });
+      } catch { return; }
     };
 
     checkUpdates();
     const interval = setInterval(checkUpdates, 10000);
-    return () => clearInterval(interval);
-  }, [user, location.pathname]);
+    window.addEventListener('update_unread', checkUpdates);
+    return () => {
+      active = false;
+      pendingRequest?.abort();
+      clearInterval(interval);
+      window.removeEventListener('update_unread', checkUpdates);
+    };
+  }, [userId, location.pathname]);
 
   if (!user || location.pathname.startsWith("/messages")) return null;
 
