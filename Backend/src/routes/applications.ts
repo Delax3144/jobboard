@@ -15,6 +15,7 @@ import { mailTransporter } from "../config/mailer";
 import {
   applicationIdSchema,
   applicationListSchema,
+  jobApplicationListSchema,
   createApplicationSchema,
   jobIdSchema,
   sendMessageSchema
@@ -138,6 +139,10 @@ applicationsRouter.get(
       }
 
       const jobId = parsedJobId.data;
+      const parsedQuery = jobApplicationListSchema.safeParse(req.query);
+      if (!parsedQuery.success) return res.status(400).json({ message: "Invalid application filters" });
+      const { page, status } = parsedQuery.data;
+      const pageSize = 20;
 
       const job = await prisma.job.findUnique({
         where: { id: jobId },
@@ -148,15 +153,21 @@ applicationsRouter.get(
       }
 
       const apps = await prisma.application.findMany({
-        where: { jobId },
+        where: { jobId, ...(status !== 'all' ? { status } : {}) },
         include: {
           candidate: {
             select: applicationCandidateSelect,
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        ...(page ? { skip: (page - 1) * pageSize, take: pageSize + 1 } : {}),
       });
-      res.json(apps);
+      if (!page) return res.json(apps);
+      const grouped = await prisma.application.groupBy({
+        by: ['status'], where: { jobId }, _count: { _all: true },
+      });
+      const total = grouped.reduce((count, group) => count + group._count._all, 0);
+      res.json({ applications: apps.slice(0, pageSize), total, page, pageSize, hasNextPage: apps.length > pageSize });
     } catch (err) {
       res.status(500).json({ message: "Server error" });
     }

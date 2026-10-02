@@ -11,7 +11,7 @@ const Icons = {
 
 export default function JobManagement() {
   const {
-    job, applications, loading, error, retry, filter, setFilter, apiUrl,
+    job, total, pagination, loading, error, retry, filter, setFilter, apiUrl,
     filteredApps, expandedAppId, toggleExpand, handleUpdateStatus
   } = useJobManagement();
 
@@ -33,7 +33,7 @@ export default function JobManagement() {
               <span className={styles.company}>{job.companyName}</span>
               <span className="hidden-mobile">•</span>
               <span className={styles.count}>
-                {applications.length} Candidate{applications.length !== 1 && 's'}
+                {total} Candidate{total !== 1 && 's'}
               </span>
             </div>
           </div>
@@ -70,6 +70,11 @@ export default function JobManagement() {
           ))
         )}
       </div>
+      <nav aria-label="Applicant pages" className={styles.pagination}>
+        <button disabled={loading || pagination.page === 1} onClick={() => pagination.setPage(pagination.page - 1)}>Previous</button>
+        <span aria-live="polite">Page {pagination.page}</span>
+        <button disabled={loading || !pagination.hasNextPage} onClick={() => pagination.setPage(pagination.page + 1)}>Next</button>
+      </nav>
     </div>
   );
 }

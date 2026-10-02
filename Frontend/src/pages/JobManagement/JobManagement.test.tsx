@@ -13,10 +13,16 @@ describe('Employer application management', () => {
       id: 'application-1', status: 'new', createdAt: '2026-09-01T12:00:00Z',
       candidate: { id: 'candidate-1', firstName: 'Alex', lastName: 'Demo', email: 'alex@example.test' },
     };
-    vi.mocked(api.get).mockImplementation(async (url) => ({
-      data: url === '/jobs/job-1' ? { title: 'Frontend Developer', companyName: 'Demo' } : [app],
+    vi.mocked(api.get).mockImplementation(async (url, config) => ({
+      data: url === '/jobs/job-1' ? { title: 'Frontend Developer', companyName: 'Demo' } : {
+        applications: (config?.params as { status: string }).status === 'all' || (config?.params as { status: string }).status === app.status ? [app] : [],
+        total: 1, hasNextPage: false,
+      },
     }));
-    vi.mocked(api.patch).mockResolvedValue({ data: {} });
+    vi.mocked(api.patch).mockImplementation(async (_url, payload) => {
+      app.status = (payload as { status: string }).status;
+      return { data: {} };
+    });
     const user = userEvent.setup();
     render(<MemoryRouter initialEntries={['/employer/job/job-1']}>
       <Routes><Route path='/employer/job/:id' element={<JobManagement />} /></Routes>
@@ -35,9 +41,31 @@ describe('Employer application management', () => {
     await waitFor(() => expect(api.patch).toHaveBeenLastCalledWith('/applications/application-1', { status: 'invited' }));
     expect(screen.queryByRole('button', { name: 'Invite to Interview' })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'rejected' }));
-    expect(screen.getByRole('button', { name: 'rejected' }).getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByText('No candidates found for this filter.')).toBeTruthy();
+    expect((await screen.findByRole('button', { name: 'rejected' })).getAttribute('aria-pressed')).toBe('true');
+    expect(await screen.findByText('No candidates found for this filter.')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'invited' }));
-    expect(screen.getByText('Alex Demo')).toBeTruthy();
+    expect(await screen.findByText('Alex Demo')).toBeTruthy();
+  });
+});
+
+it('loads another applicant page and resets to page one when the status filter changes', async () => {
+  vi.mocked(api.get).mockImplementation(async url => ({ data: url.startsWith('/jobs/')
+    ? { title: 'Frontend Developer', companyName: 'Demo' }
+    : { applications: [], total: 45, hasNextPage: true },
+  }));
+  const user = userEvent.setup();
+  render(<MemoryRouter initialEntries={['/employer/job/job-1']}>
+    <Routes><Route path='/employer/job/:id' element={<JobManagement />} /></Routes>
+  </MemoryRouter>);
+  expect(await screen.findByText('45 Candidates')).toBeTruthy();
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+  expect(await screen.findByText('Page 2')).toBeTruthy();
+  expect(api.get).toHaveBeenCalledWith('/applications/job/job-1', {
+    params: { page: 2, status: 'all' }, signal: expect.any(AbortSignal),
+  });
+  await user.click(screen.getByRole('button', { name: 'new' }));
+  expect(await screen.findByText('Page 1')).toBeTruthy();
+  expect(api.get).toHaveBeenCalledWith('/applications/job/job-1', {
+    params: { page: 1, status: 'new' }, signal: expect.any(AbortSignal),
   });
 });

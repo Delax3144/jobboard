@@ -57,7 +57,7 @@ it.each(pages)('ignores a cancelled response when navigating between $name recor
   const first = deferred<{ data: unknown }>();
   const second = deferred<{ data: unknown }>();
   vi.mocked(api.get).mockImplementation(url => {
-    if (url.startsWith('/applications/job/')) return Promise.resolve({ data: [] });
+    if (url.startsWith('/applications/job/')) return Promise.resolve({ data: { applications: [], total: 0, hasNextPage: false } });
     return url.endsWith('/first') ? first.promise : second.promise;
   });
   renderPage(page);
@@ -75,7 +75,7 @@ it.each(pages)('clears old $name data and retries a failed request', async page 
   const user = userEvent.setup();
   const next = deferred<{ data: unknown }>();
   vi.mocked(api.get).mockImplementation(url => {
-    if (url.startsWith('/applications/job/')) return Promise.resolve({ data: [] });
+    if (url.startsWith('/applications/job/')) return Promise.resolve({ data: { applications: [], total: 0, hasNextPage: false } });
     return url.endsWith('/first') ? Promise.resolve({ data: page.first }) : next.promise;
   });
   renderPage(page);
@@ -86,7 +86,7 @@ it.each(pages)('clears old $name data and retries a failed request', async page 
   await act(async () => { next.reject(new Error('Offline')); });
   expect(screen.getByRole('alert').textContent).toBe(page.unavailable);
   expect(screen.queryByText(page.notFound)).toBeNull();
-  vi.mocked(api.get).mockImplementation(async url => ({ data: url.startsWith('/applications/job/') ? [] : page.second }));
+  vi.mocked(api.get).mockImplementation(async url => ({ data: url.startsWith('/applications/job/') ? { applications: [], total: 0, hasNextPage: false } : page.second }));
   await user.click(screen.getByRole('button', { name: 'Try again' }));
   expect(await screen.findByRole('heading', { name: 'Second record' })).toBeTruthy();
   expect(screen.queryByRole('alert')).toBeNull();

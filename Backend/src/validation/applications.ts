@@ -4,6 +4,10 @@ export const applicationListSchema = z.strictObject({
   page: z.coerce.number().int().min(1).max(100_000).optional(),
 });
 
+export const jobApplicationListSchema = applicationListSchema.extend({
+  status: z.enum(['all', 'new', 'reviewed', 'invited', 'rejected']).default('all'),
+});
+
 export const updateApplicationStatusSchema = z.object({
   status: z.enum(["reviewed", "invited", "rejected"]),
 }).strict();

@@ -63,3 +63,33 @@ it('rejects invalid pages and employer access before loading applications', asyn
   assert.equal(response.status, 403);
   assert.equal(findMany.mock.callCount(), 0);
 });
+
+it('paginates applicants with a status filter only after verifying vacancy ownership', async () => {
+  const jobId = '33333333-3333-4333-8333-333333333333';
+  mock.method(prisma.user, 'findUnique', async () => ({ tokenVersion: 0, role: 'employer' }));
+  mock.method(prisma.job, 'findUnique', async () => ({ id: jobId, ownerId: candidateId }));
+  const response = await fetch(`${baseUrl}/applications/job/${jobId}?page=2&status=new`, {
+    headers: { Authorization: `Bearer ${signAccessToken({ id: candidateId, role: 'employer' })}` },
+  });
+  assert.equal(response.status, 200);
+  const data = await response.json();
+  assert.equal(data.applications.length, 20);
+  assert.equal(data.total, 50);
+  assert.equal(data.hasNextPage, true);
+  const query = findMany.mock.calls[0].arguments[0];
+  assert.deepEqual(query.where, { jobId, status: 'new' });
+  assert.equal(query.skip, 20);
+  assert.equal(query.take, 21);
+  assert.deepEqual(groupBy.mock.calls[0].arguments[0].where, { jobId });
+});
+
+it('rejects another employer before fetching applicants or their statistics', async () => {
+  mock.method(prisma.user, 'findUnique', async () => ({ tokenVersion: 0, role: 'employer' }));
+  mock.method(prisma.job, 'findUnique', async () => ({ ownerId: 'other-owner' }));
+  const response = await fetch(`${baseUrl}/applications/job/33333333-3333-4333-8333-333333333333?page=1`, {
+    headers: { Authorization: `Bearer ${signAccessToken({ id: candidateId, role: 'employer' })}` },
+  });
+  assert.equal(response.status, 403);
+  assert.equal(findMany.mock.callCount(), 0);
+  assert.equal(groupBy.mock.callCount(), 0);
+});
