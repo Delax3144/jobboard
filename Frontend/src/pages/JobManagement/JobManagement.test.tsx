@@ -41,6 +41,7 @@ describe('Employer application management', () => {
     await waitFor(() => expect(api.patch).toHaveBeenCalledWith('/applications/application-1', { status: 'reviewed' }));
     await user.click(await screen.findByRole('button', { name: 'Invite to Interview' }));
     await waitFor(() => expect(api.patch).toHaveBeenLastCalledWith('/applications/application-1', { status: 'invited' }));
+    expect(await screen.findByText('Interview')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Invite to Interview' })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'rejected' }));
     expect((await screen.findByRole('button', { name: 'rejected' })).getAttribute('aria-pressed')).toBe('true');

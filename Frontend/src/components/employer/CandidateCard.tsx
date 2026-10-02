@@ -40,7 +40,7 @@ export default function CandidateCard({ app, isExpanded, toggleExpand, handleUpd
                 {name}
               </h3>
               <span className={styles.status}>
-                {app.status}
+                {statusLabels[app.status]}
               </span>
             </div>
             <div className={styles.metadata}>
